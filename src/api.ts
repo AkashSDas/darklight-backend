@@ -6,6 +6,13 @@ import { sendResponse } from "./utils/client-response";
 export var app = express();
 
 // ==============================
+// Middlewares
+// ==============================
+
+app.use(express.json()); // for parsing incoming data
+app.use(express.urlencoded({ extended: true })); // parses incoming requests with urlencoded payloads
+
+// ==============================
 // Routes
 // ==============================
 

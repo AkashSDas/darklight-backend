@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import { AnyZodObject } from "zod";
 
 import { sendResponse } from "../utils/client-response";
+import logger from "../utils/logger";
 
 /**
  * Validate the input of a request and give err is the input is invalid
@@ -44,7 +45,7 @@ export function validateResource(schema: AnyZodObject) {
     } catch (err: any) {
       return sendResponse(res, {
         status: 400,
-        msg: "Invalid request",
+        msg: "Missing or invalid fields",
         data: {
           errors: err.errors.map(function parseError(err: any) {
             return { field: err.path[1], msg: err.message };
