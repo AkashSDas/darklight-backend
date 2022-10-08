@@ -20,7 +20,8 @@
     "mongoose": "^6.6.5",
     "nodemon": "^2.0.20",
     "validator": "^13.7.0",
-    "winston": "^3.8.2"
+    "winston": "^3.8.2",
+    "zod": "^3.19.1"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.2",
