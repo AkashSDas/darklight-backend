@@ -2,7 +2,6 @@ import { NextFunction, Request, Response } from "express";
 import { AnyZodObject } from "zod";
 
 import { sendResponse } from "../utils/client-response";
-import logger from "../utils/logger";
 
 /**
  * Validate the input of a request and give err is the input is invalid

@@ -10,7 +10,7 @@ var zodUserFullName = string({ required_error: "Full name is required" })
 
 var zodUserUsername = string({ required_error: "Username is required" })
   .max(120, "Username is too long")
-  .min(6, "Username is too short");
+  .min(3, "Username is too short");
 
 var zodUserEmail = string({ required_error: "Email is required" }).email(
   "Invalid email"
