@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 
-import { sentResponse } from "./client-response";
+import { sendResponse } from "./client-response";
 
 /**
  * API error class
@@ -31,5 +31,5 @@ export class BaseApiError extends Error {
 export function handleCtrlError(err: unknown, _: Request, res: Response) {
   var status = (err as any)?.status || 500;
   var msg = (err as any)?.msg || "Something went wrong, Please try again";
-  sentResponse(res, { status, msg });
+  sendResponse(res, { status, msg });
 }

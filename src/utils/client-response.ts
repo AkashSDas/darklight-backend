@@ -17,7 +17,7 @@ interface Options {
  * @returns {void} void
  * @example sendClientResponse(res, { status: 200, msg: "OK" })
  */
-export function sentResponse(res: Response, options: Options): void {
+export function sendResponse(res: Response, options: Options): void {
   var { status, msg, data } = options;
   res.status(status).json({ msg, data });
 }
