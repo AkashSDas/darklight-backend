@@ -1,10 +1,10 @@
+import { object, TypeOf } from "zod";
+
+import { zodUser } from "./";
+
 // ============================================
 // Schemas
 // ============================================
-
-import { object } from "zod";
-
-import { zodUser } from "./";
 
 export var signupSchema = object({
   body: object({
@@ -20,3 +20,9 @@ export var signupSchema = object({
     { message: "Passwords do not match", path: ["confirmPassword"] }
   ),
 });
+
+// ============================================
+// Types
+// ============================================
+
+export type ZodSignup = TypeOf<typeof signupSchema>;
