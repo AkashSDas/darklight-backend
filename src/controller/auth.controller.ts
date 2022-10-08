@@ -34,7 +34,7 @@ export async function signupController(
     to: user.email,
     subject: "Confirm your email",
     text: `Please click on the link to confirm your email: ${confirmEmailURL}`,
-    html: `Please click on the link to confirm your email: 🔗 <a href="${confirmEmailURL}">${confirmEmailURL}</a>`,
+    html: `Please click on the link to confirm your email: 🔗 <a href="${confirmEmailURL}">Link</a>`,
   };
 
   try {
