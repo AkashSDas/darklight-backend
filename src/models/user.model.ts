@@ -3,8 +3,9 @@ import crypto from "crypto";
 import { SchemaTypes, Types } from "mongoose";
 import validator from "validator";
 
-import { getModelForClass, modelOptions, prop, Severity } from "@typegoose/typegoose";
+import { getModelForClass, modelOptions, post, pre, prop, Severity } from "@typegoose/typegoose";
 
+import { BaseApiError } from "../utils/handle-error";
 import { TImageClass } from "./image.model";
 
 // ===============================
@@ -37,6 +38,19 @@ class TOAuthProviderClass {
 }
 
 /** User Typegoose Class */
+@pre<TUserClass>("save", async function encryptPassword(next) {
+  // If password is modified the hash it
+  if (!this.isModified("passwordDigest")) return next();
+  this.passwordDigest = await bcrypt.hash(this.passwordDigest, 12);
+})
+@post<TUserClass>("save", function handleDuplicateError(err, user, next) {
+  // Handle error due to user trying to create user with duplicate
+  // fields (email OR username)
+  if (err.name == "MongoServerError" && err.code == 11000) {
+    next(new BaseApiError(400, "Username OR email already used"));
+  }
+  next();
+})
 @modelOptions({
   schemaOptions: {
     timestamps: true,
