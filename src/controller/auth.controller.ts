@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import { Request, Response } from "express";
 
 import { createUserService, getUserService } from "../services/user.service";
@@ -5,7 +6,7 @@ import { sendResponse } from "../utils/client-response";
 import { BaseApiError } from "../utils/handle-error";
 import logger from "../utils/logger";
 import { EmailOptions, sendEmail } from "../utils/send-email";
-import { ZodGetEmailVerificationLink, ZodSignup } from "../zod-schema/auth.schema";
+import { ZodConfirmEmailVerification, ZodGetEmailVerificationLink, ZodSignup } from "../zod-schema/auth.schema";
 
 export async function signupController(
   req: Request<{}, {}, ZodSignup["body"]>,
@@ -96,4 +97,31 @@ export async function getEmailVerificationLinkController(
     await user.save({ validateModifiedOnly: true });
     return sendResponse(res, { status: 500, msg: "Failed to send email" });
   }
+}
+
+export async function confirmEmailVerificationController(
+  req: Request<ZodConfirmEmailVerification["params"]>,
+  res: Response
+) {
+  // Verify the token
+  var token = req.params.token;
+  var encryptedToken = crypto.createHash("sha256").update(token).digest("hex");
+  var user = await getUserService({
+    emailVerificationToken: encryptedToken,
+    emailVerificationTokenExpiresAt: { $gt: new Date(Date.now()) }, // token should not be expired
+  });
+  if (!user) throw new BaseApiError(400, "Invalid or expired token");
+
+  // Verify user's email and activate the account
+  user.isEmailVerified = true;
+  user.isActive = true;
+  user.emailVerificationToken = undefined;
+  user.emailVerificationTokenExpiresAt = undefined;
+  await user.save({ validateModifiedOnly: true });
+
+  return sendResponse(res, {
+    status: 200,
+    msg: "Email verified successfully",
+    data: { user },
+  });
 }

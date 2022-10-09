@@ -1,4 +1,4 @@
-import { object, TypeOf } from "zod";
+import { object, string, TypeOf } from "zod";
 
 import { zodUser } from "./";
 
@@ -25,6 +25,10 @@ export var getEmailVerificationLinkSchema = object({
   body: object({ email: zodUser.email }),
 });
 
+export var confirmEmailVerificationSchema = object({
+  params: object({ token: string() }),
+});
+
 // ============================================
 // Types
 // ============================================
@@ -32,4 +36,7 @@ export var getEmailVerificationLinkSchema = object({
 export type ZodSignup = TypeOf<typeof signupSchema>;
 export type ZodGetEmailVerificationLink = TypeOf<
   typeof getEmailVerificationLinkSchema
+>;
+export type ZodConfirmEmailVerification = TypeOf<
+  typeof confirmEmailVerificationSchema
 >;

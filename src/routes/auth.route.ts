@@ -1,10 +1,10 @@
 import { Router } from "express";
 
-import { getEmailVerificationLinkController, signupController } from "../controller/auth.controller";
+import { confirmEmailVerificationController, getEmailVerificationLinkController, signupController } from "../controller/auth.controller";
 import { validateResource } from "../middlewares/validate-resource";
 import { handleAsyncMiddleware } from "../utils/handle-async";
 import { handleCtrlError } from "../utils/handle-error";
-import { getEmailVerificationLinkSchema, signupSchema } from "../zod-schema/auth.schema";
+import { confirmEmailVerificationSchema, getEmailVerificationLinkSchema, signupSchema } from "../zod-schema/auth.schema";
 
 export var router = Router();
 
@@ -17,9 +17,16 @@ router.post(
 );
 
 // Email verification
-router.post(
-  "/verify-email",
-  validateResource(getEmailVerificationLinkSchema),
-  handleAsyncMiddleware(getEmailVerificationLinkController),
-  handleCtrlError
-);
+router
+  .post(
+    "/verify-email",
+    validateResource(getEmailVerificationLinkSchema),
+    handleAsyncMiddleware(getEmailVerificationLinkController),
+    handleCtrlError
+  )
+  .get(
+    "/confirm-email/:token",
+    validateResource(confirmEmailVerificationSchema),
+    handleAsyncMiddleware(confirmEmailVerificationController),
+    handleCtrlError
+  );
