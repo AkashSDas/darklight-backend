@@ -1,11 +1,11 @@
 import { Router } from "express";
 
-import { confirmEmailVerificationController, getEmailVerificationLinkController, getNewAccessTokenController, loginController, signupController, testAuthController } from "../controller/auth.controller";
+import { confirmEmailVerificationController, forgotPasswordController, getEmailVerificationLinkController, getNewAccessTokenController, loginController, resetPasswordController, signupController, testAuthController } from "../controller/auth.controller";
 import { validateResource } from "../middlewares/validate-resource";
 import verifyJwt from "../middlewares/verify-jwt";
 import { handleMiddlewarelError } from "../utils/handle-async";
 import { sendErrorResponse } from "../utils/handle-error";
-import { confirmEmailVerificationSchema, getEmailVerificationLinkSchema, loginSchema, signupSchema } from "../zod-schema/auth.schema";
+import { confirmEmailVerificationSchema, forgotPasswordSchema, getEmailVerificationLinkSchema, loginSchema, resetPasswordSchema, signupSchema } from "../zod-schema/auth.schema";
 
 export var router = Router();
 
@@ -54,3 +54,18 @@ router.get(
   handleMiddlewarelError(getNewAccessTokenController),
   sendErrorResponse
 );
+
+// Forgot password and reset password
+router
+  .post(
+    "/forgot-password",
+    validateResource(forgotPasswordSchema),
+    handleMiddlewarelError(forgotPasswordController),
+    sendErrorResponse
+  )
+  .post(
+    "/reset-password/:token",
+    validateResource(resetPasswordSchema),
+    handleMiddlewarelError(resetPasswordController),
+    sendErrorResponse
+  );

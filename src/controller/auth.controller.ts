@@ -7,7 +7,7 @@ import { sendResponse } from "../utils/client-response";
 import { BaseApiError } from "../utils/handle-error";
 import logger from "../utils/logger";
 import { EmailOptions, sendEmail } from "../utils/send-email";
-import { ZodConfirmEmailVerification, ZodGetEmailVerificationLink, ZodLogin, ZodSignup } from "../zod-schema/auth.schema";
+import { ZodConfirmEmailVerification, ZodForgotPassword, ZodGetEmailVerificationLink, ZodLogin, ZodResetPassword, ZodSignup } from "../zod-schema/auth.schema";
 
 export async function signupController(
   req: Request<{}, {}, ZodSignup["body"]>,
@@ -191,4 +191,63 @@ export async function getNewAccessTokenController(req: Request, res: Response) {
   } catch (error) {
     throw new BaseApiError(401, "Invalid refresh token");
   }
+}
+
+// TODO: set the endpoint to the front-end's password reset URL
+export async function forgotPasswordController(
+  req: Request<{}, {}, ZodForgotPassword["body"]>,
+  res: Response
+) {
+  // Chech if the user exists
+  var email = req.body.email;
+  var user = await getUserService({ email });
+  if (!user) throw new BaseApiError(404, "User not found");
+
+  // Send reset password link to user's email
+  var token = user.getPasswordResetToken();
+  console.log(user);
+  await user.save(); // saving token info to DB
+  var endpoint = `/api/auth/reset-password/${token}`;
+  var resetPasswordURL = `${req.protocol}://${req.get("host")}${endpoint}`;
+  var opts: EmailOptions = {
+    to: user.email,
+    subject: "Reset your password",
+    text: `Please click on the link to reset your password: ${resetPasswordURL}`,
+    html: `Please click on the link to reset your password: 🔗 <a href="${resetPasswordURL}">Link</a>`,
+  };
+
+  try {
+    await sendEmail(opts);
+    return sendResponse(res, { status: 200, msg: "Email sent successfully" });
+  } catch (error) {
+    // Reset the token and tokenExpiresAt
+    user.passwordResetToken = undefined;
+    user.passwordResetTokenExpiresAt = undefined;
+    await user.save({ validateModifiedOnly: true });
+    return sendResponse(res, { status: 500, msg: "Failed to send email" });
+  }
+}
+
+export async function resetPasswordController(
+  req: Request<ZodResetPassword["params"], {}, ZodResetPassword["body"]>,
+  res: Response
+) {
+  // Check the token
+  var token = req.params.token;
+  var encryptedToken = crypto.createHash("sha256").update(token).digest("hex");
+  var user = await getUserService({
+    passwordResetToken: encryptedToken,
+    passwordResetTokenExpiresAt: { $gt: new Date(Date.now()) }, // token should not be expired
+  });
+  if (!user) throw new BaseApiError(400, "Invalid or expired token");
+
+  // Update the password
+  var { password } = req.body;
+  user.passwordDigest = password;
+  user.passwordResetToken = undefined;
+  user.passwordResetTokenExpiresAt = undefined;
+  await user.save({ validateModifiedOnly: true }); // Saving the passwordDigest
+  user.passwordDigest = undefined; // Removing the passwordDigest from the user object
+
+  return sendResponse(res, { status: 200, msg: "Password reset successfully" });
 }
