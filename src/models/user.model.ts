@@ -1,5 +1,6 @@
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
+import jwt from "jsonwebtoken";
 import { SchemaTypes, Types } from "mongoose";
 import validator from "validator";
 
@@ -169,6 +170,22 @@ export class TUserClass {
     );
 
     return token;
+  }
+
+  /** Genereate access token for JWT authentication. Short duration */
+  generateAccessToken(): string {
+    var payload = { id: this._id, username: this.username, email: this.email };
+    return jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET, {
+      expiresIn: process.env.ACCESS_TOKEN_EXPIRES_IN,
+    });
+  }
+
+  /** Genereate refresh token for JWT authentication. Long duration */
+  generateRefreshToken(): string {
+    var payload = { id: this._id, username: this.username, email: this.email };
+    return jwt.sign(payload, process.env.REFRESH_TOKEN_SECRET, {
+      expiresIn: process.env.REFRESH_TOKEN_EXPIRES_IN,
+    });
   }
 
   // ===============================

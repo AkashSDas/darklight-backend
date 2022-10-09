@@ -1,10 +1,11 @@
 import { Router } from "express";
 
-import { confirmEmailVerificationController, getEmailVerificationLinkController, signupController } from "../controller/auth.controller";
+import { confirmEmailVerificationController, getEmailVerificationLinkController, loginController, signupController, testAuthController } from "../controller/auth.controller";
 import { validateResource } from "../middlewares/validate-resource";
+import verifyJwt from "../middlewares/verify-jwt";
 import { handleMiddlewarelError } from "../utils/handle-async";
 import { sendErrorResponse } from "../utils/handle-error";
-import { confirmEmailVerificationSchema, getEmailVerificationLinkSchema, signupSchema } from "../zod-schema/auth.schema";
+import { confirmEmailVerificationSchema, getEmailVerificationLinkSchema, loginSchema, signupSchema } from "../zod-schema/auth.schema";
 
 export var router = Router();
 
@@ -30,3 +31,19 @@ router
     handleMiddlewarelError(confirmEmailVerificationController),
     sendErrorResponse
   );
+
+// Login
+router.post(
+  "/login",
+  validateResource(loginSchema),
+  handleMiddlewarelError(loginController),
+  sendErrorResponse
+);
+
+// Test auth
+router.get(
+  "/test",
+  handleMiddlewarelError(verifyJwt),
+  handleMiddlewarelError(testAuthController),
+  sendErrorResponse
+);

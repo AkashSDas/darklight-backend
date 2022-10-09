@@ -29,6 +29,19 @@ export var confirmEmailVerificationSchema = object({
   params: object({ token: string() }),
 });
 
+export var loginSchema = object({
+  body: object({
+    email: zodUser.email,
+    password: zodUser.password,
+    confirmPassword: zodUser.confirmPassword,
+  }).refine(
+    function zodValidatePassword(data) {
+      return data.password == data.confirmPassword;
+    },
+    { message: "Passwords do not match", path: ["confirmPassword"] }
+  ),
+});
+
 // ============================================
 // Types
 // ============================================
@@ -40,3 +53,4 @@ export type ZodGetEmailVerificationLink = TypeOf<
 export type ZodConfirmEmailVerification = TypeOf<
   typeof confirmEmailVerificationSchema
 >;
+export type ZodLogin = TypeOf<typeof loginSchema>;

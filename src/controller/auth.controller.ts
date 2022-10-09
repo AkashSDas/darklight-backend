@@ -1,12 +1,12 @@
 import crypto from "crypto";
 import { Request, Response } from "express";
 
-import { createUserService, getUserService } from "../services/user.service";
+import { createUserService, getUserService, getUserWithNotSelectedFields } from "../services/user.service";
 import { sendResponse } from "../utils/client-response";
 import { BaseApiError } from "../utils/handle-error";
 import logger from "../utils/logger";
 import { EmailOptions, sendEmail } from "../utils/send-email";
-import { ZodConfirmEmailVerification, ZodGetEmailVerificationLink, ZodSignup } from "../zod-schema/auth.schema";
+import { ZodConfirmEmailVerification, ZodGetEmailVerificationLink, ZodLogin, ZodSignup } from "../zod-schema/auth.schema";
 
 export async function signupController(
   req: Request<{}, {}, ZodSignup["body"]>,
@@ -124,4 +124,41 @@ export async function confirmEmailVerificationController(
     msg: "Email verified successfully",
     data: { user },
   });
+}
+
+export async function loginController(
+  req: Request<{}, {}, ZodLogin["body"]>,
+  res: Response
+) {
+  // Check if the user exists. Also get passwordDigest too as it will be
+  // used while using checkPassword method
+  var { email, password } = req.body;
+  var user = await getUserWithNotSelectedFields({ email }, "+passwordDigest");
+  if (!user) throw new BaseApiError(404, "User not found");
+
+  // Verify the password
+  if (!(await user.verifyPassword(password))) {
+    throw new BaseApiError(401, "Incorrect password");
+  }
+
+  // Generate refresh and access tokens
+  var accessToken = user.generateAccessToken();
+  var refreshToken = user.generateRefreshToken();
+  res.cookie("refreshToken", refreshToken, {
+    httpOnly: true, // so that the cookie cannot be accessed/modified in the frontend
+    // secure: process.env.NODE_ENV == "production", // cookie will only be sent in a HTTPS connection in production
+    sameSite: "none", // to allow the cookie to be sent to the server in cross-site requests
+    maxAge: 2 * 60 * 1000, // 2 minutes, should match the expiresIn of the refresh token
+  });
+
+  // Send the user data and access token
+  return sendResponse(res, {
+    status: 200,
+    msg: "Logged in successfully",
+    data: { user, accessToken },
+  });
+}
+
+export async function testAuthController(req: Request, res: Response) {
+  sendResponse(res, { status: 200, msg: "You are authorized" });
 }
