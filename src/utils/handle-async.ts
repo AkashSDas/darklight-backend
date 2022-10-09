@@ -25,8 +25,8 @@ type AsyncHandler = (
  * @param fn A middleware OR controller function that returns a promise
  * @returns The given middleware function is returned along with error handling
  */
-export function handleAsyncMiddleware(fn: AsyncHandler): AsyncHandler {
-  return function handleAsyncMiddlewareError(req, res, next) {
+export function handleMiddlewarelError(fn: AsyncHandler): AsyncHandler {
+  return function addCatchError(req, res, next) {
     return fn(req, res, next).catch(next);
   };
 }

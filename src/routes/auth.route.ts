@@ -1,9 +1,11 @@
-import { Router } from "express";
+import { Request, Response, Router } from "express";
+
+import { logger } from "@typegoose/typegoose/lib/logSettings";
 
 import { confirmEmailVerificationController, getEmailVerificationLinkController, signupController } from "../controller/auth.controller";
 import { validateResource } from "../middlewares/validate-resource";
-import { handleAsyncMiddleware } from "../utils/handle-async";
-import { handleCtrlError } from "../utils/handle-error";
+import { handleMiddlewarelError } from "../utils/handle-async";
+import { sendErrorResponse } from "../utils/handle-error";
 import { confirmEmailVerificationSchema, getEmailVerificationLinkSchema, signupSchema } from "../zod-schema/auth.schema";
 
 export var router = Router();
@@ -12,8 +14,8 @@ export var router = Router();
 router.post(
   "/signup",
   validateResource(signupSchema),
-  handleAsyncMiddleware(signupController),
-  handleCtrlError
+  handleMiddlewarelError(signupController),
+  sendErrorResponse
 );
 
 // Email verification
@@ -21,12 +23,12 @@ router
   .post(
     "/verify-email",
     validateResource(getEmailVerificationLinkSchema),
-    handleAsyncMiddleware(getEmailVerificationLinkController),
-    handleCtrlError
+    handleMiddlewarelError(getEmailVerificationLinkController),
+    sendErrorResponse
   )
   .get(
     "/confirm-email/:token",
     validateResource(confirmEmailVerificationSchema),
-    handleAsyncMiddleware(confirmEmailVerificationController),
-    handleCtrlError
+    handleMiddlewarelError(confirmEmailVerificationController),
+    sendErrorResponse
   );

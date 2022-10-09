@@ -8,6 +8,7 @@ import logger from "../utils/logger";
 import { EmailOptions, sendEmail } from "../utils/send-email";
 import { ZodConfirmEmailVerification, ZodGetEmailVerificationLink, ZodSignup } from "../zod-schema/auth.schema";
 
+// TODO: Add unique email/username checks
 export async function signupController(
   req: Request<{}, {}, ZodSignup["body"]>,
   res: Response
