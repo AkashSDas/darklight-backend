@@ -250,3 +250,13 @@ export async function resetPasswordController(
 
   return sendResponse(res, { status: 200, msg: "Password reset successfully" });
 }
+
+export async function logoutController(req: Request, res: Response) {
+  if (!req.cookies?.refreshToken) throw new BaseApiError(401, "Unauthorized");
+  res.clearCookie("refreshToken", {
+    httpOnly: true,
+    // secure: process.env.NODE_ENV == "production",
+    sameSite: "none",
+  });
+  return sendResponse(res, { status: 200, msg: "Logged out successfully" });
+}
