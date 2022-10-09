@@ -21,8 +21,15 @@ export var signupSchema = object({
   ),
 });
 
+export var getEmailVerificationLinkSchema = object({
+  body: object({ email: zodUser.email }),
+});
+
 // ============================================
 // Types
 // ============================================
 
 export type ZodSignup = TypeOf<typeof signupSchema>;
+export type ZodGetEmailVerificationLink = TypeOf<
+  typeof getEmailVerificationLinkSchema
+>;

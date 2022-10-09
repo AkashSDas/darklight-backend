@@ -1,10 +1,11 @@
 import { Request, Response } from "express";
 
-import { createUserService } from "../services/user.service";
+import { createUserService, getUserService } from "../services/user.service";
 import { sendResponse } from "../utils/client-response";
+import { BaseApiError } from "../utils/handle-error";
 import logger from "../utils/logger";
 import { EmailOptions, sendEmail } from "../utils/send-email";
-import { ZodSignup } from "../zod-schema/auth.schema";
+import { ZodGetEmailVerificationLink, ZodSignup } from "../zod-schema/auth.schema";
 
 export async function signupController(
   req: Request<{}, {}, ZodSignup["body"]>,
@@ -56,5 +57,43 @@ export async function signupController(
       msg: "Failed to send email",
       data: { user },
     });
+  }
+}
+
+export async function getEmailVerificationLinkController(
+  req: Request<{}, {}, ZodGetEmailVerificationLink["body"]>,
+  res: Response
+) {
+  // Check if the user exists
+  var email = req.body.email;
+  var user = await getUserService({ email });
+  if (!user) throw new BaseApiError(404, "User not found");
+
+  // Check if the user's email is already verified OR not
+  if (user.isEmailVerified) {
+    throw new BaseApiError(400, "Email already verified");
+  }
+
+  // Send email verification link to user's email
+  var token = user.getEmailVerificationToken();
+  await user.save({ validateModifiedOnly: true }); // saving token info to DB
+  var endpoint = `/api/auth/confirm-email/${token}`;
+  var confirmEmailURL = `${req.protocol}://${req.get("host")}${endpoint}`;
+  var opts: EmailOptions = {
+    to: user.email,
+    subject: "Confirm your email",
+    text: `Please click on the link to confirm your email: ${confirmEmailURL}`,
+    html: `Please click on the link to confirm your email: 🔗 <a href="${confirmEmailURL}">Link</a>`,
+  };
+
+  try {
+    await sendEmail(opts);
+    return sendResponse(res, { status: 200, msg: "Email sent successfully" });
+  } catch (error) {
+    // Reset the token and tokenExpiresAt
+    user.emailVerificationToken = undefined;
+    user.emailVerificationTokenExpiresAt = undefined;
+    await user.save({ validateModifiedOnly: true });
+    return sendResponse(res, { status: 500, msg: "Failed to send email" });
   }
 }
