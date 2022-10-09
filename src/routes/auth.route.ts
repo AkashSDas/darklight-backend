@@ -1,6 +1,4 @@
-import { Request, Response, Router } from "express";
-
-import { logger } from "@typegoose/typegoose/lib/logSettings";
+import { Router } from "express";
 
 import { confirmEmailVerificationController, getEmailVerificationLinkController, signupController } from "../controller/auth.controller";
 import { validateResource } from "../middlewares/validate-resource";
