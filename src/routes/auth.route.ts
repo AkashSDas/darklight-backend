@@ -1,6 +1,6 @@
 import { Router } from "express";
 
-import { confirmEmailVerificationController, getEmailVerificationLinkController, loginController, signupController, testAuthController } from "../controller/auth.controller";
+import { confirmEmailVerificationController, getEmailVerificationLinkController, getNewAccessTokenController, loginController, signupController, testAuthController } from "../controller/auth.controller";
 import { validateResource } from "../middlewares/validate-resource";
 import verifyJwt from "../middlewares/verify-jwt";
 import { handleMiddlewarelError } from "../utils/handle-async";
@@ -45,5 +45,12 @@ router.get(
   "/test",
   handleMiddlewarelError(verifyJwt),
   handleMiddlewarelError(testAuthController),
+  sendErrorResponse
+);
+
+// Get new access token
+router.get(
+  "/access-token",
+  handleMiddlewarelError(getNewAccessTokenController),
   sendErrorResponse
 );

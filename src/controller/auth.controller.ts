@@ -1,5 +1,6 @@
 import crypto from "crypto";
 import { Request, Response } from "express";
+import jwt from "jsonwebtoken";
 
 import { createUserService, getUserService, getUserWithNotSelectedFields } from "../services/user.service";
 import { sendResponse } from "../utils/client-response";
@@ -161,4 +162,33 @@ export async function loginController(
 
 export async function testAuthController(req: Request, res: Response) {
   sendResponse(res, { status: 200, msg: "You are authorized" });
+}
+
+export async function getNewAccessTokenController(req: Request, res: Response) {
+  var refreshToken = req.cookies?.refreshToken;
+  if (!refreshToken) throw new BaseApiError(401, "Unauthorized");
+
+  try {
+    // Verify the refresh token and generate a new access token
+    jwt.verify(
+      refreshToken,
+      process.env.REFRESH_TOKEN_SECRET,
+      async function getNewAccessToken(
+        error: jwt.VerifyErrors,
+        decoded: string | jwt.JwtPayload
+      ) {
+        if (error) throw new BaseApiError(401, "Invalid refresh token");
+        var user = await getUserService({ _id: (decoded as any).id });
+        if (!user) throw new BaseApiError(404, "User not found");
+        var accessToken = user.generateAccessToken();
+        return sendResponse(res, {
+          status: 200,
+          msg: "New access token generated successfully",
+          data: { user, accessToken },
+        });
+      }
+    );
+  } catch (error) {
+    throw new BaseApiError(401, "Invalid refresh token");
+  }
 }
