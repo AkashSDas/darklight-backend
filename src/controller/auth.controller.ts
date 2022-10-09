@@ -205,7 +205,6 @@ export async function forgotPasswordController(
 
   // Send reset password link to user's email
   var token = user.getPasswordResetToken();
-  console.log(user);
   await user.save(); // saving token info to DB
   var endpoint = `/api/auth/reset-password/${token}`;
   var resetPasswordURL = `${req.protocol}://${req.get("host")}${endpoint}`;
