@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 
 import { sendResponse } from "./client-response";
 
@@ -27,8 +27,17 @@ export class BaseApiError extends Error {
  *
  * @example app.use(handleCtrlError)
  * @example route.get("/route", handleCtrlError((req, res) => { ... }))
+ *
+ * @remarks Your error handler middleware MUST have 4 parameters: error,
+ * req, res, next. Otherwise your handler won't fire.
+ * https://stackoverflow.com/a/61464426
  */
-export function handleCtrlError(err: unknown, _: Request, res: Response) {
+export function sendErrorResponse(
+  err: unknown,
+  _: Request,
+  res: Response,
+  next: NextFunction
+) {
   var status = (err as any)?.status || 500;
   var msg = (err as any)?.msg || "Something went wrong, Please try again";
   sendResponse(res, { status, msg });
