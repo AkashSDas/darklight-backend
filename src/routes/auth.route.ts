@@ -30,8 +30,8 @@ router
     "/signup/google/redirect",
     passport.authenticate(Strategies.GoogleSignup, {
       failureMessage: "Cannot signup to Google, Please try again",
-      successRedirect: process.env.GOOGLE_SUCCESS_REDIRECT_URL,
-      failureRedirect: process.env.GOOGLE_FAILURE_REDIRECT_URL,
+      successRedirect: process.env.GOOGLE_SIGNUP_SUCCESS_REDIRECT_URL,
+      failureRedirect: process.env.GOOGLE_SIGNUP_FAILURE_REDIRECT_URL,
     })
   );
 
@@ -51,12 +51,29 @@ router
   );
 
 // Login
-router.post(
-  "/login",
-  validateResource(loginSchema),
-  handleMiddlewarelError(loginController),
-  sendErrorResponse
-);
+router
+  .post(
+    "/login",
+    validateResource(loginSchema),
+    handleMiddlewarelError(loginController),
+    sendErrorResponse
+  )
+  .get(
+    "/login/google",
+    passport.authenticate(Strategies.GoogleLogin, {
+      scope: ["profile", "email"],
+    }),
+    function loginWithGoogle() {}
+  )
+  .get(
+    "/login/google/redirect",
+    passport.authenticate(Strategies.GoogleLogin, {
+      failureMessage: "Cannot login to Google, Please try again",
+      successRedirect: process.env.GOOGLE_LOGIN_SUCCESS_REDIRECT_URL,
+      failureRedirect: `${process.env.GOOGLE_LOGIN_FAILURE_REDIRECT_URL}?info=signup-incomplete`,
+    }),
+    function loginWithGoogleRedirect() {}
+  );
 
 // Test auth
 router.get(
