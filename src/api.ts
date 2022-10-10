@@ -1,11 +1,14 @@
 import cookieParser from "cookie-parser";
 import cors from "cors";
+import { config } from "dotenv";
 import express from "express";
 import expressSession from "express-session";
 import morgan from "morgan";
 import passport from "passport";
 
 import { sendResponse } from "./utils/client-response";
+
+if (process.env.NODE_ENV != "production") config();
 
 /** Express app */
 export var app = express();
@@ -38,6 +41,7 @@ app.get("/api/test", function testRoute(req, res) {
 });
 
 app.use("/api/auth", require("./routes/auth.route").router);
+app.use("/api/user", require("./routes/user.route").router);
 
 app.all("*", function handleRemainingRoute(req, res) {
   sendResponse(res, {
