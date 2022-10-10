@@ -87,6 +87,20 @@ router
       failureRedirect: `${process.env.OAUTH_LOGIN_FAILURE_REDIRECT_URL}?info=signup-incomplete`,
     }),
     function loginWithGoogleRedirect() {}
+  )
+  .get(
+    "/login/facebook",
+    passport.authenticate(Strategies.FacebookLogin),
+    function loginWithFacebook() {}
+  )
+  .get(
+    "/login/facebook/redirect",
+    passport.authenticate(Strategies.FacebookLogin, {
+      failureMessage: "Cannot login to Facebook, Please try again",
+      successRedirect: process.env.OAUTH_LOGIN_SUCCESS_REDIRECT_URL,
+      failureRedirect: `${process.env.OAUTH_LOGIN_FAILURE_REDIRECT_URL}?info=signup-incomplete`,
+    }),
+    function loginWithFacebookRedirect() {}
   );
 
 // Test auth
