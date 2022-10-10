@@ -2,12 +2,12 @@ import crypto from "crypto";
 import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 
-import { createUserService, getUserService, getUserWithNotSelectedFields } from "../services/user.service";
+import { createUserService, deleteUserService, getUserService, getUserWithNotSelectedFields, updateUserService } from "../services/user.service";
 import { sendResponse } from "../utils/client-response";
 import { BaseApiError } from "../utils/handle-error";
 import logger from "../utils/logger";
 import { EmailOptions, sendEmail } from "../utils/send-email";
-import { ZodConfirmEmailVerification, ZodForgotPassword, ZodGetEmailVerificationLink, ZodLogin, ZodResetPassword, ZodSignup } from "../zod-schema/auth.schema";
+import { ZodCompleteOAuthSignup, ZodConfirmEmailVerification, ZodForgotPassword, ZodGetEmailVerificationLink, ZodLogin, ZodResetPassword, ZodSignup } from "../zod-schema/auth.schema";
 
 export async function signupController(
   req: Request<{}, {}, ZodSignup["body"]>,
@@ -259,4 +259,27 @@ export async function logoutController(req: Request, res: Response) {
     sameSite: "none",
   });
   return sendResponse(res, { status: 200, msg: "Logged out successfully" });
+}
+
+export async function cancelOAuthController(req: Request, res: Response) {
+  if (!req.user) return sendResponse(res, { status: 401, msg: "Unauthorized" });
+
+  await deleteUserService({ _id: req.user?._id });
+  req.logOut &&
+    req.logOut(function successfulOAuthLogout() {
+      return sendResponse(res, { status: 200, msg: "OAuth signup cancelled" });
+    });
+}
+
+export async function completeOAuthSignupController(
+  req: Request<{}, {}, ZodCompleteOAuthSignup["body"]>,
+  res: Response
+) {
+  var { username, email, fullName } = req.body;
+  await updateUserService(
+    { _id: req.user?._id },
+    { username, email, fullName }
+  );
+
+  return sendResponse(res, { status: 200, msg: "OAuth signup completed" });
 }

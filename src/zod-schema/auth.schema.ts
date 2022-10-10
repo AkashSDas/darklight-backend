@@ -59,6 +59,14 @@ export var resetPasswordSchema = object({
   ),
 });
 
+export var completeOAuthSignupSchema = object({
+  body: object({
+    fullName: zodUser.fullName,
+    username: zodUser.username,
+    email: zodUser.email,
+  }),
+});
+
 // ============================================
 // Types
 // ============================================
@@ -73,3 +81,4 @@ export type ZodConfirmEmailVerification = TypeOf<
 export type ZodLogin = TypeOf<typeof loginSchema>;
 export type ZodForgotPassword = TypeOf<typeof forgotPasswordSchema>;
 export type ZodResetPassword = TypeOf<typeof resetPasswordSchema>;
+export type ZodCompleteOAuthSignup = TypeOf<typeof completeOAuthSignupSchema>;

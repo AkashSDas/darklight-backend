@@ -1,13 +1,13 @@
 import { Router } from "express";
 import passport from "passport";
 
-import { confirmEmailVerificationController, forgotPasswordController, getEmailVerificationLinkController, getNewAccessTokenController, loginController, logoutController, resetPasswordController, signupController, testAuthController } from "../controller/auth.controller";
+import { cancelOAuthController, completeOAuthSignupController, confirmEmailVerificationController, forgotPasswordController, getEmailVerificationLinkController, getNewAccessTokenController, loginController, logoutController, resetPasswordController, signupController, testAuthController } from "../controller/auth.controller";
 import { validateResource } from "../middlewares/validate-resource";
-import verifyJwt from "../middlewares/verify-jwt";
+import verifyAuth from "../middlewares/verify-auth";
 import { Strategies } from "../passport";
 import { handleMiddlewarelError } from "../utils/handle-async";
 import { sendErrorResponse } from "../utils/handle-error";
-import { confirmEmailVerificationSchema, forgotPasswordSchema, getEmailVerificationLinkSchema, loginSchema, resetPasswordSchema, signupSchema } from "../zod-schema/auth.schema";
+import { completeOAuthSignupSchema, confirmEmailVerificationSchema, forgotPasswordSchema, getEmailVerificationLinkSchema, loginSchema, resetPasswordSchema, signupSchema } from "../zod-schema/auth.schema";
 
 export var router = Router();
 
@@ -134,7 +134,7 @@ router
 // Test auth
 router.get(
   "/test",
-  handleMiddlewarelError(verifyJwt),
+  handleMiddlewarelError(verifyAuth),
   handleMiddlewarelError(testAuthController),
   sendErrorResponse
 );
@@ -167,3 +167,19 @@ router.post(
   handleMiddlewarelError(logoutController),
   sendErrorResponse
 );
+
+// Post OAuth signup
+router
+  .post(
+    "/cancel-oauth",
+    handleMiddlewarelError(verifyAuth),
+    handleMiddlewarelError(cancelOAuthController),
+    sendErrorResponse
+  )
+  .post(
+    "/complete-oauth",
+    validateResource(completeOAuthSignupSchema),
+    handleMiddlewarelError(verifyAuth),
+    handleMiddlewarelError(completeOAuthSignupController),
+    sendErrorResponse
+  );
