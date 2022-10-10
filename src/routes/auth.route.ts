@@ -47,6 +47,20 @@ router
       failureRedirect: process.env.OAUTH_SIGNUP_FAILURE_REDIRECT_URL,
     }),
     function signupWithFacebookRedirect() {}
+  )
+  .get(
+    "/signup/twitter",
+    passport.authenticate(Strategies.TwitterSignup),
+    function signupWithTwitter() {}
+  )
+  .get(
+    "/signup/twitter/redirect",
+    passport.authenticate(Strategies.TwitterSignup, {
+      failureMessage: "Cannot signup to Twitter, Please try again",
+      successRedirect: process.env.OAUTH_SIGNUP_SUCCESS_REDIRECT_URL,
+      failureRedirect: process.env.OAUTH_SIGNUP_FAILURE_REDIRECT_URL,
+    }),
+    function signupWithTwitterRedirect() {}
   );
 
 // Email verification
@@ -101,6 +115,20 @@ router
       failureRedirect: `${process.env.OAUTH_LOGIN_FAILURE_REDIRECT_URL}?info=signup-incomplete`,
     }),
     function loginWithFacebookRedirect() {}
+  )
+  .get(
+    "/login/twitter",
+    passport.authenticate(Strategies.TwitterLogin),
+    function loginWithTwitter() {}
+  )
+  .get(
+    "/login/twitter/redirect",
+    passport.authenticate(Strategies.TwitterLogin, {
+      failureMessage: "Cannot login to Twitter, Please try again",
+      successRedirect: process.env.OAUTH_LOGIN_SUCCESS_REDIRECT_URL,
+      failureRedirect: `${process.env.OAUTH_LOGIN_FAILURE_REDIRECT_URL}?info=signup-incomplete`,
+    }),
+    function loginWithTwitterRedirect() {}
   );
 
 // Test auth

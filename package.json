@@ -28,6 +28,7 @@
     "passport": "^0.6.0",
     "passport-facebook": "^3.0.0",
     "passport-google-oauth20": "^2.0.0",
+    "passport-twitter": "^1.0.4",
     "validator": "^13.7.0",
     "winston": "^3.8.2",
     "zod": "^3.19.1"
@@ -41,6 +42,7 @@
     "@types/nodemailer": "^6.4.6",
     "@types/passport-facebook": "^2.1.11",
     "@types/passport-google-oauth20": "^2.0.11",
+    "@types/passport-twitter": "^1.0.37",
     "@types/validator": "^13.7.7"
   }
 }
