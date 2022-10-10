@@ -19,11 +19,14 @@
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
     "express": "^4.18.1",
+    "express-session": "^1.17.3",
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^6.6.5",
     "morgan": "^1.10.0",
     "nodemailer": "^6.8.0",
     "nodemon": "^2.0.20",
+    "passport": "^0.6.0",
+    "passport-google-oauth20": "^2.0.0",
     "validator": "^13.7.0",
     "winston": "^3.8.2",
     "zod": "^3.19.1"
@@ -31,9 +34,11 @@
   "devDependencies": {
     "@types/bcryptjs": "^2.4.2",
     "@types/cookie-parser": "^1.4.3",
+    "@types/express-session": "^1.17.5",
     "@types/jsonwebtoken": "^8.5.9",
     "@types/morgan": "^1.9.3",
     "@types/nodemailer": "^6.4.6",
+    "@types/passport-google-oauth20": "^2.0.11",
     "@types/validator": "^13.7.7"
   }
 }

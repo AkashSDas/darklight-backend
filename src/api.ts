@@ -1,7 +1,9 @@
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import express from "express";
+import expressSession from "express-session";
 import morgan from "morgan";
+import passport from "passport";
 
 import { sendResponse } from "./utils/client-response";
 
@@ -17,6 +19,15 @@ app.use(cors({ origin: process.env.FRONTEND_BASE_URL, credentials: true })); // 
 app.use(cookieParser()); // Parse Cookie header and populate req.cookies with an object keyed by the cookie names
 app.use(express.json()); // for parsing incoming data
 app.use(express.urlencoded({ extended: true })); // parses incoming requests with urlencoded payloads
+app.use(passport.initialize());
+app.use(
+  expressSession({
+    secret: process.env.COOKIE_SESSION_SECRET,
+    resave: true,
+    saveUninitialized: true,
+  })
+);
+app.use(passport.session());
 
 // ==============================
 // Routes
