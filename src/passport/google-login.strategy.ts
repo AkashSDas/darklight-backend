@@ -33,10 +33,10 @@ function googleLoginStrategy() {
   );
 }
 
-passport.serializeUser(function serializeUser(user, done) {
+passport.serializeUser(function serializeLoginUser(user, done) {
   done(null, (user as any)._id);
 });
-passport.deserializeUser(async function deserializeUser(_id, done) {
+passport.deserializeUser(async function deserializeLoginUser(_id, done) {
   try {
     var userData = await getUserService({ _id });
   } catch (err) {
