@@ -30,9 +30,23 @@ router
     "/signup/google/redirect",
     passport.authenticate(Strategies.GoogleSignup, {
       failureMessage: "Cannot signup to Google, Please try again",
-      successRedirect: process.env.GOOGLE_SIGNUP_SUCCESS_REDIRECT_URL,
-      failureRedirect: process.env.GOOGLE_SIGNUP_FAILURE_REDIRECT_URL,
+      successRedirect: process.env.OAUTH_SIGNUP_SUCCESS_REDIRECT_URL,
+      failureRedirect: process.env.OAUTH_SIGNUP_FAILURE_REDIRECT_URL,
     })
+  )
+  .get(
+    "/signup/facebook",
+    passport.authenticate(Strategies.FacebookSignup),
+    function signupWithFacebook() {}
+  )
+  .get(
+    "/signup/facebook/redirect",
+    passport.authenticate(Strategies.FacebookSignup, {
+      failureMessage: "Cannot signup to Facebook, Please try again",
+      successRedirect: process.env.OAUTH_SIGNUP_SUCCESS_REDIRECT_URL,
+      failureRedirect: process.env.OAUTH_SIGNUP_FAILURE_REDIRECT_URL,
+    }),
+    function signupWithFacebookRedirect() {}
   );
 
 // Email verification
@@ -69,8 +83,8 @@ router
     "/login/google/redirect",
     passport.authenticate(Strategies.GoogleLogin, {
       failureMessage: "Cannot login to Google, Please try again",
-      successRedirect: process.env.GOOGLE_LOGIN_SUCCESS_REDIRECT_URL,
-      failureRedirect: `${process.env.GOOGLE_LOGIN_FAILURE_REDIRECT_URL}?info=signup-incomplete`,
+      successRedirect: process.env.OAUTH_LOGIN_SUCCESS_REDIRECT_URL,
+      failureRedirect: `${process.env.OAUTH_LOGIN_FAILURE_REDIRECT_URL}?info=signup-incomplete`,
     }),
     function loginWithGoogleRedirect() {}
   );

@@ -26,6 +26,7 @@
     "nodemailer": "^6.8.0",
     "nodemon": "^2.0.20",
     "passport": "^0.6.0",
+    "passport-facebook": "^3.0.0",
     "passport-google-oauth20": "^2.0.0",
     "validator": "^13.7.0",
     "winston": "^3.8.2",
@@ -38,6 +39,7 @@
     "@types/jsonwebtoken": "^8.5.9",
     "@types/morgan": "^1.9.3",
     "@types/nodemailer": "^6.4.6",
+    "@types/passport-facebook": "^2.1.11",
     "@types/passport-google-oauth20": "^2.0.11",
     "@types/validator": "^13.7.7"
   }
