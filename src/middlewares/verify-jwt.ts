@@ -21,7 +21,7 @@ async function verifyJwt(req: Request, res: Response, next: NextFunction) {
       process.env.ACCESS_TOKEN_SECRET
     ) as JwtPayload;
 
-    let user = await getUserService({ _id: decodedJwt._id });
+    let user = await getUserService({ _id: decodedJwt.id });
     req.user = user;
     next();
   } catch (error) {
