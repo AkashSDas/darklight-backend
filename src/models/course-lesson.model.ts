@@ -60,6 +60,18 @@ export class TCourseLessonClass {
     this.lastEditedOn = new Date(Date.now());
   }
 
+  updateContent(updateAt: number, data: any) {
+    // It wasn't saving the updated contents list when I was directly updating
+    // the content data like this
+    // this.contents[updateAt].data = new data;
+
+    var content = this.contents[updateAt];
+    content.data = Object.keys(data).map(function filterContentData(key) {
+      return { key, value: data[key] };
+    });
+    this.contents[updateAt] = content;
+  }
+
   // ===============================
   // Virtuals
   // ===============================
