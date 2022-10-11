@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 
 import { sendResponse } from "./client-response";
+import logger from "./logger";
 
 /**
  * API error class
@@ -38,6 +39,7 @@ export function sendErrorResponse(
   res: Response,
   next: NextFunction
 ) {
+  logger.error(err);
   var status = (err as any)?.status || 500;
   var msg = (err as any)?.msg || "Something went wrong, Please try again";
   sendResponse(res, { status, msg });
