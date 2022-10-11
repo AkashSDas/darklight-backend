@@ -72,6 +72,10 @@ export class TCourseLessonClass {
     this.contents[updateAt] = content;
   }
 
+  deleteContent(deleteAt: number) {
+    this.contents.splice(deleteAt, 1);
+  }
+
   // ===============================
   // Virtuals
   // ===============================

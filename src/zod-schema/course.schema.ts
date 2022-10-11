@@ -43,6 +43,19 @@ export var updateContentInCourseLessonSchema = object({
   }),
 });
 
+export var deleteContentInCourseLessonSchema = object({
+  params: object({
+    courseId: string({ required_error: "Course id is required" }),
+    lessonId: string({ required_error: "Lesson id is required" }),
+  }),
+  body: object({
+    deleteAt: number({ required_error: "Add at is required" }).min(
+      0,
+      "Add at must be greater than or equal to 0"
+    ),
+  }),
+});
+
 // ============================================
 // Types
 // ============================================
@@ -53,4 +66,7 @@ export type ZodAddContentToCourseLesson = TypeOf<
 >;
 export type ZodUpdateContentInCourseLesson = TypeOf<
   typeof updateContentInCourseLessonSchema
+>;
+export type ZodDeleteContentInCourseLesson = TypeOf<
+  typeof deleteContentInCourseLessonSchema
 >;
