@@ -149,7 +149,8 @@ export async function loginController(
     httpOnly: true, // so that the cookie cannot be accessed/modified in the frontend
     // secure: process.env.NODE_ENV == "production", // cookie will only be sent in a HTTPS connection in production
     sameSite: "none", // to allow the cookie to be sent to the server in cross-site requests
-    maxAge: 2 * 60 * 1000, // 2 minutes, should match the expiresIn of the refresh token
+    // maxAge: 2 * 60 * 1000, // 2 minutes, should match the expiresIn of the refresh token
+    maxAge: 1 * 24 * 60 * 60 * 1000, // 1 days
   });
 
   // Send the user data and access token
