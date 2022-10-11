@@ -1,4 +1,4 @@
-import { number, object, string, TypeOf } from "zod";
+import { array, number, object, string, TypeOf } from "zod";
 
 import { EditorContentType } from "../models/editor-content.model";
 
@@ -54,6 +54,15 @@ export var deleteContentInCourseLessonSchema = object({
       "Add at must be greater than or equal to 0"
     ),
   }),
+});
+
+// TODO: add body schema and use it reorderCourseLessonContentsController
+export var reorderCourseLessonContentsSchema = object({
+  params: object({
+    courseId: string({ required_error: "Course id is required" }),
+    lessonId: string({ required_error: "Lesson id is required" }),
+  }),
+  body: object({}),
 });
 
 // ============================================

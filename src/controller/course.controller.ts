@@ -191,7 +191,7 @@ export async function deleteContentInCourseLesson(
 
   // Update content in the lesson
   var lesson = await getCourseLessonService({ _id: req.params.lessonId });
-  var { deleteAt, data } = req.body as any;
+  var { deleteAt } = req.body as any;
   if (deleteAt > lesson.contents.length || lesson.contents.length == 0) {
     throw new BaseApiError(400, "Update at is out of bounds");
   }
@@ -210,13 +210,64 @@ export async function deleteContentInCourseLesson(
     await course.save({ session });
     await session.commitTransaction();
 
-    let lessonL = await getCourseLessonService({ _id: req.params.lessonId });
-
     // Return the updated lesson contents
     return sendResponse(res, {
       status: 201,
       msg: "Lesson content deleted successfully",
-      data: { contents: lessonL.contents },
+      data: { contents: lesson.contents },
+    });
+  } catch (error) {
+    logger.error(error);
+    await session.abortTransaction();
+    throw error;
+  }
+}
+
+export async function reorderCourseLessonContentsController(
+  req: Request,
+  res: Response
+) {
+  // Check if the course exists and the user is an instructor of this course
+  var user = req.user;
+  if (!user) throw new BaseApiError(404, "User not found");
+  var course = await getCourseService({ _id: req.params.courseId });
+  if (!course) throw new BaseApiError(404, "Course not found");
+  if (!course.instructors.includes(user._id)) {
+    throw new BaseApiError(403, "You don't have the required permissions");
+  }
+
+  // Check if the lesson exists and is part of the course
+  var exists = course.lessons.find(function checkLesson(lesson) {
+    return lesson._id.toString() == req.params.lessonId;
+  });
+  if (!exists) throw new BaseApiError(404, "Lesson not found");
+
+  // Update content in the lesson
+  var lesson = await getCourseLessonService({ _id: req.params.lessonId });
+  var { contents } = req.body;
+  if (contents.length != lesson.contents.length) {
+    throw new BaseApiError(400, "Invalid contents");
+  }
+  lesson.contents = contents;
+
+  // Update the course/lesson last edited on. Saving lesson and course together
+  var session = await startSession();
+  session.startTransaction();
+  try {
+    lesson.updateLastEditedOn();
+    course.updateLastEditedOn();
+
+    // Don't use Promise.all here because it cause the transaction to fail
+    // Error - Given transaction number does not match any in-progress transactions
+    await lesson.save({ session });
+    await course.save({ session });
+    await session.commitTransaction();
+
+    // Return the updated lesson contents
+    return sendResponse(res, {
+      status: 201,
+      msg: "Lesson contents reordered successfully",
+      data: { contents: lesson.contents },
     });
   } catch (error) {
     logger.error(error);
