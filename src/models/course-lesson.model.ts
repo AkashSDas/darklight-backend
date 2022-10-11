@@ -53,5 +53,5 @@ export var CourseLessonModel = getModelForClass(TCourseLessonClass, {
     toJSON: { virtuals: true },
     typeKey: "type",
   },
-  options: { allowMixed: Severity.ALLOW, customName: "courseLesson" },
+  options: { allowMixed: Severity.ALLOW, customName: "course-lesson" },
 });
