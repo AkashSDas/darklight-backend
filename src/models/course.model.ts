@@ -1,4 +1,4 @@
-import { SchemaTypes } from "mongoose";
+import { SchemaTypes, Types } from "mongoose";
 
 import { getModelForClass, prop, Severity } from "@typegoose/typegoose";
 
@@ -78,6 +78,16 @@ export class TCourseClass {
 
   @prop({ type: SchemaTypes.Array, required: true, default: [] })
   faqs: TFaqClass[];
+
+  // ===============================
+  // Virtuals
+  // ===============================
+
+  _id!: Types.ObjectId;
+  /** Get transformed MongoDB `_id` */
+  get id() {
+    return this._id.toHexString();
+  }
 }
 
 export var CourseModel = getModelForClass(TCourseClass, {
