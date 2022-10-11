@@ -1,16 +1,15 @@
 import { Router } from "express";
 
-import { addLessonToCourseController, createCourseController } from "../controller/course.controller";
+import { addContentToCourseLesson, addLessonToCourseController, createCourseController } from "../controller/course.controller";
 import { validateResource } from "../middlewares/validate-resource";
 import verifyAuth from "../middlewares/verify-auth";
 import { handleMiddlewarelError } from "../utils/handle-async";
 import { sendErrorResponse } from "../utils/handle-error";
-import { addLessonToCourseSchema } from "../zod-schema/course.schema";
+import { addContentToCourseLessonSchema, addLessonToCourseSchema } from "../zod-schema/course.schema";
 
 export var router = Router();
 
 // Course
-
 router.post(
   "/",
   handleMiddlewarelError(verifyAuth),
@@ -19,11 +18,19 @@ router.post(
 );
 
 // Lesson
-
 router.post(
   "/:courseId",
   validateResource(addLessonToCourseSchema),
   handleMiddlewarelError(verifyAuth),
   handleMiddlewarelError(addLessonToCourseController),
+  sendErrorResponse
+);
+
+// Content
+router.post(
+  "/:courseId/:lessonId",
+  validateResource(addContentToCourseLessonSchema),
+  handleMiddlewarelError(verifyAuth),
+  handleMiddlewarelError(addContentToCourseLesson),
   sendErrorResponse
 );
