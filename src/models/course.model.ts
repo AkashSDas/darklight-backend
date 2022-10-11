@@ -1,6 +1,6 @@
 import { SchemaTypes, Types } from "mongoose";
 
-import { getModelForClass, prop, Severity } from "@typegoose/typegoose";
+import { getModelForClass, prop, Ref, Severity } from "@typegoose/typegoose";
 
 import { TCourseLessonClass } from "./course-lesson.model";
 import { TImageClass } from "./image.model";
@@ -53,8 +53,13 @@ export class TCourseClass {
   })
   stage: CourseLifecycleStage;
 
-  @prop({ type: SchemaTypes.Array, required: true, default: [] })
-  instructors: TUserClass[];
+  @prop({
+    type: SchemaTypes.Array,
+    ref: () => TUserClass,
+    required: true,
+    default: [],
+  })
+  instructors: Ref<TUserClass>[];
 
   @prop({ type: SchemaTypes.Number, min: 0, required: true, default: 0 })
   price: number;
