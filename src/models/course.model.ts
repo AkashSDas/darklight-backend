@@ -78,8 +78,13 @@ export class TCourseClass {
   @prop({ type: () => TImageClass })
   coverImage: TImageClass;
 
-  @prop({ type: SchemaTypes.Array, required: true, default: [] })
-  lessons: TCourseLessonClass[];
+  @prop({
+    ref: () => TCourseLessonClass,
+    type: SchemaTypes.Array,
+    required: true,
+    default: [],
+  })
+  lessons: Ref<TCourseLessonClass>[];
 
   @prop({ type: SchemaTypes.Array, required: true, default: [] })
   faqs: TFaqClass[];
