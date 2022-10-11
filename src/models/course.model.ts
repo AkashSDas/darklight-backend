@@ -90,6 +90,14 @@ export class TCourseClass {
   faqs: TFaqClass[];
 
   // ===============================
+  // Methods
+  // ===============================
+
+  updateLastEditedOn() {
+    this.lastEditedOn = new Date(Date.now());
+  }
+
+  // ===============================
   // Virtuals
   // ===============================
 
