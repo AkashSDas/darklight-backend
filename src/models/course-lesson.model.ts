@@ -3,7 +3,7 @@ import { SchemaTypes, Types } from "mongoose";
 import { getModelForClass, prop, Severity } from "@typegoose/typegoose";
 
 import { TAttachmentClass } from "./attachment.model";
-import { TEditorContentClass } from "./editor-content.model";
+import { EditorContentType, TEditorContentClass } from "./editor-content.model";
 import { TQnaClass } from "./qna.model";
 import { TVideoClass } from "./video.model";
 
@@ -35,6 +35,30 @@ export class TCourseLessonClass {
 
   @prop({ type: () => SchemaTypes.Array, required: true, default: [] })
   attachments: TAttachmentClass[];
+
+  // ===============================
+  // Methods
+  // ===============================
+
+  /** Add content at `addAt` position in the lesson's contents array */
+  addContent(
+    type: EditorContentType,
+    addAt: number,
+    data?: { [key: string]: any }
+  ) {
+    var content = new TEditorContentClass();
+    content.type = type;
+    if (data) {
+      content.data = Object.keys(data).map(function filterContentData(key) {
+        return { key, value: data[key] };
+      });
+    }
+    this.contents.splice(addAt, 0, content);
+  }
+
+  updateLastEditedOn() {
+    this.lastEditedOn = new Date(Date.now());
+  }
 
   // ===============================
   // Virtuals
