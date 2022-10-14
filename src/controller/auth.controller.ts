@@ -2,12 +2,26 @@ import crypto from "crypto";
 import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 
-import { createUserService, deleteUserService, getUserService, getUserWithNotSelectedFields, updateUserService } from "../services/user.service";
+import {
+  createUserService,
+  deleteUserService,
+  getUserService,
+  getUserWithNotSelectedFields,
+  updateUserService,
+} from "../services/user.service";
 import { sendResponse } from "../utils/client-response";
 import { BaseApiError } from "../utils/handle-error";
 import logger from "../utils/logger";
 import { EmailOptions, sendEmail } from "../utils/send-email";
-import { ZodCompleteOAuthSignup, ZodConfirmEmailVerification, ZodForgotPassword, ZodGetEmailVerificationLink, ZodLogin, ZodResetPassword, ZodSignup } from "../zod-schema/auth.schema";
+import {
+  ZodCompleteOAuthSignup,
+  ZodConfirmEmailVerification,
+  ZodForgotPassword,
+  ZodGetEmailVerificationLink,
+  ZodLogin,
+  ZodResetPassword,
+  ZodSignup,
+} from "../zod-schema/auth.schema";
 
 export async function signupController(
   req: Request<{}, {}, ZodSignup["body"]>,
@@ -272,7 +286,7 @@ export async function cancelOAuthController(req: Request, res: Response) {
     });
 }
 
-export async function completeOAuthSignupController(
+export async function completeOAuthController(
   req: Request<{}, {}, ZodCompleteOAuthSignup["body"]>,
   res: Response
 ) {
