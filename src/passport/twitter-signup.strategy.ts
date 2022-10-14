@@ -6,6 +6,7 @@ import { OAuthProvider } from "../models/user.model";
 import { createUserService, getUserService } from "../services/user.service";
 import { Strategies } from "./";
 
+// TODO: if the user exists and is not linked to twitter, link the accounts
 async function verify(
   req: Request,
   accessToken: string,
