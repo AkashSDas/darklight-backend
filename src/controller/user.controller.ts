@@ -37,3 +37,11 @@ export async function checkUserAvailableController(
 
   return sendResponse(res, { status: 400, msg: "Invalid field" });
 }
+
+export async function getLoggedInUserController(req: Request, res: Response) {
+  return sendResponse(res, {
+    status: 200,
+    msg: "User details",
+    data: { user: req.user },
+  });
+}
