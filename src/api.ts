@@ -10,6 +10,14 @@ import { sendResponse } from "./utils/client-response";
 
 if (process.env.NODE_ENV != "production") config();
 
+// OAuth Passport Strategies. Should come after the config() call.
+import "./passport/google-signup.strategy";
+import "./passport/google-login.strategy";
+import "./passport/facebook-signup.strategy";
+import "./passport/facebook-login.strategy";
+import "./passport/twitter-signup.strategy";
+import "./passport/twitter-login.strategy";
+
 /** Express app */
 export var app = express();
 

@@ -20,12 +20,19 @@ async function verify(
 
   // Signup the user
   try {
+    let isEmailVerified =
+      typeof email_verified == "boolean"
+        ? email_verified
+        : email_verified == "true"
+        ? true
+        : false;
+
     let newUser = await createUserService({
       fullName: profile.displayName,
       email: email,
-      isEmailVerified: email_verified == "true" ? true : false,
+      isEmailVerified,
       profileImage: { id: "google", URL: picture },
-      isActive: email_verified == "true" ? true : false,
+      isActive: isEmailVerified,
       oauthProviders: [{ id: sub, provider: OAuthProvider.GOOGLE }],
     });
     return next(null, newUser);
