@@ -162,12 +162,14 @@ export async function loginController(
   res.cookie("refreshToken", refreshToken, {
     httpOnly: true, // so that the cookie cannot be accessed/modified in the frontend
     // secure: process.env.NODE_ENV == "production", // cookie will only be sent in a HTTPS connection in production
+    secure: true,
     sameSite: "none", // to allow the cookie to be sent to the server in cross-site requests
     // maxAge: 2 * 60 * 1000, // 2 minutes, should match the expiresIn of the refresh token
     maxAge: 1 * 24 * 60 * 60 * 1000, // 1 days
   });
 
   // Send the user data and access token
+  user.passwordDigest = undefined;
   return sendResponse(res, {
     status: 200,
     msg: "Logged in successfully",
@@ -271,6 +273,7 @@ export async function logoutController(req: Request, res: Response) {
   res.clearCookie("refreshToken", {
     httpOnly: true,
     // secure: process.env.NODE_ENV == "production",
+    secure: true,
     sameSite: "none",
   });
   return sendResponse(res, { status: 200, msg: "Logged out successfully" });
