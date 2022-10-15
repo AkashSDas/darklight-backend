@@ -1,4 +1,4 @@
-import passport, { deserializeUser } from "passport";
+import passport from "passport";
 import { Profile, Strategy, VerifyCallback } from "passport-google-oauth20";
 
 import { getUserService } from "../services/user.service";
@@ -13,8 +13,9 @@ async function verify(
   var { email } = profile._json;
   var user = await getUserService({ email });
 
-  // Check if the signup process is remaining
-  if (user && (!user.username || !user.email || !user.fullName)) {
+  // If the user doesn't exists OR the user exists but the signup process isn't
+  // completed yet
+  if (!user || (user && !user.username) || !user.email || !user.fullName) {
     return next(null, null);
   }
 

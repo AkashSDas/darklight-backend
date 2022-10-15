@@ -17,8 +17,9 @@ async function verify(
     oauthProviders: { $elemMatch: { id, provider: OAuthProvider.FACEBOOK } },
   });
 
-  // Check if the signup process is remaining
-  if (user && (!user.username || !user.email || !user.fullName)) {
+  // If the user doesn't exists OR the user exists but the signup process isn't
+  // completed yet
+  if (!user || (user && !user.username) || !user.email || !user.fullName) {
     return next(null, null);
   }
 

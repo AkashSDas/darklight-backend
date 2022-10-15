@@ -118,7 +118,7 @@ router
     passport.authenticate(Strategies.GoogleLogin, {
       failureMessage: "Cannot login to Google, Please try again",
       successRedirect: process.env.OAUTH_LOGIN_SUCCESS_REDIRECT_URL,
-      failureRedirect: `${process.env.OAUTH_LOGIN_FAILURE_REDIRECT_URL}?info=signup-incomplete`,
+      failureRedirect: `${process.env.OAUTH_LOGIN_FAILURE_REDIRECT_URL}?info=signup-invalid`,
     }),
     function loginWithGoogleRedirect() {}
   )
@@ -132,7 +132,7 @@ router
     passport.authenticate(Strategies.FacebookLogin, {
       failureMessage: "Cannot login to Facebook, Please try again",
       successRedirect: process.env.OAUTH_LOGIN_SUCCESS_REDIRECT_URL,
-      failureRedirect: `${process.env.OAUTH_LOGIN_FAILURE_REDIRECT_URL}?info=signup-incomplete`,
+      failureRedirect: `${process.env.OAUTH_LOGIN_FAILURE_REDIRECT_URL}?info=signup-invalid`,
     }),
     function loginWithFacebookRedirect() {}
   )
@@ -146,7 +146,7 @@ router
     passport.authenticate(Strategies.TwitterLogin, {
       failureMessage: "Cannot login to Twitter, Please try again",
       successRedirect: process.env.OAUTH_LOGIN_SUCCESS_REDIRECT_URL,
-      failureRedirect: `${process.env.OAUTH_LOGIN_FAILURE_REDIRECT_URL}?info=signup-incomplete`,
+      failureRedirect: `${process.env.OAUTH_LOGIN_FAILURE_REDIRECT_URL}?info=signup-invalid`,
     }),
     function loginWithTwitterRedirect() {}
   );

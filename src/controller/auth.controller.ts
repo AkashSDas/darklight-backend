@@ -269,14 +269,20 @@ export async function resetPasswordController(
 }
 
 export async function logoutController(req: Request, res: Response) {
-  if (!req.cookies?.refreshToken) throw new BaseApiError(401, "Unauthorized");
-  res.clearCookie("refreshToken", {
-    httpOnly: true,
-    // secure: process.env.NODE_ENV == "production",
-    secure: true,
-    sameSite: "none",
-  });
-  return sendResponse(res, { status: 200, msg: "Logged out successfully" });
+  if (req.cookies?.refreshToken) {
+    res.clearCookie("refreshToken", {
+      httpOnly: true,
+      // secure: process.env.NODE_ENV == "production",
+      secure: true,
+      sameSite: "none",
+    });
+  } else if (req.logOut) {
+    req.logOut(function successfulOAuthLogout() {
+      return sendResponse(res, { status: 200, msg: "OAuth signup cancelled" });
+    });
+  } else {
+    return sendResponse(res, { status: 200, msg: "Logged out successfully" });
+  }
 }
 
 export async function cancelOAuthController(req: Request, res: Response) {
