@@ -277,12 +277,9 @@ export async function logoutController(req: Request, res: Response) {
       sameSite: "none",
     });
   } else if (req.logOut) {
-    req.logOut(function successfulOAuthLogout() {
-      return sendResponse(res, { status: 200, msg: "OAuth signup cancelled" });
-    });
-  } else {
-    return sendResponse(res, { status: 200, msg: "Logged out successfully" });
+    req.logOut(function successfulOAuthLogout() {});
   }
+  return sendResponse(res, { status: 200, msg: "Logged out successfully" });
 }
 
 export async function cancelOAuthController(req: Request, res: Response) {
