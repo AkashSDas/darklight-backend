@@ -97,12 +97,7 @@ export class TCourseClass {
   @prop({ type: () => TImageClass })
   coverImage: TImageClass;
 
-  @prop({
-    ref: () => TCourseModuleClass,
-    type: SchemaTypes.Array,
-    required: true,
-    default: [],
-  })
+  @prop({ type: SchemaTypes.Array, required: true, default: [] })
   modules: TCourseModuleClass[];
 
   @prop({ type: SchemaTypes.Array, required: true, default: [] })
