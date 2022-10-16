@@ -30,17 +30,30 @@ class TFaqClass {
   @prop({ type: SchemaTypes.String, maxlength: 120, minlength: 3, trim: true })
   question: string;
 
-  @prop({ type: SchemaTypes.String, maxlength: 120, minlength: 3, trim: true })
+  @prop({ type: SchemaTypes.String, maxlength: 526, minlength: 3, trim: true })
   answer: string;
+}
+
+class TCourseModuleClass {
+  @prop({ type: SchemaTypes.String, maxlength: 1, minlength: 1, trim: true })
+  emoji?: string;
+
+  @prop({
+    ref: () => TCourseLessonClass,
+    type: SchemaTypes.Array,
+    required: true,
+    default: [],
+  })
+  lessons: Ref<TCourseLessonClass>[];
 }
 
 /** Course Typegoose Class */
 export class TCourseClass {
   @prop({ type: SchemaTypes.String, maxlength: 120, minlength: 6 })
-  title: string;
+  title?: string;
 
   @prop({ type: SchemaTypes.String, maxlength: 120, minlength: 6 })
-  description: string;
+  description?: string;
 
   @prop({ type: SchemaTypes.Date, default: Date.now, required: true })
   lastEditedOn: Date;
@@ -61,8 +74,8 @@ export class TCourseClass {
   })
   instructors: Ref<TUserClass>[];
 
-  @prop({ type: SchemaTypes.Number, min: 0, required: true, default: 0 })
-  price: number;
+  @prop({ type: SchemaTypes.Number, min: 0, required: true })
+  price?: number;
 
   @prop({
     type: SchemaTypes.String,
@@ -79,12 +92,12 @@ export class TCourseClass {
   coverImage: TImageClass;
 
   @prop({
-    ref: () => TCourseLessonClass,
+    ref: () => TCourseModuleClass,
     type: SchemaTypes.Array,
     required: true,
     default: [],
   })
-  lessons: Ref<TCourseLessonClass>[];
+  modules: TCourseModuleClass[];
 
   @prop({ type: SchemaTypes.Array, required: true, default: [] })
   faqs: TFaqClass[];
