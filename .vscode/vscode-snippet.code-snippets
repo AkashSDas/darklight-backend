@@ -6,14 +6,20 @@
   // $1, $2 for tab stops, $0 for the final cursor position, and ${1:label}, ${2:another} for placeholders.
   // Placeholders with the same ids are connected.
   // Example:
-  "Print to console": {
+  "Create async controller": {
     "scope": "typescript",
     "prefix": "ctrl",
     "body": [
-      "export async function name$1Controller(req: Request, res: Response) {",
+      "export async function ${1:name}Controller(req: Request, res: Response) {",
       "$2",
       "}"
     ],
     "description": "Async express controller"
+  },
+  "Create zod schema": {
+    "scope": "typescript",
+    "prefix": "szod",
+    "body": ["export var ${1:name}Schema = object({", "  $2", "});"],
+    "description": "Zod schema"
   }
 }

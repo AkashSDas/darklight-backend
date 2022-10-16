@@ -1,14 +1,11 @@
 import { Request, Response } from "express";
-import { startSession } from "mongoose";
 
 import { UserRole } from "../models/user.model";
-import { getCourseLessonService } from "../services/course-lesson.service";
 import { createCourseService, getCourseService } from "../services/course.service";
 import { sendResponse } from "../utils/client-response";
 import { validateCourseAndOwnership } from "../utils/course";
 import { BaseApiError } from "../utils/handle-error";
-import logger from "../utils/logger";
-import { ZodAddModuleToCourse, ZodDeleteCourseModule, ZodUpdateCourseModule } from "../zod-schema/course.schema";
+import { ZodAddModuleToCourse, ZodDeleteCourseModule, ZodReorderLessonsInModule, ZodUpdateCourseModule } from "../zod-schema/course.schema";
 
 export async function createCourseController(req: Request, res: Response) {
   // Check if the user exists
@@ -107,55 +104,29 @@ export async function deleteCourseModuleController(
   });
 }
 
-export async function reorderCourseLessonContentsController(
-  req: Request,
+export async function reorderLessonsInModuleController(
+  req: Request<
+    ZodReorderLessonsInModule["params"],
+    {},
+    ZodReorderLessonsInModule["body"]
+  >,
   res: Response
 ) {
-  // Check if the course exists and the user is an instructor of this course
-  var user = req.user;
-  if (!user) throw new BaseApiError(404, "User not found");
-  var course = await getCourseService({ _id: req.params.courseId });
-  if (!course) throw new BaseApiError(404, "Course not found");
-  if (!course.instructors.includes(user._id)) {
-    throw new BaseApiError(403, "You don't have the required permissions");
-  }
+  var course = await validateCourseAndOwnership(req, res);
 
-  // Check if the lesson exists and is part of the course
-  var exists = course.lessons.find(function checkLesson(lesson) {
-    return lesson._id.toString() == req.params.lessonId;
-  });
-  if (!exists) throw new BaseApiError(404, "Lesson not found");
-
-  // Update content in the lesson
-  var lesson = await getCourseLessonService({ _id: req.params.lessonId });
-  var { contents } = req.body;
-  if (contents.length != lesson.contents.length) {
-    throw new BaseApiError(400, "Invalid contents");
-  }
-  lesson.contents = contents;
-
-  // Update the course/lesson last edited on. Saving lesson and course together
-  var session = await startSession();
-  session.startTransaction();
+  // Update course module
   try {
-    lesson.updateLastEditedOn();
-    course.updateLastEditedOn();
-
-    // Don't use Promise.all here because it cause the transaction to fail
-    // Error - Given transaction number does not match any in-progress transactions
-    await lesson.save({ session });
-    await course.save({ session });
-    await session.commitTransaction();
-
-    // Return the updated lesson contents
-    return sendResponse(res, {
-      status: 201,
-      msg: "Lesson contents reordered successfully",
-      data: { contents: lesson.contents },
-    });
-  } catch (error) {
-    logger.error(error);
-    await session.abortTransaction();
-    throw error;
+    course.updateModule(req.params.moduleId, { lessons: req.body.lessons });
+  } catch (err) {
+    if (err instanceof BaseApiError) throw err;
   }
+
+  course.updateLastEditedOn();
+  await course.save();
+
+  return sendResponse(res, {
+    status: 200,
+    msg: "Lessons reordered successfully",
+    data: { modules: course.modules },
+  });
 }

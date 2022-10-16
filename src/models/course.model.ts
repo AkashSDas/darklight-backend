@@ -151,10 +151,16 @@ export class TCourseClass {
     // Check if all the lessons are valid MongoDB ids OR not
     // TODO: can also check if all of them exists OR not
     if (payload.lessons) {
+      // Check if all the lessons are valid MongoDB ids OR not
       for (let lessonId of payload.lessons) {
         if (!Types.ObjectId.isValid(lessonId)) {
           throw new BaseApiError(400, "Invalid lesson id");
         }
+      }
+
+      // For reordering, check if newly ordered lessons have same length as old lessons
+      if (payload.lessons.length != module.lessons.length) {
+        throw new BaseApiError(400, "Invalid lesson ids");
       }
     }
 
