@@ -1,6 +1,6 @@
 import { Router } from "express";
 
-import { addContentToCourseLesson, addLessonToCourseController, addModuleToCourseController, createCourseController, deleteContentInCourseLesson, reorderCourseLessonContentsController, updateContentInCourseLesson } from "../controller/course.controller";
+import { addContentToCourseLesson, addLessonToCourseController, addModuleToCourseController, createCourseController, deleteContentInCourseLesson, reorderCourseLessonContentsController, updateContentInCourseLesson, updateCourseModuleController } from "../controller/course.controller";
 import { validateResource } from "../middlewares/validate-resource";
 import verifyAuth from "../middlewares/verify-auth";
 import { handleMiddlewarelError } from "../utils/handle-async";
@@ -18,13 +18,20 @@ router.post(
 );
 
 // Module
-router.post(
-  "/:courseId",
-  validateResource(addModuleToCourseSchema),
-  handleMiddlewarelError(verifyAuth),
-  handleMiddlewarelError(addModuleToCourseController),
-  sendErrorResponse
-);
+router
+  .post(
+    "/:courseId",
+    validateResource(addModuleToCourseSchema),
+    handleMiddlewarelError(verifyAuth),
+    handleMiddlewarelError(addModuleToCourseController),
+    sendErrorResponse
+  )
+  .put(
+    "/:courseId/:moduleId",
+    handleMiddlewarelError(verifyAuth),
+    handleMiddlewarelError(updateCourseModuleController),
+    sendErrorResponse
+  );
 
 // Content
 router

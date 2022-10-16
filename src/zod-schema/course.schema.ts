@@ -12,6 +12,21 @@ export var addModuleToCourseSchema = object({
   }),
 });
 
+export var updateCourseModuleSchema = object({
+  params: object({
+    courseId: string({ required_error: "Course id is required" }),
+    moduleId: string({ required_error: "Module id is required" }),
+  }),
+  body: object({
+    emoji: string().min(0).max(1),
+    title: string().min(0).max(120),
+    description: string().min(0).max(120),
+    lessons: string().array(),
+  }),
+});
+
+// ============================================
+
 export var addContentToCourseLessonSchema = object({
   params: object({
     courseId: string({ required_error: "Course id is required" }),
@@ -70,6 +85,8 @@ export var reorderCourseLessonContentsSchema = object({
 // ============================================
 
 export type ZodAddModuleToCourse = TypeOf<typeof addModuleToCourseSchema>;
+export type ZodUpdateCourseModule = TypeOf<typeof updateCourseModuleSchema>;
+
 export type ZodAddContentToCourseLesson = TypeOf<
   typeof addContentToCourseLessonSchema
 >;

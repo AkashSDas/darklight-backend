@@ -3,6 +3,7 @@ import { nanoid } from "nanoid";
 
 import { getModelForClass, prop, Ref, Severity } from "@typegoose/typegoose";
 
+import { BaseApiError } from "../utils/handle-error";
 import { TCourseLessonClass } from "./course-lesson.model";
 import { TImageClass } from "./image.model";
 import { TUserClass } from "./user.model";
@@ -122,6 +123,44 @@ export class TCourseClass {
 
   addModule() {
     this.modules.push({ id: nanoid(24), lessons: [] });
+  }
+
+  updateModule(
+    moduleId: string,
+    payload: {
+      emoji?: string;
+      title?: string;
+      description?: string;
+      lessons?: string[];
+    }
+  ) {
+    var index = this.modules.findIndex(function findModule(m) {
+      console.log(m.id, moduleId);
+      return m.id == moduleId;
+    });
+    if (index == -1) throw new BaseApiError(400, "Module not found");
+    var module = this.modules[index];
+
+    // Make removed fields as undefined
+    for (let key in payload) {
+      if (payload[key] == null) {
+        if (key == "lessons") payload[key] = [];
+        else payload[key] = undefined;
+      }
+    }
+
+    // Check if all the lessons are valid MongoDB ids OR not
+    // TODO: can also check if all of them exists OR not
+    if (payload.lessons) {
+      for (let lessonId of payload.lessons) {
+        if (!Types.ObjectId.isValid(lessonId)) {
+          throw new BaseApiError(400, "Invalid lesson id");
+        }
+      }
+    }
+
+    module = { ...module, ...payload } as any;
+    this.modules[index] = module;
   }
 
   // ===============================

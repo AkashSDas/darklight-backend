@@ -5,9 +5,10 @@ import { UserRole } from "../models/user.model";
 import { getCourseLessonService } from "../services/course-lesson.service";
 import { createCourseService, getCourseService } from "../services/course.service";
 import { sendResponse } from "../utils/client-response";
+import { validateCourseAndOwnership } from "../utils/course";
 import { BaseApiError } from "../utils/handle-error";
 import logger from "../utils/logger";
-import { ZodAddContentToCourseLesson, ZodAddModuleToCourse, ZodDeleteContentInCourseLesson, ZodUpdateContentInCourseLesson } from "../zod-schema/course.schema";
+import { ZodAddContentToCourseLesson, ZodAddModuleToCourse, ZodDeleteContentInCourseLesson, ZodUpdateContentInCourseLesson, ZodUpdateCourseModule } from "../zod-schema/course.schema";
 
 export async function createCourseController(req: Request, res: Response) {
   // Check if the user exists
@@ -49,6 +50,37 @@ export async function addModuleToCourseController(
   return sendResponse(res, {
     status: 201,
     msg: "Lesson added to course successfully",
+    data: { module: course.modules[course.modules.length - 1] },
+  });
+}
+
+/**
+ * This will handle single field update for a module. This means that it
+ * will also handle reordering of the modules.
+ */
+export async function updateCourseModuleController(
+  req: Request<
+    ZodUpdateCourseModule["params"],
+    {},
+    ZodUpdateCourseModule["body"]
+  >,
+  res: Response
+) {
+  var course = await validateCourseAndOwnership(req, res);
+
+  // Update course module
+  try {
+    course.updateModule(req.params.moduleId, { ...req.body });
+  } catch (err) {
+    if (err instanceof BaseApiError) throw err;
+  }
+
+  course.updateLastEditedOn();
+  await course.save();
+
+  return sendResponse(res, {
+    status: 200,
+    msg: "Course module updated successfully",
     data: { module: course.modules[course.modules.length - 1] },
   });
 }
