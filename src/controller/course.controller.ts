@@ -107,8 +107,6 @@ export async function deleteCourseModuleController(
   });
 }
 
-// ===================
-
 export async function addContentToCourseLesson(
   req: Request<
     ZodAddContentToCourseLesson["params"],

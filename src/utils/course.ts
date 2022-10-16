@@ -15,3 +15,13 @@ export async function validateCourseAndOwnership(req: Request, res: Response) {
 
   return course;
 }
+
+export async function validateCourseLesson(req: Request, res: Response) {
+  var course = await validateCourseAndOwnership(req, res);
+
+  // Check if the moudle and lesson exists
+  // var { moudleId, lessonId } = req.params;
+  // var moduleIdx = course
+
+  return course;
+}
