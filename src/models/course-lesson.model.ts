@@ -60,6 +60,7 @@ export class TCourseLessonClass {
     this.lastEditedOn = new Date(Date.now());
   }
 
+  // TODO: check content type
   updateContent(updateAt: number, data: any) {
     // It wasn't saving the updated contents list when I was directly updating
     // the content data like this

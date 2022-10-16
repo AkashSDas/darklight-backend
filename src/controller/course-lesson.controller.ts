@@ -4,7 +4,7 @@ import { createCourseLessonService, getCourseLessonService } from "../services/c
 import { sendResponse } from "../utils/client-response";
 import { batchUpdateCourseAndLessonEditTime, validateCourseAndOwnership, validateCourseLesson } from "../utils/course";
 import { BaseApiError } from "../utils/handle-error";
-import { ZodAddContentInLesson, ZodCreateCourseLesson } from "../zod-schema/course-lesson.schema";
+import { ZodAddContentInLesson, ZodCreateCourseLesson, ZodUpdateContentInLesson } from "../zod-schema/course-lesson.schema";
 
 export async function createCourseLessonController(
   req: Request<ZodCreateCourseLesson["params"]>,
@@ -62,6 +62,33 @@ export async function addContentInLessonController(
     sendResponse(res, {
       status: 201,
       msg: "Content added to lesson successfully",
+      data: { contents: lesson.contents },
+    });
+  });
+}
+
+export async function updateContentInLessonController(
+  req: Request<
+    ZodUpdateContentInLesson["params"],
+    {},
+    ZodUpdateContentInLesson["body"]
+  >,
+  res: Response
+) {
+  var { course } = await validateCourseLesson(req, res);
+  var lesson = await getCourseLessonService({ _id: req.params.lessonId });
+  var { updateAt, data } = req.body as any;
+
+  // Check if trying to update at a valid index
+  if (updateAt >= lesson.contents.length) {
+    throw new BaseApiError(400, "Update at is out of bounds");
+  }
+
+  lesson.updateContent(updateAt, data);
+  await batchUpdateCourseAndLessonEditTime(lesson, course, function () {
+    sendResponse(res, {
+      status: 200,
+      msg: "Content updated in lesson successfully",
       data: { contents: lesson.contents },
     });
   });

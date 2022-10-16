@@ -32,9 +32,26 @@ export var addContentInLessonSchema = object({
   }),
 });
 
+export var updateContentInLessonSchema = object({
+  params: object({
+    courseId: string({ required_error: "Course id is required" }),
+    moduleId: string({ required_error: "Module id is required" }),
+    lessonId: string({ required_error: "Lesson id is required" }),
+  }),
+  body: object({
+    updateAt: number({ required_error: "Add at is required" }).min(
+      0,
+      "Add at must be greater than or equal to 0"
+    ),
+  }),
+});
+
 // ============================================
 // Types
 // ============================================
 
 export type ZodCreateCourseLesson = TypeOf<typeof createCourseLessonSchema>;
 export type ZodAddContentInLesson = TypeOf<typeof addContentInLessonSchema>;
+export type ZodUpdateContentInLesson = TypeOf<
+  typeof updateContentInLessonSchema
+>;
