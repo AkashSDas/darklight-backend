@@ -1,4 +1,5 @@
 import { SchemaTypes, Types } from "mongoose";
+import { nanoid } from "nanoid";
 
 import { getModelForClass, prop, Ref, Severity } from "@typegoose/typegoose";
 
@@ -35,6 +36,14 @@ class TFaqClass {
 }
 
 class TCourseModuleClass {
+  @prop({
+    default: () => nanoid(24),
+    type: SchemaTypes.String,
+    immutable: true,
+    required: true,
+  })
+  id: string;
+
   @prop({ type: SchemaTypes.String, maxlength: 1, trim: true })
   emoji?: string;
 
@@ -112,7 +121,7 @@ export class TCourseClass {
   }
 
   addModule() {
-    this.modules.push({ lessons: [] });
+    this.modules.push({ id: nanoid(24), lessons: [] });
   }
 
   // ===============================
