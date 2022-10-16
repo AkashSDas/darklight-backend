@@ -2,26 +2,13 @@ import crypto from "crypto";
 import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 
-import {
-  createUserService,
-  deleteUserService,
-  getUserService,
-  getUserWithNotSelectedFields,
-  updateUserService,
-} from "../services/user.service";
+import { UserModel } from "../models/user.model";
+import { createUserService, deleteUserService, getUserService, getUserWithNotSelectedFields, updateUserService } from "../services/user.service";
 import { sendResponse } from "../utils/client-response";
 import { BaseApiError } from "../utils/handle-error";
 import logger from "../utils/logger";
 import { EmailOptions, sendEmail } from "../utils/send-email";
-import {
-  ZodCompleteOAuthSignup,
-  ZodConfirmEmailVerification,
-  ZodForgotPassword,
-  ZodGetEmailVerificationLink,
-  ZodLogin,
-  ZodResetPassword,
-  ZodSignup,
-} from "../zod-schema/auth.schema";
+import { ZodCompleteOAuthSignup, ZodConfirmEmailVerification, ZodForgotPassword, ZodGetEmailVerificationLink, ZodLogin, ZodResetPassword, ZodSignup } from "../zod-schema/auth.schema";
 
 export async function signupController(
   req: Request<{}, {}, ZodSignup["body"]>,
@@ -150,6 +137,15 @@ export async function loginController(
   var { email, password } = req.body;
   var user = await getUserWithNotSelectedFields({ email }, "+passwordDigest");
   if (!user) throw new BaseApiError(404, "User not found");
+
+  // If the user doesn't have a password field, meaning user has signed up using OAuth
+  // and is using that email to login, then throw error
+  if (!user.passwordDigest) {
+    throw new BaseApiError(
+      400,
+      "You're using wrong login method, please use OAuth"
+    );
+  }
 
   // Verify the password
   if (!(await user.verifyPassword(password))) {
