@@ -49,6 +49,7 @@ export async function addModuleToCourseController(
   return sendResponse(res, {
     status: 201,
     msg: "Lesson added to course successfully",
+    data: { module: course.modules[course.modules.length - 1] },
   });
 }
 

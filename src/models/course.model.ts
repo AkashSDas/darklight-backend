@@ -112,7 +112,7 @@ export class TCourseClass {
   }
 
   addModule() {
-    this.modules.push(new TCourseModuleClass());
+    this.modules.push({ lessons: [] });
   }
 
   // ===============================
