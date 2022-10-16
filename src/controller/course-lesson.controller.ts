@@ -1,10 +1,10 @@
 import { Request, Response } from "express";
 
-import { createCourseLessonService } from "../services/course-lesson.service";
+import { createCourseLessonService, getCourseLessonService } from "../services/course-lesson.service";
 import { sendResponse } from "../utils/client-response";
-import { validateCourseAndOwnership } from "../utils/course";
+import { batchUpdateCourseAndLessonEditTime, validateCourseAndOwnership, validateCourseLesson } from "../utils/course";
 import { BaseApiError } from "../utils/handle-error";
-import { ZodCreateCourseLesson } from "../zod-schema/course-lesson.schema";
+import { ZodAddContentInLesson, ZodCreateCourseLesson } from "../zod-schema/course-lesson.schema";
 
 export async function createCourseLessonController(
   req: Request<ZodCreateCourseLesson["params"]>,
@@ -30,5 +30,39 @@ export async function createCourseLessonController(
     status: 201,
     msg: "Lesson created successfully",
     data: { lesson },
+  });
+}
+
+// =============================
+// Content related controllers
+// =============================
+
+// TODO: Test batch update
+export async function addContentInLessonController(
+  req: Request<
+    ZodAddContentInLesson["params"],
+    {},
+    ZodAddContentInLesson["body"]
+  >,
+  res: Response
+) {
+  var { course } = await validateCourseLesson(req, res);
+  var lesson = await getCourseLessonService({ _id: req.params.lessonId });
+  var { type, addAt, data } = req.body as any;
+
+  // Check if trying to content at a valid index. If adding a new
+  // content at the end, then addAt will be equal to the length of
+  // the lesson contents
+  if (addAt > lesson.contents.length) {
+    throw new BaseApiError(400, "Add at is out of bounds");
+  }
+
+  lesson.addContent(type, addAt, data);
+  await batchUpdateCourseAndLessonEditTime(lesson, course, function () {
+    sendResponse(res, {
+      status: 201,
+      msg: "Content added to lesson successfully",
+      data: { contents: lesson.contents },
+    });
   });
 }

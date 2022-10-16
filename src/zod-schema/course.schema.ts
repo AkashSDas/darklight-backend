@@ -33,25 +33,6 @@ export var deleteCourseModuleSchema = object({
 });
 
 // ============================================
-
-export var addContentToCourseLessonSchema = object({
-  params: object({
-    courseId: string({ required_error: "Course id is required" }),
-    lessonId: string({ required_error: "Lesson id is required" }),
-  }),
-  body: object({
-    type: string({ required_error: "Type is required" }).refine(
-      function checkContentType(value) {
-        return Object.values(EditorContentType).includes(value as any);
-      }
-    ),
-    addAt: number({ required_error: "Add at is required" }).min(
-      0,
-      "Add at must be greater than or equal to 0"
-    ),
-  }),
-});
-
 export var updateContentInCourseLessonSchema = object({
   params: object({
     courseId: string({ required_error: "Course id is required" }),
@@ -95,9 +76,6 @@ export type ZodAddModuleToCourse = TypeOf<typeof addModuleToCourseSchema>;
 export type ZodUpdateCourseModule = TypeOf<typeof updateCourseModuleSchema>;
 export type ZodDeleteCourseModule = TypeOf<typeof deleteCourseModuleSchema>;
 
-export type ZodAddContentToCourseLesson = TypeOf<
-  typeof addContentToCourseLessonSchema
->;
 export type ZodUpdateContentInCourseLesson = TypeOf<
   typeof updateContentInCourseLessonSchema
 >;

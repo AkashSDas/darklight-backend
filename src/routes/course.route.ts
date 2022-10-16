@@ -1,13 +1,13 @@
 import { Router } from "express";
 
-import { createCourseLessonController } from "../controller/course-lesson.controller";
-import { addContentToCourseLesson, addModuleToCourseController, createCourseController, deleteContentInCourseLesson, deleteCourseModuleController, reorderCourseLessonContentsController, updateContentInCourseLesson, updateCourseModuleController } from "../controller/course.controller";
+import { addContentInLessonController, createCourseLessonController } from "../controller/course-lesson.controller";
+import { addModuleToCourseController, createCourseController, deleteContentInCourseLesson, deleteCourseModuleController, reorderCourseLessonContentsController, updateContentInCourseLesson, updateCourseModuleController } from "../controller/course.controller";
 import { validateResource } from "../middlewares/validate-resource";
 import verifyAuth from "../middlewares/verify-auth";
 import { handleMiddlewarelError } from "../utils/handle-async";
 import { sendErrorResponse } from "../utils/handle-error";
-import { createCourseLessonSchema } from "../zod-schema/course-lesson.schema";
-import { addContentToCourseLessonSchema, addModuleToCourseSchema, deleteContentInCourseLessonSchema, deleteCourseModuleSchema, updateContentInCourseLessonSchema } from "../zod-schema/course.schema";
+import { addContentInLessonSchema, createCourseLessonSchema } from "../zod-schema/course-lesson.schema";
+import { addModuleToCourseSchema, deleteContentInCourseLessonSchema, deleteCourseModuleSchema, updateContentInCourseLessonSchema } from "../zod-schema/course.schema";
 
 export var router = Router();
 
@@ -51,14 +51,15 @@ router.post(
 );
 
 // Content
+router.post(
+  "/:courseId/:moduleId/:lessonId",
+  validateResource(addContentInLessonSchema),
+  handleMiddlewarelError(verifyAuth),
+  handleMiddlewarelError(addContentInLessonController),
+  sendErrorResponse
+);
+
 router
-  .post(
-    "/:courseId/:lessonId",
-    validateResource(addContentToCourseLessonSchema),
-    handleMiddlewarelError(verifyAuth),
-    handleMiddlewarelError(addContentToCourseLesson),
-    sendErrorResponse
-  )
   .put(
     "/:courseId/:lessonId",
     validateResource(updateContentInCourseLessonSchema),
