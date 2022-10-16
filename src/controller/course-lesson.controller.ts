@@ -93,3 +93,26 @@ export async function updateContentInLessonController(
     });
   });
 }
+
+export async function deleteContentInLessonController(
+  req: Request<ZodUpdateContentInLesson["params"]>,
+  res: Response
+) {
+  var { course } = await validateCourseLesson(req, res);
+  var lesson = await getCourseLessonService({ _id: req.params.lessonId });
+  var { deleteAt } = req.body as any;
+
+  // Check if trying to delete at a valid index
+  if (deleteAt >= lesson.contents.length) {
+    throw new BaseApiError(400, "Delete at is out of bounds");
+  }
+
+  lesson.deleteContent(deleteAt);
+  await batchUpdateCourseAndLessonEditTime(lesson, course, function () {
+    sendResponse(res, {
+      status: 200,
+      msg: "Content deleted in lesson successfully",
+      data: { contents: lesson.contents },
+    });
+  });
+}

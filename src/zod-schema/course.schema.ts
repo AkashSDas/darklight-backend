@@ -1,6 +1,4 @@
-import { number, object, string, TypeOf } from "zod";
-
-import { EditorContentType } from "../models/editor-content.model";
+import { object, string, TypeOf } from "zod";
 
 // ============================================
 // Schemas
@@ -32,33 +30,6 @@ export var deleteCourseModuleSchema = object({
   }),
 });
 
-// ============================================
-export var updateContentInCourseLessonSchema = object({
-  params: object({
-    courseId: string({ required_error: "Course id is required" }),
-    lessonId: string({ required_error: "Lesson id is required" }),
-  }),
-  body: object({
-    updateAt: number({ required_error: "Add at is required" }).min(
-      0,
-      "Add at must be greater than or equal to 0"
-    ),
-  }),
-});
-
-export var deleteContentInCourseLessonSchema = object({
-  params: object({
-    courseId: string({ required_error: "Course id is required" }),
-    lessonId: string({ required_error: "Lesson id is required" }),
-  }),
-  body: object({
-    deleteAt: number({ required_error: "Add at is required" }).min(
-      0,
-      "Add at must be greater than or equal to 0"
-    ),
-  }),
-});
-
 // TODO: add body schema and use it reorderCourseLessonContentsController
 export var reorderCourseLessonContentsSchema = object({
   params: object({
@@ -75,10 +46,3 @@ export var reorderCourseLessonContentsSchema = object({
 export type ZodAddModuleToCourse = TypeOf<typeof addModuleToCourseSchema>;
 export type ZodUpdateCourseModule = TypeOf<typeof updateCourseModuleSchema>;
 export type ZodDeleteCourseModule = TypeOf<typeof deleteCourseModuleSchema>;
-
-export type ZodUpdateContentInCourseLesson = TypeOf<
-  typeof updateContentInCourseLessonSchema
->;
-export type ZodDeleteContentInCourseLesson = TypeOf<
-  typeof deleteContentInCourseLessonSchema
->;

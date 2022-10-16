@@ -1,12 +1,12 @@
 import { Router } from "express";
 
-import { addContentInLessonController, createCourseLessonController, updateContentInLessonController } from "../controller/course-lesson.controller";
+import { addContentInLessonController, createCourseLessonController, deleteContentInLessonController, updateContentInLessonController } from "../controller/course-lesson.controller";
 import { addModuleToCourseController, createCourseController, deleteContentInCourseLesson, deleteCourseModuleController, reorderCourseLessonContentsController, updateContentInCourseLesson, updateCourseModuleController } from "../controller/course.controller";
 import { validateResource } from "../middlewares/validate-resource";
 import verifyAuth from "../middlewares/verify-auth";
 import { handleMiddlewarelError } from "../utils/handle-async";
 import { sendErrorResponse } from "../utils/handle-error";
-import { addContentInLessonSchema, createCourseLessonSchema, updateContentInLessonSchema } from "../zod-schema/course-lesson.schema";
+import { addContentInLessonSchema, createCourseLessonSchema, deleteContentInLessonSchema, updateContentInLessonSchema } from "../zod-schema/course-lesson.schema";
 import { addModuleToCourseSchema, deleteContentInCourseLessonSchema, deleteCourseModuleSchema, updateContentInCourseLessonSchema } from "../zod-schema/course.schema";
 
 export var router = Router();
@@ -65,6 +65,12 @@ router
     handleMiddlewarelError(verifyAuth),
     handleMiddlewarelError(updateContentInLessonController),
     sendErrorResponse
+  )
+  .delete(
+    "/:courseId/:moduleId/:lessonId",
+    validateResource(deleteContentInLessonSchema),
+    handleMiddlewarelError(verifyAuth),
+    handleMiddlewarelError(deleteContentInLessonController)
   );
 
 router
