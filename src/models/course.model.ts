@@ -35,8 +35,14 @@ class TFaqClass {
 }
 
 class TCourseModuleClass {
-  @prop({ type: SchemaTypes.String, maxlength: 1, minlength: 1, trim: true })
+  @prop({ type: SchemaTypes.String, maxlength: 1, trim: true })
   emoji?: string;
+
+  @prop({ type: SchemaTypes.String, maxlength: 120, trim: true })
+  title?: string;
+
+  @prop({ type: SchemaTypes.String, maxlength: 120, trim: true })
+  description?: string;
 
   @prop({
     ref: () => TCourseLessonClass,
@@ -74,7 +80,7 @@ export class TCourseClass {
   })
   instructors: Ref<TUserClass>[];
 
-  @prop({ type: SchemaTypes.Number, min: 0, required: true })
+  @prop({ type: SchemaTypes.Number, min: 0 })
   price?: number;
 
   @prop({
@@ -108,6 +114,10 @@ export class TCourseClass {
 
   updateLastEditedOn() {
     this.lastEditedOn = new Date(Date.now());
+  }
+
+  addModule() {
+    this.modules.push(new TCourseModuleClass());
   }
 
   // ===============================

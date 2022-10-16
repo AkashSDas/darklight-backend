@@ -7,7 +7,7 @@ import { createCourseService, getCourseService } from "../services/course.servic
 import { sendResponse } from "../utils/client-response";
 import { BaseApiError } from "../utils/handle-error";
 import logger from "../utils/logger";
-import { ZodAddContentToCourseLesson, ZodAddLessonToCourse, ZodDeleteContentInCourseLesson, ZodUpdateContentInCourseLesson } from "../zod-schema/course.schema";
+import { ZodAddContentToCourseLesson, ZodAddModuleToCourse, ZodDeleteContentInCourseLesson, ZodUpdateContentInCourseLesson } from "../zod-schema/course.schema";
 
 export async function createCourseController(req: Request, res: Response) {
   // Check if the user exists
@@ -28,8 +28,8 @@ export async function createCourseController(req: Request, res: Response) {
   });
 }
 
-export async function addLessonToCourseController(
-  req: Request<ZodAddLessonToCourse["params"]>,
+export async function addModuleToCourseController(
+  req: Request<ZodAddModuleToCourse["params"]>,
   res: Response
 ) {
   // Check if the course exists and the user is an instructor of this course
@@ -41,16 +41,15 @@ export async function addLessonToCourseController(
     throw new BaseApiError(403, "You don't have the required permissions");
   }
 
-  // Create a lesson and add it to the course
-  var lesson = await createCourseLessonService({});
-  course.lessons.push(lesson._id);
+  // Create a module and add it to the course
+  course.addModule();
   course.updateLastEditedOn();
   await course.save();
 
   return sendResponse(res, {
     status: 201,
     msg: "Lesson added to course successfully",
-    data: { lesson },
+    data: { module: course.modules[-1] },
   });
 }
 

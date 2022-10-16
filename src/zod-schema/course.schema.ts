@@ -1,4 +1,4 @@
-import { array, number, object, string, TypeOf } from "zod";
+import { number, object, string, TypeOf } from "zod";
 
 import { EditorContentType } from "../models/editor-content.model";
 
@@ -6,7 +6,7 @@ import { EditorContentType } from "../models/editor-content.model";
 // Schemas
 // ============================================
 
-export var addLessonToCourseSchema = object({
+export var addModuleToCourseSchema = object({
   params: object({
     courseId: string({ required_error: "Course id is required" }),
   }),
@@ -69,7 +69,7 @@ export var reorderCourseLessonContentsSchema = object({
 // Types
 // ============================================
 
-export type ZodAddLessonToCourse = TypeOf<typeof addLessonToCourseSchema>;
+export type ZodAddModuleToCourse = TypeOf<typeof addModuleToCourseSchema>;
 export type ZodAddContentToCourseLesson = TypeOf<
   typeof addContentToCourseLessonSchema
 >;
