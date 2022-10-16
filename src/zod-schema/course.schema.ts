@@ -25,6 +25,13 @@ export var updateCourseModuleSchema = object({
   }),
 });
 
+export var deleteCourseModuleSchema = object({
+  params: object({
+    courseId: string({ required_error: "Course id is required" }),
+    moduleId: string({ required_error: "Module id is required" }),
+  }),
+});
+
 // ============================================
 
 export var addContentToCourseLessonSchema = object({
@@ -86,6 +93,7 @@ export var reorderCourseLessonContentsSchema = object({
 
 export type ZodAddModuleToCourse = TypeOf<typeof addModuleToCourseSchema>;
 export type ZodUpdateCourseModule = TypeOf<typeof updateCourseModuleSchema>;
+export type ZodDeleteCourseModule = TypeOf<typeof deleteCourseModuleSchema>;
 
 export type ZodAddContentToCourseLesson = TypeOf<
   typeof addContentToCourseLessonSchema

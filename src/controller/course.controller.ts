@@ -8,7 +8,7 @@ import { sendResponse } from "../utils/client-response";
 import { validateCourseAndOwnership } from "../utils/course";
 import { BaseApiError } from "../utils/handle-error";
 import logger from "../utils/logger";
-import { ZodAddContentToCourseLesson, ZodAddModuleToCourse, ZodDeleteContentInCourseLesson, ZodUpdateContentInCourseLesson, ZodUpdateCourseModule } from "../zod-schema/course.schema";
+import { ZodAddContentToCourseLesson, ZodAddModuleToCourse, ZodDeleteContentInCourseLesson, ZodDeleteCourseModule, ZodUpdateContentInCourseLesson, ZodUpdateCourseModule } from "../zod-schema/course.schema";
 
 export async function createCourseController(req: Request, res: Response) {
   // Check if the user exists
@@ -82,6 +82,28 @@ export async function updateCourseModuleController(
     status: 200,
     msg: "Course module updated successfully",
     data: { module: course.modules[course.modules.length - 1] },
+  });
+}
+
+export async function deleteCourseModuleController(
+  req: Request<ZodDeleteCourseModule["params"]>,
+  res: Response
+) {
+  var course = await validateCourseAndOwnership(req, res);
+
+  // Update course module
+  try {
+    course.deleteModule(req.params.moduleId);
+  } catch (err) {
+    if (err instanceof BaseApiError) throw err;
+  }
+
+  course.updateLastEditedOn();
+  await course.save();
+
+  return sendResponse(res, {
+    status: 200,
+    msg: "Course module deleted successfully",
   });
 }
 

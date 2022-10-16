@@ -135,7 +135,6 @@ export class TCourseClass {
     }
   ) {
     var index = this.modules.findIndex(function findModule(m) {
-      console.log(m.id, moduleId);
       return m.id == moduleId;
     });
     if (index == -1) throw new BaseApiError(400, "Module not found");
@@ -161,6 +160,16 @@ export class TCourseClass {
 
     module = { ...module, ...payload } as any;
     this.modules[index] = module;
+  }
+
+  // TODO: delete all the lessons of this module
+  deleteModule(moduleId: string) {
+    var deleteAt = this.modules.findIndex(function findModule(m) {
+      console.log(m.id, moduleId);
+      return m.id == moduleId;
+    });
+    if (deleteAt == -1) throw new BaseApiError(400, "Module not found");
+    this.modules.splice(deleteAt, 1);
   }
 
   // ===============================
