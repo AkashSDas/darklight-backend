@@ -4,6 +4,12 @@ import { object, string, TypeOf } from "zod";
 // Schemas
 // ============================================
 
+export var getCourseSchema = object({
+  params: object({
+    courseId: string({ required_error: "Course id is required" }),
+  }),
+});
+
 export var addModuleToCourseSchema = object({
   params: object({
     courseId: string({ required_error: "Course id is required" }),
@@ -44,6 +50,7 @@ export var reorderLessonsInModuleSchema = object({
 // Types
 // ============================================
 
+export type ZodGetCourse = TypeOf<typeof getCourseSchema>;
 export type ZodAddModuleToCourse = TypeOf<typeof addModuleToCourseSchema>;
 export type ZodUpdateCourseModule = TypeOf<typeof updateCourseModuleSchema>;
 export type ZodDeleteCourseModule = TypeOf<typeof deleteCourseModuleSchema>;

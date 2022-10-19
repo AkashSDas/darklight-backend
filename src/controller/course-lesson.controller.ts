@@ -1,10 +1,12 @@
 import { Request, Response } from "express";
 
 import { createCourseLessonService, getCourseLessonService } from "../services/course-lesson.service";
+import { getCourseService } from "../services/course.service";
 import { sendResponse } from "../utils/client-response";
 import { batchUpdateCourseAndLessonEditTime, validateCourseAndOwnership, validateCourseLesson } from "../utils/course";
 import { BaseApiError } from "../utils/handle-error";
 import { ZodAddContentInLesson, ZodCreateCourseLesson, ZodUpdateContentInLesson } from "../zod-schema/course-lesson.schema";
+import { ZodGetCourse } from "../zod-schema/course.schema";
 
 export async function createCourseLessonController(
   req: Request<ZodCreateCourseLesson["params"]>,
@@ -30,6 +32,20 @@ export async function createCourseLessonController(
     status: 201,
     msg: "Lesson created successfully",
     data: { lesson },
+  });
+}
+
+export async function getCourseController(
+  req: Request<ZodGetCourse["params"]>,
+  res: Response
+) {
+  var course = await getCourseService({ _id: req.params.courseId });
+  if (!course) throw new BaseApiError(404, "Course not found");
+
+  return sendResponse(res, {
+    status: 200,
+    msg: "Course fetched successfully",
+    data: { course },
   });
 }
 
