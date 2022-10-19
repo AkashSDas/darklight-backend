@@ -121,11 +121,7 @@ export async function confirmEmailVerificationController(
   user.emailVerificationTokenExpiresAt = undefined;
   await user.save({ validateModifiedOnly: true });
 
-  return sendResponse(res, {
-    status: 200,
-    msg: "Email verified successfully",
-    data: { user },
-  });
+  res.redirect(301, `${process.env.FRONTEND_BASE_URL}`);
 }
 
 export async function loginController(

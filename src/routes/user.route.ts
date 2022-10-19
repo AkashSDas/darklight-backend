@@ -1,9 +1,6 @@
 import { Router } from "express";
 
-import {
-  checkUserAvailableController,
-  getLoggedInUserController,
-} from "../controller/user.controller";
+import { checkUserAvailableController, getLoggedInUserController, instructorSignupController } from "../controller/user.controller";
 import { validateResource } from "../middlewares/validate-resource";
 import verifyAuth from "../middlewares/verify-auth";
 import { handleMiddlewarelError } from "../utils/handle-async";
@@ -24,5 +21,12 @@ router.get(
   "/me",
   handleMiddlewarelError(verifyAuth),
   handleMiddlewarelError(getLoggedInUserController),
+  sendErrorResponse
+);
+
+router.post(
+  "/instructor-signup",
+  handleMiddlewarelError(verifyAuth),
+  handleMiddlewarelError(instructorSignupController),
   sendErrorResponse
 );
