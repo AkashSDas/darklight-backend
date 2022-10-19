@@ -109,7 +109,7 @@ export class TUserClass {
   @prop({
     type: () => SchemaTypes.Array,
     required: [true, "Roles are required"],
-    default: ["user"],
+    default: [UserRole.STUDENT],
   })
   roles: UserRole[];
 
