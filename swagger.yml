@@ -1,0 +1,58 @@
+openapi: 3.0.0
+info:
+  title: 🌗 DarkLight API
+  description: RESTful API back-end for the DarkLight project
+  version: 1.0.0
+
+servers:
+  - url: 'http://localhost:{port}/api'
+    description: Local server
+    variables:
+      port:
+        default: '5002'
+        enum:
+          - '5002'
+          - '8000'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    User:
+      type: object
+      properties:
+        _id:
+          type: string
+          format: uuid
+        username:
+          type: string
+        email:
+          type: string
+      required:
+        - _id
+        - username
+        - email
+    AccessToken:
+      type: object
+      properties:
+        token:
+          type: string
+          format: JWT
+      required:
+        - token
+
+
+paths:
+  /auth/access-token:
+    get:
+      summary: Get a new access token depending on the refresh token
+      responses:
+        '200':
+          description: New access token generated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessToken'

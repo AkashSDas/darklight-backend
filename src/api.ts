@@ -6,6 +6,9 @@ import expressSession from "express-session";
 import morgan from "morgan";
 import passport from "passport";
 
+import swaggerUI from "swagger-ui-express";
+import YAML from "yamljs";
+
 import { sendResponse } from "./utils/client-response";
 
 if (process.env.NODE_ENV != "production") config();
@@ -39,6 +42,9 @@ app.use(
   })
 );
 app.use(passport.session());
+
+var swaggerDoc = YAML.load("./swagger.yml");
+app.use("/api-docs", swaggerUI.serve, swaggerUI.setup(swaggerDoc));
 
 // ==============================
 // Routes
