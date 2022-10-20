@@ -1,8 +1,34 @@
-import { object, string, TypeOf } from "zod";
+import { number, object, string, TypeOf } from "zod";
+
+import { CourseCourseDifficulty } from "../models/course.model";
 
 // ============================================
 // Schemas
 // ============================================
+
+export var updateCourseSchema = object({
+  params: object({
+    courseId: string({ required_error: "Course id is required" }),
+  }),
+  body: object({
+    title: string(),
+    description: string(),
+    stage: string().refine(
+      function zodValidateCourseStage(value) {
+        return value == "draft" || value == "published";
+      },
+      { message: "Invalid course stage", path: ["stage"] }
+    ),
+    price: number().min(0),
+    difficulty: string().refine(
+      function zodValidateCourseDifficulty(value) {
+        return Object.values(CourseCourseDifficulty).includes(value as any);
+      },
+      { message: "Invalid course difficulty", path: ["difficulty"] }
+    ),
+    tags: string().array(),
+  }),
+});
 
 export var getCourseSchema = object({
   params: object({
@@ -50,6 +76,7 @@ export var reorderLessonsInModuleSchema = object({
 // Types
 // ============================================
 
+export type ZodUpdateCourse = TypeOf<typeof updateCourseSchema>;
 export type ZodGetCourse = TypeOf<typeof getCourseSchema>;
 export type ZodAddModuleToCourse = TypeOf<typeof addModuleToCourseSchema>;
 export type ZodUpdateCourseModule = TypeOf<typeof updateCourseModuleSchema>;

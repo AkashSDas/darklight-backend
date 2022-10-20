@@ -35,6 +35,7 @@ export async function createCourseLessonController(
   });
 }
 
+// TODO: move this to course.controller.ts
 export async function getCourseController(
   req: Request<ZodGetCourse["params"]>,
   res: Response

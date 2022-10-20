@@ -5,7 +5,7 @@ import { createCourseService, getCourseService } from "../services/course.servic
 import { sendResponse } from "../utils/client-response";
 import { validateCourseAndOwnership } from "../utils/course";
 import { BaseApiError } from "../utils/handle-error";
-import { ZodAddModuleToCourse, ZodDeleteCourseModule, ZodReorderLessonsInModule, ZodUpdateCourseModule } from "../zod-schema/course.schema";
+import { ZodAddModuleToCourse, ZodDeleteCourseModule, ZodReorderLessonsInModule, ZodUpdateCourse, ZodUpdateCourseModule } from "../zod-schema/course.schema";
 
 export async function createCourseController(req: Request, res: Response) {
   // Check if the user exists
@@ -22,6 +22,29 @@ export async function createCourseController(req: Request, res: Response) {
   return sendResponse(res, {
     status: 201,
     msg: "Course created successfully",
+    data: { course },
+  });
+}
+
+export async function updateCourseInfoController(
+  req: Request<ZodUpdateCourse["params"], {}, ZodUpdateCourse["body"]>,
+  res: Response
+) {
+  var course = await validateCourseAndOwnership(req, res);
+  var { description, difficulty, price, stage, tags, title } = req.body;
+  if (description) course.description = description;
+  if (difficulty) course.difficulty = difficulty as any;
+  if (price) course.price = price;
+  if (stage) course.stage = stage as any;
+  if (tags) course.tags = tags;
+  if (title) course.title = title;
+
+  course.updateLastEditedOn();
+  await course.save();
+
+  return sendResponse(res, {
+    status: 200,
+    msg: "Course updated successfully",
     data: { course },
   });
 }

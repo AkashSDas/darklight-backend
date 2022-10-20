@@ -1,7 +1,7 @@
 import { Router } from "express";
 
 import { addContentInLessonController, createCourseLessonController, deleteContentInLessonController, getCourseController, updateContentInLessonController } from "../controller/course-lesson.controller";
-import { addModuleToCourseController, createCourseController, deleteCourseModuleController, reorderLessonsInModuleController, updateCourseModuleController } from "../controller/course.controller";
+import { addModuleToCourseController, createCourseController, deleteCourseModuleController, reorderLessonsInModuleController, updateCourseInfoController, updateCourseModuleController } from "../controller/course.controller";
 import { validateResource } from "../middlewares/validate-resource";
 import verifyAuth from "../middlewares/verify-auth";
 import { handleMiddlewarelError } from "../utils/handle-async";
@@ -23,6 +23,12 @@ router
     "/:courseId",
     validateResource(getCourseSchema),
     handleMiddlewarelError(getCourseController),
+    sendErrorResponse
+  )
+  .put(
+    "/:courseId/info",
+    handleMiddlewarelError(verifyAuth),
+    handleMiddlewarelError(updateCourseInfoController),
     sendErrorResponse
   );
 
