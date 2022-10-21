@@ -1,11 +1,20 @@
 import { Request, Response } from "express";
 
 import { UserRole } from "../models/user.model";
-import { createCourseService, getCourseService } from "../services/course.service";
+import {
+  createCourseService,
+  getCourseService,
+} from "../services/course.service";
 import { sendResponse } from "../utils/client-response";
 import { validateCourseAndOwnership } from "../utils/course";
 import { BaseApiError } from "../utils/handle-error";
-import { ZodAddModuleToCourse, ZodDeleteCourseModule, ZodReorderLessonsInModule, ZodUpdateCourse, ZodUpdateCourseModule } from "../zod-schema/course.schema";
+import {
+  ZodAddModuleToCourse,
+  ZodDeleteCourseModule,
+  ZodReorderLessonsInModule,
+  ZodUpdateCourse,
+  ZodUpdateCourseModule,
+} from "../zod-schema/course.schema";
 
 export async function createCourseController(req: Request, res: Response) {
   // Check if the user exists
@@ -71,6 +80,22 @@ export async function addModuleToCourseController(
     status: 201,
     msg: "Lesson added to course successfully",
     data: { module: course.modules[course.modules.length - 1] },
+  });
+}
+
+export async function getCourseMoudelController(req: Request, res: Response) {
+  // Check if the course exists and the user is an instructor of this course
+  var course = await getCourseService({ _id: req.params.courseId });
+  if (!course) throw new BaseApiError(404, "Course not found");
+
+  // Get the module
+  var module = course.modules.find((m) => m.id == req.params.moduleId);
+  if (!module) throw new BaseApiError(404, "Module not found");
+
+  return sendResponse(res, {
+    status: 200,
+    msg: "Module fetched successfully",
+    data: { module },
   });
 }
 
