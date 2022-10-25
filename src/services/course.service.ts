@@ -7,7 +7,16 @@ export async function createCourseService(course: Partial<TCourseClass>) {
 }
 
 export async function getCourseService(filter: FilterQuery<TCourseClass>) {
-  return await CourseModel.findOne(filter, "-__v").exec();
+  return await CourseModel.findOne(filter, "-__v")
+    .populate({
+      path: "modules",
+      populate: {
+        path: "lessons",
+        model: "course-lesson",
+        select: "-contents -qna -attachments",
+      },
+    })
+    .exec();
 }
 
 export async function updateCourseService(
