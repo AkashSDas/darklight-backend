@@ -1,20 +1,11 @@
 import { Request, Response } from "express";
 
 import { UserRole } from "../models/user.model";
-import {
-  createCourseService,
-  getCourseService,
-} from "../services/course.service";
+import { createCourseService, getCourseService } from "../services/course.service";
 import { sendResponse } from "../utils/client-response";
 import { validateCourseAndOwnership } from "../utils/course";
 import { BaseApiError } from "../utils/handle-error";
-import {
-  ZodAddModuleToCourse,
-  ZodDeleteCourseModule,
-  ZodReorderLessonsInModule,
-  ZodUpdateCourse,
-  ZodUpdateCourseModule,
-} from "../zod-schema/course.schema";
+import { ZodAddModuleToCourse, ZodDeleteCourseModule, ZodReorderLessonsInModule, ZodUpdateCourse, ZodUpdateCourseModule } from "../zod-schema/course.schema";
 
 export async function createCourseController(req: Request, res: Response) {
   // Check if the user exists
@@ -175,6 +166,27 @@ export async function reorderLessonsInModuleController(
   return sendResponse(res, {
     status: 200,
     msg: "Lessons reordered successfully",
+    data: { modules: course.modules },
+  });
+}
+
+// TODO: add zod schema and validation
+export async function reorderModulesController(req: Request, res: Response) {
+  var course = await validateCourseAndOwnership(req, res);
+
+  // Update course module
+  try {
+    course.updateModules(req.body.modules);
+  } catch (err) {
+    if (err instanceof BaseApiError) throw err;
+  }
+
+  course.updateLastEditedOn();
+  await course.save();
+
+  return sendResponse(res, {
+    status: 200,
+    msg: "Modules reordered successfully",
     data: { modules: course.modules },
   });
 }

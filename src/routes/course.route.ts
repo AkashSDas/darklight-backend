@@ -1,37 +1,13 @@
 import { Router } from "express";
 
-import {
-  addContentInLessonController,
-  createCourseLessonController,
-  deleteContentInLessonController,
-  getCourseController,
-  updateContentInLessonController,
-} from "../controller/course-lesson.controller";
-import {
-  addModuleToCourseController,
-  createCourseController,
-  deleteCourseModuleController,
-  getCourseMoudelController,
-  reorderLessonsInModuleController,
-  updateCourseInfoController,
-  updateCourseModuleController,
-} from "../controller/course.controller";
+import { addContentInLessonController, createCourseLessonController, deleteContentInLessonController, getCourseController, updateContentInLessonController } from "../controller/course-lesson.controller";
+import { addModuleToCourseController, createCourseController, deleteCourseModuleController, getCourseMoudelController, reorderLessonsInModuleController, reorderModulesController, updateCourseInfoController, updateCourseModuleController } from "../controller/course.controller";
 import { validateResource } from "../middlewares/validate-resource";
 import verifyAuth from "../middlewares/verify-auth";
 import { handleMiddlewarelError } from "../utils/handle-async";
 import { sendErrorResponse } from "../utils/handle-error";
-import {
-  addContentInLessonSchema,
-  createCourseLessonSchema,
-  deleteContentInLessonSchema,
-  updateContentInLessonSchema,
-} from "../zod-schema/course-lesson.schema";
-import {
-  addModuleToCourseSchema,
-  deleteCourseModuleSchema,
-  getCourseSchema,
-  reorderLessonsInModuleSchema,
-} from "../zod-schema/course.schema";
+import { addContentInLessonSchema, createCourseLessonSchema, deleteContentInLessonSchema, updateContentInLessonSchema } from "../zod-schema/course-lesson.schema";
+import { addModuleToCourseSchema, deleteCourseModuleSchema, getCourseSchema, reorderLessonsInModuleSchema } from "../zod-schema/course.schema";
 
 export var router = Router();
 
@@ -53,6 +29,12 @@ router
     "/:courseId/info",
     handleMiddlewarelError(verifyAuth),
     handleMiddlewarelError(updateCourseInfoController),
+    sendErrorResponse
+  )
+  .put(
+    "/:courseId/reorder",
+    handleMiddlewarelError(verifyAuth),
+    handleMiddlewarelError(reorderModulesController),
     sendErrorResponse
   );
 

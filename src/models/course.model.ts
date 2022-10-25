@@ -65,10 +65,10 @@ class TCourseModuleClass {
 
 /** Course Typegoose Class */
 export class TCourseClass {
-  @prop({ type: SchemaTypes.String, maxlength: 120, minlength: 6 })
+  @prop({ type: SchemaTypes.String })
   title?: string;
 
-  @prop({ type: SchemaTypes.String, maxlength: 120, minlength: 6 })
+  @prop({ type: SchemaTypes.String })
   description?: string;
 
   @prop({ type: SchemaTypes.Date, default: Date.now, required: true })
@@ -176,6 +176,11 @@ export class TCourseClass {
     });
     if (deleteAt == -1) throw new BaseApiError(400, "Module not found");
     this.modules.splice(deleteAt, 1);
+  }
+
+  updateModules(payload: TCourseModuleClass[]) {
+    console.log(payload);
+    this.modules = payload;
   }
 
   // ===============================
