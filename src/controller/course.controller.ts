@@ -106,7 +106,7 @@ export async function updateCourseModuleController(
 
   // Update course module
   try {
-    course.updateModule(req.params.moduleId, { ...req.body });
+    var module = course.updateModule(req.params.moduleId, { ...req.body });
   } catch (err) {
     if (err instanceof BaseApiError) throw err;
   }
@@ -117,7 +117,7 @@ export async function updateCourseModuleController(
   return sendResponse(res, {
     status: 200,
     msg: "Course module updated successfully",
-    data: { module: course.modules[course.modules.length - 1] },
+    data: { module },
   });
 }
 

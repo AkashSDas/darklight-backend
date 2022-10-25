@@ -166,6 +166,7 @@ export class TCourseClass {
 
     module = { ...module, ...payload } as any;
     this.modules[index] = module;
+    return module;
   }
 
   // TODO: delete all the lessons of this module
