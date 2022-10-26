@@ -50,6 +50,18 @@ export async function getCourseController(
   });
 }
 
+// TODO: add zod schema
+export async function getLessonController(req: Request, res: Response) {
+  var lesson = await getCourseLessonService({ _id: req.params.lessonId });
+  if (!lesson) throw new BaseApiError(404, "Lesson not found");
+
+  sendResponse(res, {
+    status: 201,
+    msg: "Content added to lesson successfully",
+    data: { lesson },
+  });
+}
+
 // =============================
 // Content related controllers
 // =============================

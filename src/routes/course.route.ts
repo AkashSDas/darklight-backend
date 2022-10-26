@@ -1,6 +1,6 @@
 import { Router } from "express";
 
-import { addContentInLessonController, createCourseLessonController, deleteContentInLessonController, getCourseController, updateContentInLessonController } from "../controller/course-lesson.controller";
+import { addContentInLessonController, createCourseLessonController, deleteContentInLessonController, getCourseController, getLessonController, updateContentInLessonController } from "../controller/course-lesson.controller";
 import { addModuleToCourseController, createCourseController, deleteCourseModuleController, getCourseMoudelController, reorderLessonsInModuleController, reorderModulesController, updateCourseInfoController, updateCourseModuleController } from "../controller/course.controller";
 import { validateResource } from "../middlewares/validate-resource";
 import verifyAuth from "../middlewares/verify-auth";
@@ -74,12 +74,19 @@ router
   );
 
 // Lesson
-router.post(
-  "/:courseId/:moduleId",
-  validateResource(createCourseLessonSchema),
-  handleMiddlewarelError(verifyAuth),
-  handleMiddlewarelError(createCourseLessonController)
-);
+router
+  .post(
+    "/:courseId/:moduleId",
+    validateResource(createCourseLessonSchema),
+    handleMiddlewarelError(verifyAuth),
+    handleMiddlewarelError(createCourseLessonController),
+    sendErrorResponse
+  )
+  .get(
+    "/:courseId/:moduleId/:lessonId",
+    handleMiddlewarelError(getLessonController),
+    sendErrorResponse
+  );
 
 // Content
 router
