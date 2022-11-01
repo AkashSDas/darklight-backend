@@ -1,4 +1,4 @@
-import { object, string, TypeOf } from "zod";
+import { object, string, TypeOf, z } from "zod";
 
 import { zodUser } from "./";
 
@@ -6,11 +6,17 @@ import { zodUser } from "./";
 // Schemas
 // ============================================
 
-export var signupSchema = object({
-  body: object({
-    username: zodUser.username,
-    email: zodUser.email,
-    password: zodUser.password,
+export var signupSchema = z.object({
+  body: z.object({
+    username: z
+      .string({ required_error: "Required" })
+      .min(3, "Too short")
+      .max(120, "Too long"),
+    email: z.string({ required_error: "Required" }).email("Invalid"),
+    password: z
+      .string({ required_error: "Required" })
+      .min(6, "Too short")
+      .max(120, "Too long"),
   }),
 });
 
@@ -64,7 +70,8 @@ export var completeOAuthSignupSchema = object({
 // Types
 // ============================================
 
-export type ZodSignup = TypeOf<typeof signupSchema>;
+export type SignupSchema = z.infer<typeof signupSchema>;
+
 export type ZodGetEmailVerificationLink = TypeOf<
   typeof getEmailVerificationLinkSchema
 >;

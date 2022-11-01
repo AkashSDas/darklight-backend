@@ -7,47 +7,49 @@ import { sendResponse } from "../utils/client-response";
 import { BaseApiError } from "../utils/handle-error";
 import logger from "../utils/logger";
 import { EmailOptions, sendEmail } from "../utils/send-email";
-import { ZodCompleteOAuthSignup, ZodConfirmEmailVerification, ZodForgotPassword, ZodGetEmailVerificationLink, ZodLogin, ZodResetPassword, ZodSignup } from "../zod-schema/auth.schema";
+import * as z from "../zod-schema/auth.schema";
 
-export async function signupController(
-  req: Request<{}, {}, ZodSignup["body"]>,
-  res: Response
-) {
+// ========================
+// Types
+// ========================
+
+type SignupReq = Request<{}, {}, z.SignupSchema["body"]>;
+
+// ========================
+// Controllers
+// ========================
+
+export async function signupController(req: SignupReq, res: Response) {
+  // Creating new user
   var { username, email, password } = req.body;
   var user = await createUserService({
     username,
     email,
-    passwordDigest: password, // it will be converted to hash in `pre` Mongoose middleware
+    passwordDigest: password,
   });
 
-  // Send email verification link to user's email
+  // Send email verification mail
   var token = user.getEmailVerificationToken();
-  await user.save({ validateModifiedOnly: true }); // saving token info to DB
-
-  // Doing this after the user is saved to DB because if it is done above the passwordDigest will be undefined
-  // and it will give error in `pre` save hook (in the bcrypt.hash function) that
-  // Error: Illegal arguments: undefined, number (undefined is the passwordDigest)
-  user.passwordDigest = undefined; // remove the password digest from the response
-
-  // URL sent to the user for verifying user's email
-  var endpoint = `/api/auth/confirm-email/${token}`;
-  var confirmEmailURL = `${req.protocol}://${req.get("host")}${endpoint}`;
+  await user.save({ validateModifiedOnly: true });
+  user.passwordDigest = undefined; // rm pwd hash after updating user in the db
+  var url = `${req.protocol}://${req.get("host")}`;
+  url += `/api/auth/confirm-email/${token}`;
   var opts: EmailOptions = {
     to: user.email,
-    subject: "Confirm your email",
-    text: `Please click on the link to confirm your email: ${confirmEmailURL}`,
-    html: `Please click on the link to confirm your email: 🔗 <a href="${confirmEmailURL}">Link</a>`,
+    subject: "Verify your email",
+    text: `Please click on the link to confirm your email: ${url}`,
+    html: `Please click on the link to confirm your email: 🔗 <a href="${url}">Link</a>`,
   };
 
   try {
     await sendEmail(opts);
     return sendResponse(res, {
       status: 200,
-      msg: "Email sent successfully",
-      data: { user },
+      msg: "Email verification link sent",
+      data: user,
     });
   } catch (error) {
-    // If sending email fails then make emailVerificationToken and emailVerificationTokenExpiresAt undefined
+    // Resetting fields after failed email sending
     user.emailVerificationToken = undefined;
     user.emailVerificationTokenExpiresAt = undefined;
     await user.save({ validateModifiedOnly: true });
@@ -56,13 +58,13 @@ export async function signupController(
     return sendResponse(res, {
       status: 500,
       msg: "Failed to send email",
-      data: { user },
+      data: user,
     });
   }
 }
 
 export async function getEmailVerificationLinkController(
-  req: Request<{}, {}, ZodGetEmailVerificationLink["body"]>,
+  req: Request<{}, {}, z.ZodGetEmailVerificationLink["body"]>,
   res: Response
 ) {
   // Check if the user exists
@@ -100,7 +102,7 @@ export async function getEmailVerificationLinkController(
 }
 
 export async function confirmEmailVerificationController(
-  req: Request<ZodConfirmEmailVerification["params"]>,
+  req: Request<z.ZodConfirmEmailVerification["params"]>,
   res: Response
 ) {
   // Verify the token
@@ -123,7 +125,7 @@ export async function confirmEmailVerificationController(
 }
 
 export async function loginController(
-  req: Request<{}, {}, ZodLogin["body"]>,
+  req: Request<{}, {}, z.ZodLogin["body"]>,
   res: Response
 ) {
   // Check if the user exists. Also get passwordDigest too as it will be
@@ -202,7 +204,7 @@ export async function getNewAccessTokenController(req: Request, res: Response) {
 
 // TODO: set the endpoint to the front-end's password reset URL
 export async function forgotPasswordController(
-  req: Request<{}, {}, ZodForgotPassword["body"]>,
+  req: Request<{}, {}, z.ZodForgotPassword["body"]>,
   res: Response
 ) {
   // Chech if the user exists
@@ -236,7 +238,7 @@ export async function forgotPasswordController(
 }
 
 export async function resetPasswordController(
-  req: Request<ZodResetPassword["params"], {}, ZodResetPassword["body"]>,
+  req: Request<z.ZodResetPassword["params"], {}, z.ZodResetPassword["body"]>,
   res: Response
 ) {
   // Check the token
@@ -284,7 +286,7 @@ export async function cancelOAuthController(req: Request, res: Response) {
 }
 
 export async function completeOAuthController(
-  req: Request<{}, {}, ZodCompleteOAuthSignup["body"]>,
+  req: Request<{}, {}, z.ZodCompleteOAuthSignup["body"]>,
   res: Response
 ) {
   var { username, email, fullName } = req.body;
