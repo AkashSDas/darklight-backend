@@ -1,33 +1,13 @@
 import { Router } from "express";
 import passport from "passport";
 
-import {
-  cancelOAuthController,
-  completeOAuthController,
-  confirmEmailVerificationController,
-  forgotPasswordController,
-  getEmailVerificationLinkController,
-  getNewAccessTokenController,
-  loginController,
-  logoutController,
-  resetPasswordController,
-  signupController,
-  testAuthController,
-} from "../controller/auth.controller";
+import { cancelOAuthController, completeOAuthController, confirmEmailVerificationController, forgotPasswordController, getEmailVerificationLinkController, getNewAccessTokenController, loginController, logoutController, resetPasswordController, signupController, testAuthController } from "../controller/auth.controller";
 import { validateResource } from "../middlewares/validate-resource";
 import verifyAuth from "../middlewares/verify-auth";
 import { Strategies } from "../passport";
 import { handleMiddlewarelError } from "../utils/handle-async";
 import { sendErrorResponse } from "../utils/handle-error";
-import {
-  completeOAuthSignupSchema,
-  confirmEmailVerificationSchema,
-  forgotPasswordSchema,
-  getEmailVerificationLinkSchema,
-  loginSchema,
-  resetPasswordSchema,
-  signupSchema,
-} from "../zod-schema/auth.schema";
+import { completeOAuthSchema, confirmEmailVerificationSchema, forgotPasswordSchema, getEmailVerificationLinkSchema, loginSchema, resetPasswordSchema, signupSchema } from "../zod-schema/auth.schema";
 
 export var router = Router();
 
@@ -198,7 +178,7 @@ router
   )
   .post(
     "/complete-oauth",
-    validateResource(completeOAuthSignupSchema),
+    validateResource(completeOAuthSchema),
     handleMiddlewarelError(verifyAuth),
     handleMiddlewarelError(completeOAuthController),
     sendErrorResponse

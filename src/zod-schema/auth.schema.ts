@@ -20,6 +20,10 @@ export var signupSchema = z.object({
   }),
 });
 
+export var completeOAuthSchema = z.object({
+  body: object({ username: zodUser.username, email: zodUser.email }),
+});
+
 export var getEmailVerificationLinkSchema = object({
   body: object({ email: zodUser.email }),
 });
@@ -58,19 +62,12 @@ export var resetPasswordSchema = object({
   ),
 });
 
-export var completeOAuthSignupSchema = object({
-  body: object({
-    fullName: zodUser.fullName,
-    username: zodUser.username,
-    email: zodUser.email,
-  }),
-});
-
 // ============================================
 // Types
 // ============================================
 
 export type SignupSchema = z.infer<typeof signupSchema>;
+export type CompleteOAuthSchema = z.infer<typeof completeOAuthSchema>;
 
 export type ZodGetEmailVerificationLink = TypeOf<
   typeof getEmailVerificationLinkSchema
@@ -81,4 +78,3 @@ export type ZodConfirmEmailVerification = TypeOf<
 export type ZodLogin = TypeOf<typeof loginSchema>;
 export type ZodForgotPassword = TypeOf<typeof forgotPasswordSchema>;
 export type ZodResetPassword = TypeOf<typeof resetPasswordSchema>;
-export type ZodCompleteOAuthSignup = TypeOf<typeof completeOAuthSignupSchema>;

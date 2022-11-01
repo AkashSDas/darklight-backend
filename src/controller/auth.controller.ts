@@ -12,16 +12,13 @@ import { userDataToSend } from "../utils/user";
 import * as z from "../zod-schema/auth.schema";
 
 // ========================
-// Types
-// ========================
-
-type SignupReq = Request<{}, {}, z.SignupSchema["body"]>;
-
-// ========================
 // Controllers
 // ========================
 
-export async function signupController(req: SignupReq, res: Response) {
+export async function signupController(
+  req: Request<{}, {}, z.SignupSchema["body"]>,
+  res: Response
+) {
   // Creating new user
   var { username, email, password } = req.body;
   var user = await createUserService({
@@ -68,6 +65,27 @@ export async function signupController(req: SignupReq, res: Response) {
       data: { user: userDataToSend(user), accessToken },
     });
   }
+}
+
+export async function cancelOAuthController(req: Request, res: Response) {
+  if (!req.user) return sendResponse(res, { status: 401, msg: "Unauthorized" });
+
+  await deleteUserService({ _id: req.user?._id });
+  if (req.logOut) {
+    // OAuth logout
+    req.logOut(function logout() {
+      return sendResponse(res, { status: 200, msg: "Signup cancelled" });
+    });
+  }
+}
+
+export async function completeOAuthController(
+  req: Request<{}, {}, z.CompleteOAuthSchema["body"]>,
+  res: Response
+) {
+  var { username, email } = req.body;
+  await updateUserService({ _id: req.user?._id }, { username, email });
+  return sendResponse(res, { status: 200, msg: "Signup completed" });
 }
 
 export async function getEmailVerificationLinkController(
@@ -280,27 +298,4 @@ export async function logoutController(req: Request, res: Response) {
     req.logOut(function successfulOAuthLogout() {});
   }
   return sendResponse(res, { status: 200, msg: "Logged out successfully" });
-}
-
-export async function cancelOAuthController(req: Request, res: Response) {
-  if (!req.user) return sendResponse(res, { status: 401, msg: "Unauthorized" });
-
-  await deleteUserService({ _id: req.user?._id });
-  req.logOut &&
-    req.logOut(function successfulOAuthLogout() {
-      return sendResponse(res, { status: 200, msg: "OAuth signup cancelled" });
-    });
-}
-
-export async function completeOAuthController(
-  req: Request<{}, {}, z.ZodCompleteOAuthSignup["body"]>,
-  res: Response
-) {
-  var { username, email, fullName } = req.body;
-  await updateUserService(
-    { _id: req.user?._id },
-    { username, email, fullName }
-  );
-
-  return sendResponse(res, { status: 200, msg: "OAuth signup completed" });
 }
