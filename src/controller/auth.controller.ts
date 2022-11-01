@@ -2,7 +2,6 @@ import crypto from "crypto";
 import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 
-import { UserModel } from "../models/user.model";
 import { createUserService, deleteUserService, getUserService, getUserWithNotSelectedFields, updateUserService } from "../services/user.service";
 import { sendResponse } from "../utils/client-response";
 import { BaseApiError } from "../utils/handle-error";
@@ -14,9 +13,8 @@ export async function signupController(
   req: Request<{}, {}, ZodSignup["body"]>,
   res: Response
 ) {
-  var { fullName, username, email, password } = req.body;
+  var { username, email, password } = req.body;
   var user = await createUserService({
-    fullName,
     username,
     email,
     passwordDigest: password, // it will be converted to hash in `pre` Mongoose middleware

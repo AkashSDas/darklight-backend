@@ -63,12 +63,11 @@ class TOAuthProviderClass {
 export class TUserClass {
   @prop({
     type: SchemaTypes.String,
-    required: [true, "Full name is required"],
     maxlength: [240, "Max length can be 240 characters"],
     minlength: [6, "Minimum length should be 6 characters"],
     trim: true,
   })
-  fullName: string;
+  fullName?: string;
 
   @prop({
     type: SchemaTypes.String,
