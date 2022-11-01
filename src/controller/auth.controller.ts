@@ -3,10 +3,12 @@ import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 
 import { createUserService, deleteUserService, getUserService, getUserWithNotSelectedFields, updateUserService } from "../services/user.service";
+import { loginCookieConfig } from "../utils/auth";
 import { sendResponse } from "../utils/client-response";
 import { BaseApiError } from "../utils/handle-error";
 import logger from "../utils/logger";
 import { EmailOptions, sendEmail } from "../utils/send-email";
+import { userDataToSend } from "../utils/user";
 import * as z from "../zod-schema/auth.schema";
 
 // ========================
@@ -43,11 +45,8 @@ export async function signupController(req: SignupReq, res: Response) {
 
   try {
     await sendEmail(opts);
-    return sendResponse(res, {
-      status: 200,
-      msg: "Email verification link sent",
-      data: user,
-    });
+    var status = 201;
+    var msg = "Account created successfully. Email sent to verify your email";
   } catch (error) {
     // Resetting fields after failed email sending
     user.emailVerificationToken = undefined;
@@ -55,10 +54,18 @@ export async function signupController(req: SignupReq, res: Response) {
     await user.save({ validateModifiedOnly: true });
 
     logger.error(`Error sending email: ${error}`);
+    var status = 500;
+    var msg = "Account created successfully";
+  } finally {
+    // Logging user in
+    let accessToken = user.generateAccessToken();
+    let refreshToken = user.generateRefreshToken();
+    res.cookie("refreshToken", refreshToken, loginCookieConfig);
+
     return sendResponse(res, {
-      status: 500,
-      msg: "Failed to send email",
-      data: user,
+      status,
+      msg,
+      data: { user: userDataToSend(user), accessToken },
     });
   }
 }
