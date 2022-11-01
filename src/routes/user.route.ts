@@ -1,18 +1,18 @@
 import { Router } from "express";
 
-import { checkUserAvailableController, getLoggedInUserController, instructorSignupController } from "../controller/user.controller";
+import * as ctrls from "../controller/user.controller";
 import { validateResource } from "../middlewares/validate-resource";
 import verifyAuth from "../middlewares/verify-auth";
 import { handleMiddlewarelError } from "../utils/handle-async";
 import { sendErrorResponse } from "../utils/handle-error";
-import { checkUserAvailableSchema } from "../zod-schema/user.schema";
+import * as schemas from "../zod-schema/user.schema";
 
 export var router = Router();
 
 router.get(
-  "/check/:field/:value",
-  validateResource(checkUserAvailableSchema),
-  handleMiddlewarelError(checkUserAvailableController),
+  "/available",
+  validateResource(schemas.userExistsSchema),
+  handleMiddlewarelError(ctrls.userExistsController),
   sendErrorResponse
 );
 
@@ -20,13 +20,13 @@ router.get(
 router.get(
   "/me",
   handleMiddlewarelError(verifyAuth),
-  handleMiddlewarelError(getLoggedInUserController),
+  handleMiddlewarelError(ctrls.getLoggedInUserController),
   sendErrorResponse
 );
 
 router.post(
   "/instructor-signup",
   handleMiddlewarelError(verifyAuth),
-  handleMiddlewarelError(instructorSignupController),
+  handleMiddlewarelError(ctrls.instructorSignupController),
   sendErrorResponse
 );

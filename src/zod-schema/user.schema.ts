@@ -1,18 +1,18 @@
-import { object, string, TypeOf } from "zod";
+import { z } from "zod";
 
-// ============================================
-// Schemas
-// ============================================
+// =========================
+// Schema
+// =========================
 
-export var checkUserAvailableSchema = object({
-  params: object({
-    field: string({ required_error: "Field is required" }),
-    value: string({ required_error: "Value is required" }),
+export var userExistsSchema = z.object({
+  query: z.object({
+    email: z.string().email("Invalid").optional(),
+    username: z.string().min(3, "Too short").max(120, "Too long").optional(),
   }),
 });
 
-// ============================================
+// =========================
 // Types
-// ============================================
+// =========================
 
-export type ZodCheckUserAvailable = TypeOf<typeof checkUserAvailableSchema>;
+export type UserExistsSchema = z.infer<typeof userExistsSchema>;
