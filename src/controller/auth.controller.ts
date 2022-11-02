@@ -88,6 +88,51 @@ export async function completeOAuthController(
   return sendResponse(res, { status: 200, msg: "Signup completed" });
 }
 
+export async function loginController(
+  req: Request<{}, {}, z.LoginSchema["body"]>,
+  res: Response
+) {
+  // Check if the user exists. Also get passwordDigest too as it will be
+  // used while using checkPassword method
+  var { email, password } = req.body;
+  var user = await getUserWithNotSelectedFields({ email }, "+passwordDigest");
+  if (!user) throw new BaseApiError(404, "User not found");
+
+  // If the user doesn't have a password field, meaning user has signed up using OAuth
+  // and is using that email to login, then throw error
+  if (!user.passwordDigest) {
+    throw new BaseApiError(
+      400,
+      "You're using wrong login method, please use OAuth"
+    );
+  }
+
+  // Verify the password
+  if (!(await user.verifyPassword(password))) {
+    throw new BaseApiError(401, "Incorrect password");
+  }
+
+  // Generate refresh and access tokens
+  var accessToken = user.generateAccessToken();
+  var refreshToken = user.generateRefreshToken();
+  res.cookie("refreshToken", refreshToken, {
+    httpOnly: true, // so that the cookie cannot be accessed/modified in the frontend
+    // secure: process.env.NODE_ENV == "production", // cookie will only be sent in a HTTPS connection in production
+    secure: true,
+    sameSite: "none", // to allow the cookie to be sent to the server in cross-site requests
+    // maxAge: 2 * 60 * 1000, // 2 minutes, should match the expiresIn of the refresh token
+    maxAge: 1 * 24 * 60 * 60 * 1000, // 1 days
+  });
+
+  // Send the user data and access token
+  user.passwordDigest = undefined;
+  return sendResponse(res, {
+    status: 200,
+    msg: "Logged in successfully",
+    data: { user, accessToken },
+  });
+}
+
 export async function getEmailVerificationLinkController(
   req: Request<{}, {}, z.ZodGetEmailVerificationLink["body"]>,
   res: Response
@@ -147,51 +192,6 @@ export async function confirmEmailVerificationController(
   await user.save({ validateModifiedOnly: true });
 
   res.redirect(301, `${process.env.FRONTEND_BASE_URL}`);
-}
-
-export async function loginController(
-  req: Request<{}, {}, z.ZodLogin["body"]>,
-  res: Response
-) {
-  // Check if the user exists. Also get passwordDigest too as it will be
-  // used while using checkPassword method
-  var { email, password } = req.body;
-  var user = await getUserWithNotSelectedFields({ email }, "+passwordDigest");
-  if (!user) throw new BaseApiError(404, "User not found");
-
-  // If the user doesn't have a password field, meaning user has signed up using OAuth
-  // and is using that email to login, then throw error
-  if (!user.passwordDigest) {
-    throw new BaseApiError(
-      400,
-      "You're using wrong login method, please use OAuth"
-    );
-  }
-
-  // Verify the password
-  if (!(await user.verifyPassword(password))) {
-    throw new BaseApiError(401, "Incorrect password");
-  }
-
-  // Generate refresh and access tokens
-  var accessToken = user.generateAccessToken();
-  var refreshToken = user.generateRefreshToken();
-  res.cookie("refreshToken", refreshToken, {
-    httpOnly: true, // so that the cookie cannot be accessed/modified in the frontend
-    // secure: process.env.NODE_ENV == "production", // cookie will only be sent in a HTTPS connection in production
-    secure: true,
-    sameSite: "none", // to allow the cookie to be sent to the server in cross-site requests
-    // maxAge: 2 * 60 * 1000, // 2 minutes, should match the expiresIn of the refresh token
-    maxAge: 1 * 24 * 60 * 60 * 1000, // 1 days
-  });
-
-  // Send the user data and access token
-  user.passwordDigest = undefined;
-  return sendResponse(res, {
-    status: 200,
-    msg: "Logged in successfully",
-    data: { user, accessToken },
-  });
 }
 
 export async function testAuthController(req: Request, res: Response) {
