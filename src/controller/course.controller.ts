@@ -22,7 +22,7 @@ export async function createCourseController(req: Request, res: Response) {
   return sendResponse(res, {
     status: 201,
     msg: "Course created successfully",
-    data: { course },
+    data: course,
   });
 }
 
@@ -45,7 +45,7 @@ export async function updateCourseInfoController(
   return sendResponse(res, {
     status: 200,
     msg: "Course updated successfully",
-    data: { course },
+    data: course,
   });
 }
 

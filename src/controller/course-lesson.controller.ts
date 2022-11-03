@@ -46,7 +46,7 @@ export async function getCourseController(
   return sendResponse(res, {
     status: 200,
     msg: "Course fetched successfully",
-    data: { course },
+    data: course,
   });
 }
 

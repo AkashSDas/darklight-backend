@@ -61,6 +61,9 @@ class TCourseModuleClass {
     default: [],
   })
   lessons: Ref<TCourseLessonClass>[];
+
+  @prop({ type: SchemaTypes.Date, default: Date.now, required: true })
+  lastEditedOn: Date;
 }
 
 /** Course Typegoose Class */
@@ -122,7 +125,11 @@ export class TCourseClass {
   }
 
   addModule() {
-    this.modules.push({ id: nanoid(24), lessons: [] });
+    this.modules.push({
+      id: nanoid(24),
+      lessons: [],
+      lastEditedOn: new Date(Date.now()),
+    });
   }
 
   updateModule(
