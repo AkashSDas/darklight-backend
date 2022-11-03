@@ -31,7 +31,7 @@ export async function createCourseLessonController(
   return sendResponse(res, {
     status: 201,
     msg: "Lesson created successfully",
-    data: { lesson },
+    data: lesson,
   });
 }
 
@@ -58,7 +58,7 @@ export async function getLessonController(req: Request, res: Response) {
   sendResponse(res, {
     status: 201,
     msg: "Content added to lesson successfully",
-    data: { lesson },
+    data: lesson,
   });
 }
 

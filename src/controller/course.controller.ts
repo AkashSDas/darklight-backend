@@ -69,8 +69,8 @@ export async function addModuleToCourseController(
 
   return sendResponse(res, {
     status: 201,
-    msg: "Lesson added to course successfully",
-    data: { module: course.modules[course.modules.length - 1] },
+    msg: "Module created",
+    data: course.modules[course.modules.length - 1],
   });
 }
 
@@ -86,7 +86,7 @@ export async function getCourseMoudelController(req: Request, res: Response) {
   return sendResponse(res, {
     status: 200,
     msg: "Module fetched successfully",
-    data: { module },
+    data: module,
   });
 }
 
