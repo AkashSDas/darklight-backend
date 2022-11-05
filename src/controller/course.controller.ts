@@ -31,7 +31,8 @@ export async function updateCourseInfoController(
   res: Response
 ) {
   var course = await validateCourseAndOwnership(req, res);
-  var { description, difficulty, price, stage, tags, title } = req.body;
+  var { emoji, description, difficulty, price, stage, tags, title } = req.body;
+  if (emoji) course.emoji = emoji;
   if (description) course.description = description;
   if (difficulty) course.difficulty = difficulty as any;
   if (price) course.price = price;

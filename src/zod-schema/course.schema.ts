@@ -11,6 +11,7 @@ export var updateCourseSchema = object({
     courseId: string({ required_error: "Course id is required" }),
   }),
   body: object({
+    emoji: string().min(0).max(1),
     title: string(),
     description: string(),
     stage: string().refine(

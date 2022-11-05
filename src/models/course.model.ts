@@ -69,6 +69,9 @@ class TCourseModuleClass {
 /** Course Typegoose Class */
 export class TCourseClass {
   @prop({ type: SchemaTypes.String })
+  emoji?: string;
+
+  @prop({ type: SchemaTypes.String })
   title?: string;
 
   @prop({ type: SchemaTypes.String })
