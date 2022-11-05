@@ -107,7 +107,12 @@ export async function updateCourseModuleController(
 
   // Update course module
   try {
-    var module = course.updateModule(req.params.moduleId, { ...req.body });
+    var module = course.updateModule(req.params.moduleId, {
+      emoji: req.body.emoji,
+      title: req.body.title,
+      description: req.body.description,
+      lessons: req.body.lessons,
+    });
   } catch (err) {
     if (err instanceof BaseApiError) throw err;
   }
