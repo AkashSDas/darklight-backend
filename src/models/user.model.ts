@@ -73,7 +73,6 @@ export class TUserClass {
     type: SchemaTypes.String,
     maxlength: [120, "Max length can be 120 characters"],
     minlength: [3, "Minimum length should be 3 characters"],
-    unique: true,
     trim: true,
   })
   username?: string;
@@ -81,7 +80,6 @@ export class TUserClass {
   @prop({
     type: SchemaTypes.String,
     validate: [validator.isEmail, "Email is invalid"],
-    unique: true,
   })
   email?: string;
 
