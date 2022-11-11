@@ -9,7 +9,7 @@ import { TVideoClass } from "./video.model";
 
 /** Lesson Typegoose Class */
 export class TCourseLessonClass {
-  @prop({ type: SchemaTypes.String, maxlength: 1, minlength: 1, trim: true })
+  @prop({ type: SchemaTypes.String, trim: true })
   emoji?: string;
 
   @prop({ type: SchemaTypes.String, maxlength: 120, minlength: 3, trim: true })
@@ -44,15 +44,12 @@ export class TCourseLessonClass {
   addContent(
     type: EditorContentType,
     addAt: number,
-    data?: { [key: string]: any }
+    data?: { [key: string]: any }[]
   ) {
     var content = new TEditorContentClass();
     content.type = type;
-    if (data) {
-      content.data = Object.keys(data).map(function filterContentData(key) {
-        return { key, value: data[key] };
-      });
-    }
+    console.log("data", data);
+    if (data) content.data = data as any;
     this.contents.splice(addAt, 0, content);
   }
 
@@ -65,11 +62,9 @@ export class TCourseLessonClass {
     // It wasn't saving the updated contents list when I was directly updating
     // the content data like this
     // this.contents[updateAt].data = new data;
-
+    console.log(updateAt);
     var content = this.contents[updateAt];
-    content.data = Object.keys(data).map(function filterContentData(key) {
-      return { key, value: data[key] };
-    });
+    content.data = data as any;
     this.contents[updateAt] = content;
   }
 

@@ -30,8 +30,8 @@ export async function validateCourseLesson(req: Request, res: Response) {
   if (moduleIdx == -1) throw new BaseApiError(404, "Module not found");
 
   var lessonIdx = course.modules[moduleIdx].lessons.findIndex(
-    function findLesson(lId) {
-      return lId == new Types.ObjectId(lessonId);
+    function findLesson(lsn) {
+      return lsn.id == lessonId;
     }
   );
   if (lessonIdx == -1) throw new BaseApiError(404, "Lesson not found");

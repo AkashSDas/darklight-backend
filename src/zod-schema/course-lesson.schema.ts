@@ -1,4 +1,4 @@
-import { number, object, string, TypeOf } from "zod";
+import { boolean, number, object, string, TypeOf } from "zod";
 
 import { EditorContentType } from "../models/editor-content.model";
 
@@ -54,6 +54,20 @@ export var deleteContentInLessonSchema = object({
   }),
 });
 
+export var updateLessonMetadataSchema = object({
+  params: object({
+    courseId: string({ required_error: "Course id is required" }),
+    moduleId: string({ required_error: "Module id is required" }),
+    lessonId: string({ required_error: "Lesson id is required" }),
+  }),
+  body: object({
+    title: string({ required_error: "Title is required" }),
+    description: string({ required_error: "Description is required" }),
+    emoji: string({ required_error: "Emoji is required" }),
+    isFree: boolean({ required_error: "Is free is required" }),
+  }),
+});
+
 // ============================================
 // Types
 // ============================================
@@ -66,3 +80,4 @@ export type ZodUpdateContentInLesson = TypeOf<
 export type ZodDeleteContentInLesson = TypeOf<
   typeof deleteContentInLessonSchema
 >;
+export type ZodUpdateLessonMetadata = TypeOf<typeof updateLessonMetadataSchema>;

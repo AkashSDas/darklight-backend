@@ -5,7 +5,7 @@ import { getCourseService } from "../services/course.service";
 import { sendResponse } from "../utils/client-response";
 import { batchUpdateCourseAndLessonEditTime, validateCourseAndOwnership, validateCourseLesson } from "../utils/course";
 import { BaseApiError } from "../utils/handle-error";
-import { ZodAddContentInLesson, ZodCreateCourseLesson, ZodUpdateContentInLesson } from "../zod-schema/course-lesson.schema";
+import { ZodAddContentInLesson, ZodCreateCourseLesson, ZodUpdateContentInLesson, ZodUpdateLessonMetadata } from "../zod-schema/course-lesson.schema";
 import { ZodGetCourse } from "../zod-schema/course.schema";
 
 export async function createCourseLessonController(
@@ -62,6 +62,37 @@ export async function getLessonController(req: Request, res: Response) {
   });
 }
 
+export async function updateLessonMetadataController(
+  req: Request<
+    ZodUpdateLessonMetadata["params"],
+    {},
+    ZodUpdateLessonMetadata["body"]
+  >,
+  res: Response
+) {
+  var { course } = await validateCourseLesson(req, res);
+  var lesson = await getCourseLessonService({ _id: req.params.lessonId });
+  var { description, emoji, title, isFree } = req.body;
+
+  lesson.title = title;
+  lesson.description = description;
+  lesson.emoji = emoji;
+  lesson.isFree = isFree;
+  lesson.updateLastEditedOn();
+
+  await lesson.save();
+
+  // Update course last edited on
+  course.updateLastEditedOn();
+  await course.save();
+
+  return sendResponse(res, {
+    status: 200,
+    msg: "Lesson metadata updated successfully",
+    data: lesson,
+  });
+}
+
 // =============================
 // Content related controllers
 // =============================
@@ -75,7 +106,7 @@ export async function addContentInLessonController(
   >,
   res: Response
 ) {
-  var { course } = await validateCourseLesson(req, res);
+  var course = await validateCourseAndOwnership(req, res);
   var lesson = await getCourseLessonService({ _id: req.params.lessonId });
   var { type, addAt, data } = req.body as any;
 
