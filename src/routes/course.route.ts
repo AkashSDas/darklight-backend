@@ -1,7 +1,7 @@
 import { Router } from "express";
 
 import { addContentInLessonController, createCourseLessonController, deleteContentInLessonController, deleteLessonController, getCourseController, getLessonController, reorderContentController, updateContentInLessonController, updateLessonMetadataController } from "../controller/course-lesson.controller";
-import { addModuleToCourseController, createCourseController, deleteCourseModuleController, getCourseMoudelController, reorderLessonsInModuleController, reorderModulesController, updateCourseInfoController, updateCourseModuleController } from "../controller/course.controller";
+import { addModuleToCourseController, createCourseController, deleteCourseController, deleteCourseModuleController, getCourseMoudelController, reorderLessonsInModuleController, reorderModulesController, updateCourseInfoController, updateCourseModuleController } from "../controller/course.controller";
 import { validateResource } from "../middlewares/validate-resource";
 import verifyAuth from "../middlewares/verify-auth";
 import { handleMiddlewarelError } from "../utils/handle-async";
@@ -36,6 +36,11 @@ router
     handleMiddlewarelError(verifyAuth),
     handleMiddlewarelError(reorderModulesController),
     sendErrorResponse
+  )
+  .delete(
+    "/:courseId",
+    handleMiddlewarelError(verifyAuth),
+    handleMiddlewarelError(deleteCourseController)
   );
 
 // Module

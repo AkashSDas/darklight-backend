@@ -214,3 +214,25 @@ export async function reorderModulesController(req: Request, res: Response) {
     data: { modules: course.modules },
   });
 }
+
+export async function deleteCourseController(req, res) {
+  var course = await validateCourseAndOwnership(req, res);
+  var lessons = course.getAllLessons();
+
+  var session = await startSession();
+  session.startTransaction();
+
+  try {
+    await course.delete({ session });
+    await CourseLessonModel.deleteMany({ _id: { $in: lessons } }, { session });
+    await session.commitTransaction();
+  } catch (error) {
+    await session.abortTransaction();
+    throw error;
+  }
+
+  return sendResponse(res, {
+    status: 200,
+    msg: "Course deleted successfully",
+  });
+}

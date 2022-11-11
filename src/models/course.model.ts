@@ -190,6 +190,14 @@ export class TCourseClass {
     return lessons;
   }
 
+  getAllLessons() {
+    var lessons = [];
+    for (let module of this.modules) {
+      lessons = lessons.concat(module.lessons);
+    }
+    return lessons;
+  }
+
   updateModules(payload: TCourseModuleClass[]) {
     console.log(payload);
     this.modules = payload;
