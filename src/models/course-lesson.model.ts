@@ -48,7 +48,6 @@ export class TCourseLessonClass {
   ) {
     var content = new TEditorContentClass();
     content.type = type;
-    console.log("data", data);
     if (data) content.data = data as any;
     this.contents.splice(addAt, 0, content);
   }
@@ -62,7 +61,6 @@ export class TCourseLessonClass {
     // It wasn't saving the updated contents list when I was directly updating
     // the content data like this
     // this.contents[updateAt].data = new data;
-    console.log(updateAt);
     var content = this.contents[updateAt];
     content.data = data as any;
     this.contents[updateAt] = content;
