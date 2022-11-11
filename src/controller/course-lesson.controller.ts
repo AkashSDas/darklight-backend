@@ -176,3 +176,25 @@ export async function deleteContentInLessonController(
     });
   });
 }
+
+export async function reorderContentController(req: Request, res: Response) {
+  var { course } = await validateCourseLesson(req, res);
+  var lesson = await getCourseLessonService({ _id: req.params.lessonId });
+  var { content } = req.body as any;
+
+  try {
+    lesson.updateContentOrder(content);
+  } catch (err) {
+    if (err instanceof BaseApiError) throw err;
+  }
+
+  await lesson.save();
+  course.updateLastEditedOn();
+  await course.save();
+
+  return sendResponse(res, {
+    status: 200,
+    msg: "Content reordered successfully",
+    data: { contents: lesson.contents },
+  });
+}

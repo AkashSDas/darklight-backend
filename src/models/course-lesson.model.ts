@@ -70,6 +70,10 @@ export class TCourseLessonClass {
     this.contents.splice(deleteAt, 1);
   }
 
+  updateContentOrder(newContents) {
+    this.contents = newContents;
+  }
+
   // ===============================
   // Virtuals
   // ===============================
