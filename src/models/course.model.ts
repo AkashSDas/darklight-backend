@@ -182,11 +182,12 @@ export class TCourseClass {
   // TODO: delete all the lessons of this module
   deleteModule(moduleId: string) {
     var deleteAt = this.modules.findIndex(function findModule(m) {
-      console.log(m.id, moduleId);
       return m.id == moduleId;
     });
     if (deleteAt == -1) throw new BaseApiError(400, "Module not found");
+    var lessons = this.modules[deleteAt].lessons;
     this.modules.splice(deleteAt, 1);
+    return lessons;
   }
 
   updateModules(payload: TCourseModuleClass[]) {

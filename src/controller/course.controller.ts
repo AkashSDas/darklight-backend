@@ -1,5 +1,7 @@
 import { Request, Response } from "express";
+import { startSession } from "mongoose";
 
+import { CourseLessonModel } from "../models/course-lesson.model";
 import { UserRole } from "../models/user.model";
 import { createCourseService, getCourseService } from "../services/course.service";
 import { sendResponse } from "../utils/client-response";
@@ -135,13 +137,29 @@ export async function deleteCourseModuleController(
 
   // Update course module
   try {
-    course.deleteModule(req.params.moduleId);
+    var lessons = course.deleteModule(req.params.moduleId);
   } catch (err) {
     if (err instanceof BaseApiError) throw err;
   }
 
+  var session = await startSession();
+  session.startTransaction();
+
   course.updateLastEditedOn();
-  await course.save();
+
+  try {
+    if (lessons) {
+      await CourseLessonModel.deleteMany(
+        { _id: { $in: lessons } },
+        { session }
+      );
+      await course.save({ session });
+    }
+    await session.commitTransaction();
+  } catch (error) {
+    await session.abortTransaction();
+    throw error;
+  }
 
   return sendResponse(res, {
     status: 200,
