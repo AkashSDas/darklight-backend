@@ -1,4 +1,4 @@
-import { SchemaTypes, Types } from "mongoose";
+import mongoose, { SchemaTypes, Types } from "mongoose";
 import { nanoid } from "nanoid";
 
 import { getModelForClass, prop, Ref, Severity } from "@typegoose/typegoose";
@@ -192,6 +192,18 @@ export class TCourseClass {
   updateModules(payload: TCourseModuleClass[]) {
     console.log(payload);
     this.modules = payload;
+  }
+
+  deleteLesson(lessonId: string) {
+    for (let module of this.modules) {
+      var deleteAt = module.lessons.findIndex(function findLesson(l) {
+        return l == new mongoose.Types.ObjectId(lessonId);
+      });
+      if (deleteAt != -1) {
+        module.lessons.splice(deleteAt, 1);
+        break;
+      }
+    }
   }
 
   // ===============================

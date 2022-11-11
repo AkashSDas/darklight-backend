@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 
-import { createCourseLessonService, getCourseLessonService } from "../services/course-lesson.service";
+import { createCourseLessonService, deleteCourseLessonService, getCourseLessonService } from "../services/course-lesson.service";
 import { getCourseService } from "../services/course.service";
 import { sendResponse } from "../utils/client-response";
 import { batchUpdateCourseAndLessonEditTime, validateCourseAndOwnership, validateCourseLesson } from "../utils/course";
@@ -90,6 +90,21 @@ export async function updateLessonMetadataController(
     status: 200,
     msg: "Lesson metadata updated successfully",
     data: lesson,
+  });
+}
+
+export async function deleteLessonController(
+  req: Request<ZodUpdateLessonMetadata["params"]>,
+  res: Response
+) {
+  var { course } = await validateCourseLesson(req, res);
+  var lesson = await deleteCourseLessonService({ _id: req.params.lessonId });
+  course.deleteLesson(lesson.id);
+  await course.save();
+
+  return sendResponse(res, {
+    status: 200,
+    msg: "Lesson deleted successfully",
   });
 }
 

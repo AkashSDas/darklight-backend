@@ -1,6 +1,6 @@
 import { Router } from "express";
 
-import { addContentInLessonController, createCourseLessonController, deleteContentInLessonController, getCourseController, getLessonController, reorderContentController, updateContentInLessonController, updateLessonMetadataController } from "../controller/course-lesson.controller";
+import { addContentInLessonController, createCourseLessonController, deleteContentInLessonController, deleteLessonController, getCourseController, getLessonController, reorderContentController, updateContentInLessonController, updateLessonMetadataController } from "../controller/course-lesson.controller";
 import { addModuleToCourseController, createCourseController, deleteCourseModuleController, getCourseMoudelController, reorderLessonsInModuleController, reorderModulesController, updateCourseInfoController, updateCourseModuleController } from "../controller/course.controller";
 import { validateResource } from "../middlewares/validate-resource";
 import verifyAuth from "../middlewares/verify-auth";
@@ -92,6 +92,11 @@ router
     handleMiddlewarelError(verifyAuth),
     handleMiddlewarelError(updateLessonMetadataController),
     sendErrorResponse
+  )
+  .delete(
+    "/:courseId/:moduleId/:lessonId/delete",
+    handleMiddlewarelError(verifyAuth),
+    handleMiddlewarelError(deleteLessonController)
   );
 
 // Content
