@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 
 import { createCourseLessonService, deleteCourseLessonService, getCourseLessonService } from "../services/course-lesson.service";
-import { getCourseService } from "../services/course.service";
+import { getAllCoursesService, getCourseService } from "../services/course.service";
 import { sendResponse } from "../utils/client-response";
 import { batchUpdateCourseAndLessonEditTime, validateCourseAndOwnership, validateCourseLesson } from "../utils/course";
 import { BaseApiError } from "../utils/handle-error";
@@ -211,5 +211,17 @@ export async function reorderContentController(req: Request, res: Response) {
     status: 200,
     msg: "Content reordered successfully",
     data: { contents: lesson.contents },
+  });
+}
+
+export async function getCoursesController(req: Request, res: Response) {
+  const LIMIT = 4;
+  var next = req.query.next as string;
+  var courses = await getAllCoursesService(LIMIT, next);
+
+  return sendResponse(res, {
+    status: 200,
+    msg: "Courses fetched successfully",
+    data: courses,
   });
 }

@@ -1,7 +1,8 @@
+import MongoPaging from "mongo-cursor-pagination";
 import mongoose, { SchemaTypes, Types } from "mongoose";
 import { nanoid } from "nanoid";
 
-import { getModelForClass, prop, Ref, Severity } from "@typegoose/typegoose";
+import { getModelForClass, plugin, prop, Ref, Severity } from "@typegoose/typegoose";
 
 import { BaseApiError } from "../utils/handle-error";
 import { TCourseLessonClass } from "./course-lesson.model";
@@ -67,6 +68,7 @@ class TCourseModuleClass {
 }
 
 /** Course Typegoose Class */
+@plugin(MongoPaging.mongoosePlugin, { name: "paginateCourse" })
 export class TCourseClass {
   @prop({ type: SchemaTypes.String })
   emoji?: string;
