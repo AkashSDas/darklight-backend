@@ -8,17 +8,23 @@ export async function createCourseService(course: Partial<TCourseClass>) {
   return await CourseModel.create(course);
 }
 
+// TODO: Fix lessons population
 export async function getCourseService(filter: FilterQuery<TCourseClass>) {
-  return await CourseModel.findOne(filter, "-__v")
-    .populate({
-      path: "modules",
-      populate: {
-        path: "lessons",
-        model: "course-lesson",
-        select: "-contents -qna -attachments",
-      },
-    })
+  var course = await CourseModel.findOne(filter, "-__v")
+    .populate({ path: "instructors", model: "user" })
     .exec();
+
+  course.modules = await Promise.all(
+    course.modules.map(async (module) => {
+      module.lessons = await CourseLessonModel.find(
+        { _id: { $in: module.lessons } },
+        "-contents -qna -attachments"
+      ).exec();
+      return module;
+    })
+  );
+
+  return course;
 }
 
 export async function updateCourseService(

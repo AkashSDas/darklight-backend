@@ -215,7 +215,7 @@ export async function reorderContentController(req: Request, res: Response) {
 }
 
 export async function getCoursesController(req: Request, res: Response) {
-  const LIMIT = 4;
+  const LIMIT = 2;
   var next = req.query.next as string;
   var courses = await getAllCoursesService(LIMIT, next);
 
