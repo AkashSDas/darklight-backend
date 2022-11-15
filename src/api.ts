@@ -57,6 +57,7 @@ app.get("/api/test", function testRoute(req, res) {
 app.use("/api/auth", require("./routes/auth.route").router);
 app.use("/api/user", require("./routes/user.route").router);
 app.use("/api/course", require("./routes/course.route").router);
+app.use("/api/course-profile", require("./routes/course-profile.route").router);
 
 app.all("*", function handleRemainingRoute(req, res) {
   sendResponse(res, {
