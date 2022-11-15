@@ -16,14 +16,6 @@ class TPurchaseInfoClass {
   purchasedAt: Date;
 }
 
-class TLessonProgressClass {
-  @prop({ ref: () => TCourseLessonClass, required: true })
-  lesson: Ref<TCourseLessonClass>;
-
-  @prop({ type: SchemaTypes.Boolean, default: false })
-  done: boolean;
-}
-
 export class TCourseProfileClass {
   @prop({ ref: () => TCourseClass, required: true })
   user: Ref<TUserClass>;
@@ -36,8 +28,13 @@ export class TCourseProfileClass {
 
   // When a student completes a lesson, the lesson id with done as true
   // will be added to this
-  @prop({ type: SchemaTypes.Array, required: true, default: [] })
-  progress: TLessonProgressClass[];
+  @prop({
+    type: SchemaTypes.Array,
+    required: true,
+    default: [],
+    ref: () => TCourseLessonClass,
+  })
+  progress: Ref<TCourseLessonClass>[];
 
   // ===============================
   // Methods

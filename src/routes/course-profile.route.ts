@@ -4,6 +4,8 @@ import {
   buyCourseController,
   getCourseProfileController,
   getCourseProfilesController,
+  updateCourseProfileController,
+  updateCourseProgressController,
 } from "../controller/course-profile.controller";
 import verifyAuth from "../middlewares/verify-auth";
 import { handleMiddlewarelError } from "../utils/handle-async";
@@ -26,5 +28,17 @@ router
   .get(
     "/:userId",
     handleMiddlewarelError(getCourseProfilesController),
+    sendErrorResponse
+  )
+  .put(
+    "/:userId/:courseId",
+    handleMiddlewarelError(verifyAuth),
+    handleMiddlewarelError(updateCourseProfileController),
+    sendErrorResponse
+  )
+  .get(
+    "/:userId/:courseId/:lessonId/done",
+    handleMiddlewarelError(verifyAuth),
+    handleMiddlewarelError(updateCourseProgressController),
     sendErrorResponse
   );

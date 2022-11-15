@@ -5,6 +5,7 @@ import {
   createCourseProfileService,
   getCourseProfileService,
   getCourseProfilesService,
+  updateCourseProfileService,
 } from "../services/course-profile.service";
 import { sendResponse } from "../utils/client-response";
 import { BaseApiError } from "../utils/handle-error";
@@ -45,5 +46,49 @@ export async function getCourseProfilesController(req: Request, res: Response) {
     status: 200,
     msg: "Course profiles fetched successfully",
     data: courseProfiles,
+  });
+}
+
+// TODO: check the update
+export async function updateCourseProfileController(
+  req: Request,
+  res: Response
+) {
+  var { courseId, userId } = req.params;
+  var update = req.body;
+
+  var courseProfile = await updateCourseProfileService(
+    userId,
+    courseId,
+    update
+  );
+  return sendResponse(res, {
+    status: 200,
+    msg: "Course profile updated successfully",
+    data: courseProfile,
+  });
+}
+
+// TODO: check lessonId to be valid
+export async function updateCourseProgressController(
+  req: Request,
+  res: Response
+) {
+  var { courseId, userId, lessonId } = req.params;
+
+  var courseProfile = await getCourseProfileService(userId, courseId);
+  if (!courseProfile) {
+    throw new BaseApiError(400, "Course not purchased");
+  }
+  if (courseProfile.progress.includes(lessonId as any)) {
+    throw new BaseApiError(400, "Lesson already marked as done");
+  }
+  courseProfile.progress.push(lessonId as any);
+  await courseProfile.save();
+
+  return sendResponse(res, {
+    status: 200,
+    msg: "Course profile updated successfully",
+    data: courseProfile,
   });
 }
