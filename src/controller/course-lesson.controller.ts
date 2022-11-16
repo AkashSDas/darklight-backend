@@ -40,7 +40,7 @@ export async function getCourseController(
   req: Request<ZodGetCourse["params"]>,
   res: Response
 ) {
-  var course = await getCourseService({ _id: req.params.courseId });
+  var course = await getCourseService({ _id: req.params.courseId }, true);
   if (!course) throw new BaseApiError(404, "Course not found");
 
   return sendResponse(res, {
