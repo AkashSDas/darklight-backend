@@ -31,7 +31,7 @@ export async function validateCourseLesson(req: Request, res: Response) {
 
   var lessonIdx = course.modules[moduleIdx].lessons.findIndex(
     function findLesson(lsn) {
-      return lsn.id == lessonId;
+      return typeof lsn == "string" ? lsn == lessonId : lsn.id == lessonId;
     }
   );
   if (lessonIdx == -1) throw new BaseApiError(404, "Lesson not found");

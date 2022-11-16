@@ -9,7 +9,15 @@ export async function createCourseService(course: Partial<TCourseClass>) {
 }
 
 // TODO: Fix lessons population
-export async function getCourseService(filter: FilterQuery<TCourseClass>) {
+export async function getCourseService(
+  filter: FilterQuery<TCourseClass>,
+  populate = false
+) {
+  if (!populate) {
+    var course = await CourseModel.findOne(filter, "-__v");
+    return course;
+  }
+
   var course = await CourseModel.findOne(filter, "-__v")
     .populate({ path: "instructors", model: "user" })
     .exec();
