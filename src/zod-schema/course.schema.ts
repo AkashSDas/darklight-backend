@@ -1,4 +1,5 @@
-import { boolean, number, object, string, TypeOf } from "zod";
+import { Types } from "mongoose";
+import { array, number, object, string, TypeOf } from "zod";
 
 import { CourseCourseDifficulty } from "../models/course.model";
 
@@ -8,10 +9,14 @@ import { CourseCourseDifficulty } from "../models/course.model";
 
 // PARAMS
 
-var courseId = string({ required_error: "Required" }).regex(
-  /^(?=[a-f\d]{24}$)(\d+[a-f]|[a-f]+\d)/i,
-  "Invalid course id"
+var courseId = string({ required_error: "Required" }).refine(
+  function validateId(id) {
+    return Types.ObjectId.isValid(id);
+  },
+  { message: "Invalid", path: ["courseId"] }
 );
+
+var moduleId = string({ required_error: "Required" });
 
 // BODY
 
@@ -36,9 +41,26 @@ var difficulty = string().refine(
 );
 var tags = string().array().max(10, "Too many tags");
 
+var lessons = string()
+  .array()
+  .refine(
+    function validateLessons(lessons) {
+      var results = lessons.map((lesson) => {
+        var regex = new RegExp(/^(?=[a-f\d]{24}$)(\d+[a-f]|[a-f]+\d)/i);
+        return regex.test(lesson);
+      });
+      return results.every((result) => result == true);
+    },
+    { message: "Invalid", path: ["lessons"] }
+  );
+
 // =========================
 // SCHEMAS
 // =========================
+
+// COURSE
+
+export var getCourseSchema = object({ params: object({ courseId }) });
 
 export var updateCourseMetadataSchema = object({
   params: object({ courseId }),
@@ -53,49 +75,44 @@ export var updateCourseMetadataSchema = object({
   }),
 });
 
-export var deleteCourseSchema = object({
+export var deleteCourseSchema = object({ params: object({ courseId }) });
+
+// MODULE
+
+export var addModuleSchema = object({ params: object({ courseId }) });
+
+export var updateModuleSchema = object({
+  params: object({ courseId, moduleId }),
+  body: object({
+    emoji,
+    title,
+    description,
+    lessons,
+  }),
+});
+
+export var getModuleSchema = object({ params: object({ courseId, moduleId }) });
+
+export var deleteModuleSchema = object({
+  params: object({ courseId, moduleId }),
+});
+
+export var reorderModulesSchema = object({
   params: object({ courseId }),
+  body: object({ modules: object({}).array() }),
 });
 
-export var getCourseSchema = object({
-  params: object({
-    courseId: string({ required_error: "Course id is required" }),
-  }),
-});
-
-export var addModuleToCourseSchema = object({
-  params: object({
-    courseId: string({ required_error: "Course id is required" }),
-  }),
-});
-
-export var updateCourseModuleSchema = object({
-  params: object({
-    courseId: string({ required_error: "Course id is required" }),
-    moduleId: string({ required_error: "Module id is required" }),
-  }),
+export var reorderLessonsSchema = object({
+  params: object({ courseId, moduleId }),
   body: object({
-    emoji: string().min(0).max(1),
-    title: string().min(0).max(120),
-    description: string().min(0).max(120),
-    lessons: string().array(),
-  }),
-});
-
-export var deleteCourseModuleSchema = object({
-  params: object({
-    courseId: string({ required_error: "Course id is required" }),
-    moduleId: string({ required_error: "Module id is required" }),
-  }),
-});
-
-export var reorderLessonsInModuleSchema = object({
-  params: object({
-    courseId: string({ required_error: "Course id is required" }),
-    moduleId: string({ required_error: "Module id is required" }),
-  }),
-  body: object({
-    lessons: string().array(),
+    lessons: string()
+      .array()
+      .refine(function validateLessons(lessons) {
+        var results = lessons.map(function validateId(id) {
+          return Types.ObjectId.isValid(id);
+        });
+        return results.every((result) => result == true);
+      }),
   }),
 });
 
@@ -103,13 +120,13 @@ export var reorderLessonsInModuleSchema = object({
 // TYPES
 // =========================
 
+export type GetCourse = TypeOf<typeof getCourseSchema>;
 export type UpdateCourseMetadata = TypeOf<typeof updateCourseMetadataSchema>;
 export type DeleteCourse = TypeOf<typeof deleteCourseSchema>;
+export type ReorderModules = TypeOf<typeof reorderModulesSchema>;
 
-export type ZodGetCourse = TypeOf<typeof getCourseSchema>;
-export type ZodAddModuleToCourse = TypeOf<typeof addModuleToCourseSchema>;
-export type ZodUpdateCourseModule = TypeOf<typeof updateCourseModuleSchema>;
-export type ZodDeleteCourseModule = TypeOf<typeof deleteCourseModuleSchema>;
-export type ZodReorderLessonsInModule = TypeOf<
-  typeof reorderLessonsInModuleSchema
->;
+export type AddModule = TypeOf<typeof addModuleSchema>;
+export type UpdateModule = TypeOf<typeof updateModuleSchema>;
+export type GetModule = TypeOf<typeof getModuleSchema>;
+export type DeleteModule = TypeOf<typeof deleteModuleSchema>;
+export type ReorderLessons = TypeOf<typeof reorderLessonsSchema>;

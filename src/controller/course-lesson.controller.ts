@@ -6,7 +6,7 @@ import { sendResponse } from "../utils/client-response";
 import { batchUpdateCourseAndLessonEditTime, validateCourseAndOwnership, validateCourseLesson } from "../utils/course";
 import { BaseApiError } from "../utils/handle-error";
 import { ZodAddContentInLesson, ZodCreateCourseLesson, ZodUpdateContentInLesson, ZodUpdateLessonMetadata } from "../zod-schema/course-lesson.schema";
-import { ZodGetCourse } from "../zod-schema/course.schema";
+import { GetCourse } from "../zod-schema/course.schema";
 
 export async function createCourseLessonController(
   req: Request<ZodCreateCourseLesson["params"]>,
@@ -37,7 +37,7 @@ export async function createCourseLessonController(
 
 // TODO: move this to course.controller.ts
 export async function getCourseController(
-  req: Request<ZodGetCourse["params"]>,
+  req: Request<GetCourse["params"]>,
   res: Response
 ) {
   var course = await getCourseService({ _id: req.params.courseId }, true);

@@ -1,10 +1,11 @@
 import { Request, Response } from "express";
-import { startSession } from "mongoose";
+import { startSession, Types } from "mongoose";
+
+import { ModuleMetadata } from "@models/course.model";
 
 import { CourseLessonModel } from "../models/course-lesson.model";
 import { createCourseService, getCourseService } from "../services/course.service";
 import { sendResponse } from "../utils/client-response";
-import { validateCourseAndOwnership } from "../utils/course";
 import { BaseApiError } from "../utils/handle-error";
 import * as zod from "../zod-schema/course.schema";
 
@@ -64,6 +65,16 @@ export async function updateCourseMetadataController(
   });
 }
 
+/**
+ * Delete course with all its lessons
+ *
+ * @route DELETE /api/course/:courseId
+ *
+ * Middlewares used
+ * - verifyAuth
+ * - verifyInstructor
+ * - verifyCourseOwnership
+ */
 export async function deleteCourseController(
   req: Request<zod.DeleteCourse["params"]>,
   res: Response
@@ -89,165 +100,188 @@ export async function deleteCourseController(
   });
 }
 
-export async function addModuleToCourseController(
-  req: Request<zod.ZodAddModuleToCourse["params"]>,
-  res: Response
-) {
-  // Check if the course exists and the user is an instructor of this course
-  var user = req.user;
-  if (!user) throw new BaseApiError(404, "User not found");
-  var course = await getCourseService({ _id: req.params.courseId });
-  if (!course) throw new BaseApiError(404, "Course not found");
-  if (!course.instructors.includes(user._id)) {
-    throw new BaseApiError(403, "You don't have the required permissions");
-  }
-
-  // Create a module and add it to the course
-  course.addModule();
-  course.updateLastEditedOn();
-  await course.save();
-
-  return sendResponse(res, {
-    status: 201,
-    msg: "Module created",
-    data: course.modules[course.modules.length - 1],
-  });
-}
-
-export async function getCourseMoudelController(req: Request, res: Response) {
-  // Check if the course exists and the user is an instructor of this course
-  var course = await getCourseService({ _id: req.params.courseId });
-  if (!course) throw new BaseApiError(404, "Course not found");
-
-  // Get the module
-  var module = course.modules.find((m) => m.id == req.params.moduleId);
-  if (!module) throw new BaseApiError(404, "Module not found");
-
-  return sendResponse(res, {
-    status: 200,
-    msg: "Module fetched successfully",
-    data: module,
-  });
-}
-
+// TODO: Fix response data
+// TODO: fix module reordering technique
 /**
- * This will handle single field update for a module. This means that it
- * will also handle reordering of the modules.
+ * Rorder modules in the course
+ *
+ * @route PUT /api/course/:courseId/reorder
+ *
+ * Middlewares used
+ * - verifyAuth
+ * - verifyInstructor
+ * - verifyCourseOwnership
  */
-export async function updateCourseModuleController(
-  req: Request<
-    zod.ZodUpdateCourseModule["params"],
-    {},
-    zod.ZodUpdateCourseModule["body"]
-  >,
-  res: Response
-) {
-  var course = await validateCourseAndOwnership(req, res);
-
-  // Update course module
-  try {
-    var module = course.updateModule(req.params.moduleId, {
-      emoji: req.body.emoji,
-      title: req.body.title,
-      description: req.body.description,
-      lessons: req.body.lessons,
-    });
-  } catch (err) {
-    if (err instanceof BaseApiError) throw err;
-  }
-
-  course.updateLastEditedOn();
-  await course.save();
-
-  return sendResponse(res, {
-    status: 200,
-    msg: "Course module updated successfully",
-    data: { module },
-  });
-}
-
-export async function deleteCourseModuleController(
-  req: Request<zod.ZodDeleteCourseModule["params"]>,
-  res: Response
-) {
-  var course = await validateCourseAndOwnership(req, res);
-
-  // Update course module
-  try {
-    var lessons = course.deleteModule(req.params.moduleId);
-  } catch (err) {
-    if (err instanceof BaseApiError) throw err;
-  }
-
-  var session = await startSession();
-  session.startTransaction();
-
-  course.updateLastEditedOn();
-
-  try {
-    if (lessons) {
-      await CourseLessonModel.deleteMany(
-        { _id: { $in: lessons } },
-        { session }
-      );
-      await course.save({ session });
-    }
-    await session.commitTransaction();
-  } catch (error) {
-    await session.abortTransaction();
-    throw error;
-  }
-
-  return sendResponse(res, {
-    status: 200,
-    msg: "Course module deleted successfully",
-  });
-}
-
-export async function reorderLessonsInModuleController(
-  req: Request<
-    zod.ZodReorderLessonsInModule["params"],
-    {},
-    zod.ZodReorderLessonsInModule["body"]
-  >,
-  res: Response
-) {
-  var course = await validateCourseAndOwnership(req, res);
-
-  // Update course module
-  try {
-    course.updateModule(req.params.moduleId, { lessons: req.body.lessons });
-  } catch (err) {
-    if (err instanceof BaseApiError) throw err;
-  }
-
-  course.updateLastEditedOn();
-  await course.save();
-
-  return sendResponse(res, {
-    status: 200,
-    msg: "Lessons reordered successfully",
-    data: { modules: course.modules },
-  });
-}
-
-// TODO: add zod schema and validation
 export async function reorderModulesController(req: Request, res: Response) {
-  var course = await validateCourseAndOwnership(req, res);
+  var course = req.course;
 
   // Update course module
-  try {
-    course.updateModules(req.body.modules);
-  } catch (err) {
-    if (err instanceof BaseApiError) throw err;
-  }
-
-  course.updateLastEditedOn();
+  course.updateModules(req.body.modules);
   await course.save();
 
   return sendResponse(res, {
     status: 200,
     msg: "Modules reordered successfully",
     data: { modules: course.modules },
+  });
+}
+
+// ==================================
+// MODULE CONTROLLERS
+// ==================================
+
+/**
+ * Add module to the course
+ *
+ * @route POST /api/course/:courseId
+ *
+ * Middlewares used
+ * - verifyAuth
+ * - verifyInstructor
+ * - verifyCourseOwnership
+ */
+export async function addModuleController(
+  req: Request<zod.AddModule["params"]>,
+  res: Response
+) {
+  var course = req.course;
+  course.addModule();
+  await course.save();
+
+  return sendResponse(res, {
+    status: 201,
+    msg: "Module added",
+    data: course.modules[course.modules.length - 1],
+  });
+}
+
+/**
+ * Update module data in the course
+ *
+ * @route PUT /api/course/:courseId/:moduleId
+ *
+ * Middlewares used
+ * - verifyAuth
+ * - verifyInstructor
+ * - verifyModuleOwnership
+ */
+export async function updateModuleController(
+  req: Request<zod.UpdateModule["params"], {}, zod.UpdateModule["body"]>,
+  res: Response
+) {
+  var course = req.course;
+  var payload: ModuleMetadata = {
+    ...req.body,
+    lessons: req.body.lessons.map((lesson) => new Types.ObjectId(lesson)),
+  };
+
+  course.updateModule(req.params.moduleId, payload);
+  await course.save();
+
+  return sendResponse(res, {
+    status: 200,
+    msg: "Module updated",
+  });
+}
+
+/**
+ * Get module from the course
+ *
+ * @route GET /api/course/:courseId/:moduleId
+ */
+export async function getModuleController(
+  req: Request<zod.GetModule["params"]>,
+  res: Response
+) {
+  var course = await getCourseService({ _id: req.params.courseId });
+  if (!course) throw new BaseApiError(404, "Course not found");
+
+  var module = course.modules.find((m) => m.id == req.params.moduleId);
+  if (!module) throw new BaseApiError(404, "Module not found");
+
+  return sendResponse(res, {
+    status: 200,
+    msg: "Module fetched",
+    data: module,
+  });
+}
+
+/**
+ * Delete module from the course along with its lessons
+ *
+ * @route DELETE /api/course/:courseId/:moduleId
+ *
+ * Middlewares used
+ * - verifyAuth
+ * - verifyInstructor
+ * - verifyModuleOwnership
+ */
+export async function deleteModuleController(
+  req: Request<zod.DeleteModule["params"]>,
+  res: Response
+) {
+  var course = req.course;
+
+  // Remove module from course and get lesson ids to delete
+  try {
+    var lessons = course.deleteModule(req.params.moduleId);
+  } catch (err) {
+    if (err instanceof BaseApiError) throw err;
+  }
+
+  // Delete all the lessons in the module and update the course
+  var session = await startSession();
+  session.startTransaction();
+
+  try {
+    // Delete lessons
+    if (lessons && lessons.length > 0) {
+      await CourseLessonModel.deleteMany(
+        { _id: { $in: lessons } },
+        { session }
+      );
+    }
+
+    // Save course
+    await course.save({ session });
+
+    await session.commitTransaction();
+  } catch (err) {
+    await session.abortTransaction();
+    throw err;
+  }
+
+  session.endSession();
+
+  return sendResponse(res, {
+    status: 200,
+    msg: "Module deleted",
+  });
+}
+
+/**
+ * Reorder lessons in a module
+ *
+ * @route PUT /api/course/:courseId/:moduleId/reorder
+ *
+ * Middlewares used
+ * - verifyAuth
+ * - verifyInstructor
+ * - verifyModuleOwnership
+ */
+export async function reorderLessonsController(
+  req: Request<zod.ReorderLessons["params"], {}, zod.ReorderLessons["body"]>,
+  res: Response
+) {
+  var course = req.course;
+  course.updateModule(req.params.moduleId, {
+    lessons: req.body.lessons.map((lesson) => new Types.ObjectId(lesson)),
+  });
+
+  await course.save();
+
+  return sendResponse(res, {
+    status: 200,
+    msg: "Lessons reordered successfully",
   });
 }

@@ -1,15 +1,16 @@
 import { Router } from "express";
 
 import { addContentInLessonController, createCourseLessonController, deleteContentInLessonController, deleteLessonController, getCourseController, getCoursesController, getLessonController, reorderContentController, updateContentInLessonController, updateLessonMetadataController } from "../controller/course-lesson.controller";
-import { addModuleToCourseController, createCourseController, deleteCourseController, deleteCourseModuleController, getCourseMoudelController, reorderLessonsInModuleController, reorderModulesController, updateCourseMetadataController, updateCourseModuleController } from "../controller/course.controller";
+import { addModuleController, createCourseController, deleteCourseController, deleteModuleController, getModuleController, reorderLessonsController, reorderModulesController, updateCourseMetadataController, updateModuleController } from "../controller/course.controller";
 import { validateResource } from "../middlewares/validate-resource";
 import verifyAuth from "../middlewares/verify-auth";
 import verifyCourseOwnership from "../middlewares/verify-course-ownership";
 import verifyInstructor from "../middlewares/verify-instructor";
+import verifyModuleOwnership from "../middlewares/verify-module-ownership";
 import { handleMiddlewarelError } from "../utils/handle-async";
 import { sendErrorResponse } from "../utils/handle-error";
 import { addContentInLessonSchema, createCourseLessonSchema, deleteContentInLessonSchema, updateContentInLessonSchema, updateLessonMetadataSchema } from "../zod-schema/course-lesson.schema";
-import { addModuleToCourseSchema, deleteCourseModuleSchema, deleteCourseSchema, getCourseSchema, reorderLessonsInModuleSchema, updateCourseMetadataSchema } from "../zod-schema/course.schema";
+import { deleteCourseSchema, deleteModuleSchema, getCourseSchema, reorderLessonsSchema, reorderModulesSchema, updateCourseMetadataSchema } from "../zod-schema/course.schema";
 
 export var router = Router();
 
@@ -47,6 +48,74 @@ router.delete(
   sendErrorResponse
 );
 
+// Reorder modules
+router.put(
+  "/:courseId/reorder",
+  validateResource(reorderModulesSchema),
+  handleMiddlewarelError(verifyAuth),
+  handleMiddlewarelError(verifyInstructor),
+  handleMiddlewarelError(verifyCourseOwnership),
+  handleMiddlewarelError(reorderModulesController),
+  sendErrorResponse
+);
+
+// ==================================
+// MODULE ROUTES
+// ==================================
+
+// Add module to the course
+router.post(
+  "/:courseId",
+  handleMiddlewarelError(verifyAuth),
+  handleMiddlewarelError(verifyInstructor),
+  handleMiddlewarelError(verifyCourseOwnership),
+  handleMiddlewarelError(addModuleController),
+  sendErrorResponse
+);
+
+// Update module
+router.put(
+  "/:courseId/:moduleId",
+  handleMiddlewarelError(verifyAuth),
+  handleMiddlewarelError(verifyInstructor),
+  handleMiddlewarelError(verifyModuleOwnership),
+  handleMiddlewarelError(updateModuleController),
+  sendErrorResponse
+);
+
+// Get module
+router.get(
+  "/:courseId/:moduleId",
+  handleMiddlewarelError(getModuleController),
+  sendErrorResponse
+);
+
+// Delete module
+router.delete(
+  "/:courseId/:moduleId",
+  validateResource(deleteModuleSchema),
+  handleMiddlewarelError(verifyAuth),
+  handleMiddlewarelError(verifyInstructor),
+  handleMiddlewarelError(verifyModuleOwnership),
+  handleMiddlewarelError(deleteModuleController),
+  sendErrorResponse
+);
+
+// Reorder lessons
+router.put(
+  "/:courseId/:moduleId/reorder",
+  validateResource(reorderLessonsSchema),
+  handleMiddlewarelError(verifyAuth),
+  handleMiddlewarelError(verifyInstructor),
+  handleMiddlewarelError(verifyModuleOwnership),
+  handleMiddlewarelError(reorderLessonsController),
+  sendErrorResponse
+);
+
+// ==================================
+// LESSONS ROUTES
+// ==================================
+
 // Course
 router
   .get("/all", handleMiddlewarelError(getCoursesController), sendErrorResponse)
@@ -54,47 +123,6 @@ router
     "/:courseId",
     validateResource(getCourseSchema),
     handleMiddlewarelError(getCourseController),
-    sendErrorResponse
-  )
-  .put(
-    "/:courseId/reorder",
-    handleMiddlewarelError(verifyAuth),
-    handleMiddlewarelError(reorderModulesController),
-    sendErrorResponse
-  );
-
-// Module
-router
-  .get(
-    "/:courseId/:moduleId",
-    handleMiddlewarelError(getCourseMoudelController),
-    sendErrorResponse
-  )
-  .post(
-    "/:courseId",
-    validateResource(addModuleToCourseSchema),
-    handleMiddlewarelError(verifyAuth),
-    handleMiddlewarelError(addModuleToCourseController),
-    sendErrorResponse
-  )
-  .put(
-    "/:courseId/:moduleId",
-    handleMiddlewarelError(verifyAuth),
-    handleMiddlewarelError(updateCourseModuleController),
-    sendErrorResponse
-  )
-  .delete(
-    "/:courseId/:moduleId",
-    validateResource(deleteCourseModuleSchema),
-    handleMiddlewarelError(verifyAuth),
-    handleMiddlewarelError(deleteCourseModuleController),
-    sendErrorResponse
-  )
-  .put(
-    "/:courseId/:moduleId/reorder",
-    validateResource(reorderLessonsInModuleSchema),
-    handleMiddlewarelError(verifyAuth),
-    handleMiddlewarelError(reorderLessonsInModuleController),
     sendErrorResponse
   );
 

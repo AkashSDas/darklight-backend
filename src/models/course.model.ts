@@ -2,7 +2,7 @@ import MongoPaging from "mongo-cursor-pagination";
 import mongoose, { SchemaTypes, Types } from "mongoose";
 import { nanoid } from "nanoid";
 
-import { getModelForClass, plugin, prop, Ref, ReturnModelType, Severity } from "@typegoose/typegoose";
+import { getModelForClass, plugin, prop, Ref, Severity } from "@typegoose/typegoose";
 
 import { BaseApiError } from "../utils/handle-error";
 import { TCourseLessonClass } from "./course-lesson.model";
@@ -21,6 +21,13 @@ export interface CourseMetadata {
   price?: number;
   stage?: CourseLifecycleStage;
   tags: string[];
+}
+
+export interface ModuleMetadata {
+  emoji?: string;
+  title?: string;
+  description?: string;
+  lessons: Types.ObjectId[];
 }
 
 // ===============================
@@ -51,7 +58,7 @@ class TFaqClass {
   answer: string;
 }
 
-class TCourseModuleClass {
+export class TCourseModuleClass {
   @prop({
     default: () => nanoid(24),
     type: SchemaTypes.String,
@@ -157,6 +164,51 @@ export class TCourseClass {
     this.updateLastEditedOn();
   }
 
+  // MODULE RELATED
+
+  addModule(): void {
+    this.modules.push({
+      id: nanoid(24),
+      lessons: [],
+      lastEditedOn: new Date(Date.now()),
+    });
+
+    this.updateLastEditedOn();
+  }
+
+  // Direct update won't work like "this.modules[index].title = title"
+  updateModule(id: string, payload: ModuleMetadata): void {
+    var index = this.modules.findIndex(function findModule(m) {
+      return m.id == id;
+    });
+    var module = this.modules[index];
+    if (!module) throw new BaseApiError(400, "Module not found");
+
+    for (let key in payload) {
+      if (payload[key]) module[key] = payload[key];
+    }
+
+    module.lastEditedOn = new Date(Date.now());
+    this.modules[index] = module;
+  }
+
+  deleteModule(id: string): Types.ObjectId[] {
+    var deleteAt = this.modules.findIndex(function findModule(m) {
+      return m.id == id;
+    });
+    if (deleteAt == -1) throw new BaseApiError(400, "Module not found");
+
+    var lessons = this.modules[deleteAt].lessons; // Get all lessons in the module
+    this.modules.splice(deleteAt, 1); // Remove module
+
+    return lessons as Types.ObjectId[];
+  }
+
+  updateModules(payload: TCourseModuleClass[]): void {
+    this.modules = payload;
+    this.updateLastEditedOn();
+  }
+
   // LESSON RELATED
 
   getAllLessons(): Types.ObjectId[] {
@@ -165,74 +217,6 @@ export class TCourseClass {
       lessons = lessons.concat(module.lessons as Types.ObjectId[]);
     }
     return lessons;
-  }
-
-  addModule() {
-    this.modules.push({
-      id: nanoid(24),
-      lessons: [],
-      lastEditedOn: new Date(Date.now()),
-    });
-  }
-
-  updateModule(
-    moduleId: string,
-    payload: {
-      emoji?: string;
-      title?: string;
-      description?: string;
-      lessons?: string[];
-    }
-  ) {
-    var index = this.modules.findIndex(function findModule(m) {
-      return m.id == moduleId;
-    });
-    if (index == -1) throw new BaseApiError(400, "Module not found");
-    var module = this.modules[index];
-
-    // Make removed fields as undefined
-    for (let key in payload) {
-      if (payload[key] == null) {
-        if (key == "lessons") payload[key] = [];
-        else payload[key] = undefined;
-      }
-    }
-
-    // Check if all the lessons are valid MongoDB ids OR not
-    // TODO: can also check if all of them exists OR not
-    if (payload.lessons) {
-      // Check if all the lessons are valid MongoDB ids OR not
-      for (let lessonId of payload.lessons) {
-        if (!Types.ObjectId.isValid(lessonId)) {
-          throw new BaseApiError(400, "Invalid lesson id");
-        }
-      }
-
-      // For reordering, check if newly ordered lessons have same length as old lessons
-      if (payload.lessons.length != module.lessons.length) {
-        throw new BaseApiError(400, "Invalid lesson ids");
-      }
-    }
-
-    module = { ...module, ...payload } as any;
-    this.modules[index] = module;
-    return module;
-  }
-
-  // TODO: delete all the lessons of this module
-  deleteModule(moduleId: string) {
-    var deleteAt = this.modules.findIndex(function findModule(m) {
-      return m.id == moduleId;
-    });
-    if (deleteAt == -1) throw new BaseApiError(400, "Module not found");
-    var lessons = this.modules[deleteAt].lessons;
-    this.modules.splice(deleteAt, 1);
-    return lessons;
-  }
-
-  updateModules(payload: TCourseModuleClass[]) {
-    console.log(payload);
-    this.modules = payload;
   }
 
   deleteLesson(lessonId: string) {
