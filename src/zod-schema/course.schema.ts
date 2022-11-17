@@ -53,6 +53,10 @@ export var updateCourseMetadataSchema = object({
   }),
 });
 
+export var deleteCourseSchema = object({
+  params: object({ courseId }),
+});
+
 export var getCourseSchema = object({
   params: object({
     courseId: string({ required_error: "Course id is required" }),
@@ -100,6 +104,7 @@ export var reorderLessonsInModuleSchema = object({
 // =========================
 
 export type UpdateCourseMetadata = TypeOf<typeof updateCourseMetadataSchema>;
+export type DeleteCourse = TypeOf<typeof deleteCourseSchema>;
 
 export type ZodGetCourse = TypeOf<typeof getCourseSchema>;
 export type ZodAddModuleToCourse = TypeOf<typeof addModuleToCourseSchema>;

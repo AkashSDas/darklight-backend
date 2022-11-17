@@ -139,7 +139,13 @@ export class TCourseClass {
   // METHODS
   // =====================
 
-  updateMetadata(payload: CourseMetadata) {
+  // COURSE RELATED
+
+  updateLastEditedOn(): void {
+    this.lastEditedOn = new Date(Date.now());
+  }
+
+  updateMetadata(payload: CourseMetadata): void {
     this.emoji = payload.emoji;
     this.title = payload.title;
     this.description = payload.description;
@@ -151,8 +157,14 @@ export class TCourseClass {
     this.updateLastEditedOn();
   }
 
-  updateLastEditedOn() {
-    this.lastEditedOn = new Date(Date.now());
+  // LESSON RELATED
+
+  getAllLessons(): Types.ObjectId[] {
+    var lessons: Types.ObjectId[] = [];
+    for (let module of this.modules) {
+      lessons = lessons.concat(module.lessons as Types.ObjectId[]);
+    }
+    return lessons;
   }
 
   addModule() {
@@ -215,14 +227,6 @@ export class TCourseClass {
     if (deleteAt == -1) throw new BaseApiError(400, "Module not found");
     var lessons = this.modules[deleteAt].lessons;
     this.modules.splice(deleteAt, 1);
-    return lessons;
-  }
-
-  getAllLessons() {
-    var lessons = [];
-    for (let module of this.modules) {
-      lessons = lessons.concat(module.lessons);
-    }
     return lessons;
   }
 

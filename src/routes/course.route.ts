@@ -9,7 +9,7 @@ import verifyInstructor from "../middlewares/verify-instructor";
 import { handleMiddlewarelError } from "../utils/handle-async";
 import { sendErrorResponse } from "../utils/handle-error";
 import { addContentInLessonSchema, createCourseLessonSchema, deleteContentInLessonSchema, updateContentInLessonSchema, updateLessonMetadataSchema } from "../zod-schema/course-lesson.schema";
-import { addModuleToCourseSchema, deleteCourseModuleSchema, getCourseSchema, reorderLessonsInModuleSchema, updateCourseMetadataSchema } from "../zod-schema/course.schema";
+import { addModuleToCourseSchema, deleteCourseModuleSchema, deleteCourseSchema, getCourseSchema, reorderLessonsInModuleSchema, updateCourseMetadataSchema } from "../zod-schema/course.schema";
 
 export var router = Router();
 
@@ -36,6 +36,17 @@ router.put(
   sendErrorResponse
 );
 
+// Delete course
+router.delete(
+  "/:courseId",
+  validateResource(deleteCourseSchema),
+  handleMiddlewarelError(verifyAuth),
+  handleMiddlewarelError(verifyInstructor),
+  handleMiddlewarelError(verifyCourseOwnership),
+  handleMiddlewarelError(deleteCourseController),
+  sendErrorResponse
+);
+
 // Course
 router
   .get("/all", handleMiddlewarelError(getCoursesController), sendErrorResponse)
@@ -50,11 +61,6 @@ router
     handleMiddlewarelError(verifyAuth),
     handleMiddlewarelError(reorderModulesController),
     sendErrorResponse
-  )
-  .delete(
-    "/:courseId",
-    handleMiddlewarelError(verifyAuth),
-    handleMiddlewarelError(deleteCourseController)
   );
 
 // Module

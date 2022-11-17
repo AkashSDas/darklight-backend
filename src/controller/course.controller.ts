@@ -32,10 +32,13 @@ export async function createCourseController(req: Request, res: Response) {
   });
 }
 
+// TODO: add validation of req.body
+// TODO: optimize the async/await
 /**
  * Update course metadata
  *
  * @route PUT /api/course/:courseId
+ * @remark Req body schema isn't validated
  *
  * Middlewares used
  * - verifyAuth
@@ -58,6 +61,31 @@ export async function updateCourseMetadataController(
     status: 200,
     msg: "Course metadata updated",
     data: course,
+  });
+}
+
+export async function deleteCourseController(
+  req: Request<zod.DeleteCourse["params"]>,
+  res: Response
+) {
+  var course = req.course;
+  var lessons = course.getAllLessons();
+  var session = await startSession();
+  session.startTransaction();
+
+  try {
+    await course.delete({ session });
+    await CourseLessonModel.deleteMany({ _id: { $in: lessons } }, { session });
+    await session.commitTransaction();
+  } catch (err) {
+    await session.abortTransaction();
+    throw err;
+  }
+
+  session.endSession();
+  return sendResponse(res, {
+    status: 200,
+    msg: "Course deleted successfully",
   });
 }
 
@@ -221,27 +249,5 @@ export async function reorderModulesController(req: Request, res: Response) {
     status: 200,
     msg: "Modules reordered successfully",
     data: { modules: course.modules },
-  });
-}
-
-export async function deleteCourseController(req, res) {
-  var course = await validateCourseAndOwnership(req, res);
-  var lessons = course.getAllLessons();
-
-  var session = await startSession();
-  session.startTransaction();
-
-  try {
-    await course.delete({ session });
-    await CourseLessonModel.deleteMany({ _id: { $in: lessons } }, { session });
-    await session.commitTransaction();
-  } catch (error) {
-    await session.abortTransaction();
-    throw error;
-  }
-
-  return sendResponse(res, {
-    status: 200,
-    msg: "Course deleted successfully",
   });
 }
