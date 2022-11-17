@@ -1,35 +1,48 @@
 import { Router } from "express";
 
 import { addContentInLessonController, createCourseLessonController, deleteContentInLessonController, deleteLessonController, getCourseController, getCoursesController, getLessonController, reorderContentController, updateContentInLessonController, updateLessonMetadataController } from "../controller/course-lesson.controller";
-import { addModuleToCourseController, createCourseController, deleteCourseController, deleteCourseModuleController, getCourseMoudelController, reorderLessonsInModuleController, reorderModulesController, updateCourseInfoController, updateCourseModuleController } from "../controller/course.controller";
+import { addModuleToCourseController, createCourseController, deleteCourseController, deleteCourseModuleController, getCourseMoudelController, reorderLessonsInModuleController, reorderModulesController, updateCourseMetadataController, updateCourseModuleController } from "../controller/course.controller";
 import { validateResource } from "../middlewares/validate-resource";
 import verifyAuth from "../middlewares/verify-auth";
+import verifyCourseOwnership from "../middlewares/verify-course-ownership";
+import verifyInstructor from "../middlewares/verify-instructor";
 import { handleMiddlewarelError } from "../utils/handle-async";
 import { sendErrorResponse } from "../utils/handle-error";
 import { addContentInLessonSchema, createCourseLessonSchema, deleteContentInLessonSchema, updateContentInLessonSchema, updateLessonMetadataSchema } from "../zod-schema/course-lesson.schema";
-import { addModuleToCourseSchema, deleteCourseModuleSchema, getCourseSchema, reorderLessonsInModuleSchema } from "../zod-schema/course.schema";
+import { addModuleToCourseSchema, deleteCourseModuleSchema, getCourseSchema, reorderLessonsInModuleSchema, updateCourseMetadataSchema } from "../zod-schema/course.schema";
 
 export var router = Router();
 
+// ==================================
+// COURSE ROUTES
+// ==================================
+
+// Create course
+router.post(
+  "/",
+  handleMiddlewarelError(verifyAuth),
+  handleMiddlewarelError(verifyInstructor),
+  handleMiddlewarelError(createCourseController),
+  sendErrorResponse
+);
+
+// Update course metadata
+router.put(
+  "/:courseId/info",
+  handleMiddlewarelError(verifyAuth),
+  handleMiddlewarelError(verifyInstructor),
+  handleMiddlewarelError(verifyCourseOwnership),
+  handleMiddlewarelError(updateCourseMetadataController),
+  sendErrorResponse
+);
+
 // Course
 router
-  .post(
-    "/",
-    handleMiddlewarelError(verifyAuth),
-    handleMiddlewarelError(createCourseController),
-    sendErrorResponse
-  )
   .get("/all", handleMiddlewarelError(getCoursesController), sendErrorResponse)
   .get(
     "/:courseId",
     validateResource(getCourseSchema),
     handleMiddlewarelError(getCourseController),
-    sendErrorResponse
-  )
-  .put(
-    "/:courseId/info",
-    handleMiddlewarelError(verifyAuth),
-    handleMiddlewarelError(updateCourseInfoController),
     sendErrorResponse
   )
   .put(

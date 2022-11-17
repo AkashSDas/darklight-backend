@@ -2,12 +2,26 @@ import MongoPaging from "mongo-cursor-pagination";
 import mongoose, { SchemaTypes, Types } from "mongoose";
 import { nanoid } from "nanoid";
 
-import { getModelForClass, plugin, prop, Ref, Severity } from "@typegoose/typegoose";
+import { getModelForClass, plugin, prop, Ref, ReturnModelType, Severity } from "@typegoose/typegoose";
 
 import { BaseApiError } from "../utils/handle-error";
 import { TCourseLessonClass } from "./course-lesson.model";
 import { TImageClass } from "./image.model";
 import { TUserClass } from "./user.model";
+
+// ========================
+// UTILS
+// ========================
+
+export interface CourseMetadata {
+  emoji?: string;
+  title?: string;
+  description?: string;
+  difficulty?: CourseCourseDifficulty;
+  price?: number;
+  stage?: CourseLifecycleStage;
+  tags: string[];
+}
 
 // ===============================
 // Enums
@@ -121,9 +135,21 @@ export class TCourseClass {
   @prop({ type: SchemaTypes.Array, required: true, default: [] })
   faqs: TFaqClass[];
 
-  // ===============================
-  // Methods
-  // ===============================
+  // =====================
+  // METHODS
+  // =====================
+
+  updateMetadata(payload: CourseMetadata) {
+    this.emoji = payload.emoji;
+    this.title = payload.title;
+    this.description = payload.description;
+    this.price = payload.price;
+    this.difficulty = payload.difficulty;
+    this.tags = payload.tags;
+    this.stage = payload.stage;
+
+    this.updateLastEditedOn();
+  }
 
   updateLastEditedOn() {
     this.lastEditedOn = new Date(Date.now());

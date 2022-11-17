@@ -25,10 +25,14 @@
  * - This code does give error at first while using `Express` types
  */
 
+import { TCourseClass } from "@models/course.model";
+import { DocumentType } from "@typegoose/typegoose";
+
 import { TUserClass } from "../../src/models/user.model";
 
 declare module "express-serve-static-core" {
   interface Request {
     user?: TUserClass;
+    course?: DocumentType<TCourseClass>;
   }
 }

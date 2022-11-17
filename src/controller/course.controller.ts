@@ -2,58 +2,67 @@ import { Request, Response } from "express";
 import { startSession } from "mongoose";
 
 import { CourseLessonModel } from "../models/course-lesson.model";
-import { UserRole } from "../models/user.model";
 import { createCourseService, getCourseService } from "../services/course.service";
 import { sendResponse } from "../utils/client-response";
 import { validateCourseAndOwnership } from "../utils/course";
 import { BaseApiError } from "../utils/handle-error";
-import { ZodAddModuleToCourse, ZodDeleteCourseModule, ZodReorderLessonsInModule, ZodUpdateCourse, ZodUpdateCourseModule } from "../zod-schema/course.schema";
+import * as zod from "../zod-schema/course.schema";
 
+// ==================================
+// COURSE CONTROLLERS
+// ==================================
+
+/**
+ * Create a new empty course
+ *
+ * @route POST /api/course
+ *
+ * Middlewares used
+ * - verifyAuth
+ * - verifyInstructor
+ */
 export async function createCourseController(req: Request, res: Response) {
-  // Check if the user exists
   var user = req.user;
-  if (!user) throw new BaseApiError(404, "User not found");
-
-  // Check if the user has the required permissions
-  if (!user.roles.includes(UserRole.INSTRUCTOR)) {
-    throw new BaseApiError(403, "You don't have the required permissions");
-  }
-
-  // Create the course
   var course = await createCourseService({ instructors: [user._id] });
+
   return sendResponse(res, {
     status: 201,
-    msg: "Course created successfully",
+    msg: "Course created",
     data: course,
   });
 }
 
-export async function updateCourseInfoController(
-  req: Request<ZodUpdateCourse["params"], {}, ZodUpdateCourse["body"]>,
+/**
+ * Update course metadata
+ *
+ * @route PUT /api/course/:courseId
+ *
+ * Middlewares used
+ * - verifyAuth
+ * - verifyInstructor
+ * - verifyCourseOwnership
+ */
+export async function updateCourseMetadataController(
+  req: Request<
+    zod.UpdateCourseMetadata["params"],
+    {},
+    zod.UpdateCourseMetadata["body"]
+  >,
   res: Response
 ) {
-  var course = await validateCourseAndOwnership(req, res);
-  var { emoji, description, difficulty, price, stage, tags, title } = req.body;
-  if (emoji) course.emoji = emoji;
-  if (description) course.description = description;
-  if (difficulty) course.difficulty = difficulty as any;
-  if (price) course.price = price;
-  if (stage) course.stage = stage as any;
-  if (tags) course.tags = tags;
-  if (title) course.title = title;
-
-  course.updateLastEditedOn();
-  await course.save();
+  var course = req.course;
+  course.updateMetadata(req.body as any); // values validated by zod schema
+  course.save();
 
   return sendResponse(res, {
     status: 200,
-    msg: "Course updated successfully",
+    msg: "Course metadata updated",
     data: course,
   });
 }
 
 export async function addModuleToCourseController(
-  req: Request<ZodAddModuleToCourse["params"]>,
+  req: Request<zod.ZodAddModuleToCourse["params"]>,
   res: Response
 ) {
   // Check if the course exists and the user is an instructor of this course
@@ -99,9 +108,9 @@ export async function getCourseMoudelController(req: Request, res: Response) {
  */
 export async function updateCourseModuleController(
   req: Request<
-    ZodUpdateCourseModule["params"],
+    zod.ZodUpdateCourseModule["params"],
     {},
-    ZodUpdateCourseModule["body"]
+    zod.ZodUpdateCourseModule["body"]
   >,
   res: Response
 ) {
@@ -130,7 +139,7 @@ export async function updateCourseModuleController(
 }
 
 export async function deleteCourseModuleController(
-  req: Request<ZodDeleteCourseModule["params"]>,
+  req: Request<zod.ZodDeleteCourseModule["params"]>,
   res: Response
 ) {
   var course = await validateCourseAndOwnership(req, res);
@@ -169,9 +178,9 @@ export async function deleteCourseModuleController(
 
 export async function reorderLessonsInModuleController(
   req: Request<
-    ZodReorderLessonsInModule["params"],
+    zod.ZodReorderLessonsInModule["params"],
     {},
-    ZodReorderLessonsInModule["body"]
+    zod.ZodReorderLessonsInModule["body"]
   >,
   res: Response
 ) {

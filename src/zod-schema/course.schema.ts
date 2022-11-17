@@ -1,33 +1,55 @@
-import { number, object, string, TypeOf } from "zod";
+import { boolean, number, object, string, TypeOf } from "zod";
 
 import { CourseCourseDifficulty } from "../models/course.model";
 
-// ============================================
-// Schemas
-// ============================================
+// =========================
+// UTILS
+// =========================
 
-export var updateCourseSchema = object({
-  params: object({
-    courseId: string({ required_error: "Course id is required" }),
-  }),
+// PARAMS
+
+var courseId = string({ required_error: "Required" }).regex(
+  /^(?=[a-f\d]{24}$)(\d+[a-f]|[a-f]+\d)/i,
+  "Invalid course id"
+);
+
+// BODY
+
+var emoji = string().regex(
+  /^[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]+$/u,
+  "Invalid emoji"
+);
+var title = string().max(100, "Too long");
+var description = string().max(500, "Too long");
+var stage = string().refine(
+  function validateCourseStage(stage) {
+    return stage in CourseCourseDifficulty;
+  },
+  { message: "Invalid", path: ["stage"] }
+);
+var price = number().positive("Invalid").max(100000, "Too high");
+var difficulty = string().refine(
+  function validateDifficultyLevel(level) {
+    return level in CourseCourseDifficulty;
+  },
+  { message: "Invalid", path: ["difficulty"] }
+);
+var tags = string().array().max(10, "Too many tags");
+
+// =========================
+// SCHEMAS
+// =========================
+
+export var updateCourseMetadataSchema = object({
+  params: object({ courseId }),
   body: object({
-    emoji: string().min(0).max(1),
-    title: string(),
-    description: string(),
-    stage: string().refine(
-      function zodValidateCourseStage(value) {
-        return value == "draft" || value == "published";
-      },
-      { message: "Invalid course stage", path: ["stage"] }
-    ),
-    price: number().min(0),
-    difficulty: string().refine(
-      function zodValidateCourseDifficulty(value) {
-        return Object.values(CourseCourseDifficulty).includes(value as any);
-      },
-      { message: "Invalid course difficulty", path: ["difficulty"] }
-    ),
-    tags: string().array(),
+    emoji,
+    title,
+    description,
+    stage,
+    price,
+    difficulty,
+    tags,
   }),
 });
 
@@ -73,11 +95,12 @@ export var reorderLessonsInModuleSchema = object({
   }),
 });
 
-// ============================================
-// Types
-// ============================================
+// =========================
+// TYPES
+// =========================
 
-export type ZodUpdateCourse = TypeOf<typeof updateCourseSchema>;
+export type UpdateCourseMetadata = TypeOf<typeof updateCourseMetadataSchema>;
+
 export type ZodGetCourse = TypeOf<typeof getCourseSchema>;
 export type ZodAddModuleToCourse = TypeOf<typeof addModuleToCourseSchema>;
 export type ZodUpdateCourseModule = TypeOf<typeof updateCourseModuleSchema>;
