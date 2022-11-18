@@ -1,13 +1,12 @@
 import { Request, Response } from "express";
 import { startSession, Types } from "mongoose";
 
-import { ModuleMetadata } from "@models/course.model";
-
 import { CourseLessonModel } from "../models/course-lesson.model";
+import { ModuleMetadata } from "../models/course.model";
 import { createCourseService, getCourseService } from "../services/course.service";
 import { sendResponse } from "../utils/client-response";
 import { BaseApiError } from "../utils/handle-error";
-import * as zod from "../zod-schema/course.schema";
+import * as z from "../zod-schema/course.schema";
 
 // ==================================
 // COURSE CONTROLLERS
@@ -48,9 +47,9 @@ export async function createCourseController(req: Request, res: Response) {
  */
 export async function updateCourseMetadataController(
   req: Request<
-    zod.UpdateCourseMetadata["params"],
+    z.UpdateCourseMetadata["params"],
     {},
-    zod.UpdateCourseMetadata["body"]
+    z.UpdateCourseMetadata["body"]
   >,
   res: Response
 ) {
@@ -76,7 +75,7 @@ export async function updateCourseMetadataController(
  * - verifyCourseOwnership
  */
 export async function deleteCourseController(
-  req: Request<zod.DeleteCourse["params"]>,
+  req: Request<z.DeleteCourse["params"]>,
   res: Response
 ) {
   var course = req.course;
@@ -141,7 +140,7 @@ export async function reorderModulesController(req: Request, res: Response) {
  * - verifyCourseOwnership
  */
 export async function addModuleController(
-  req: Request<zod.AddModule["params"]>,
+  req: Request<z.AddModule["params"]>,
   res: Response
 ) {
   var course = req.course;
@@ -166,7 +165,7 @@ export async function addModuleController(
  * - verifyModuleOwnership
  */
 export async function updateModuleController(
-  req: Request<zod.UpdateModule["params"], {}, zod.UpdateModule["body"]>,
+  req: Request<z.UpdateModule["params"], {}, z.UpdateModule["body"]>,
   res: Response
 ) {
   var course = req.course;
@@ -190,7 +189,7 @@ export async function updateModuleController(
  * @route GET /api/course/:courseId/:moduleId
  */
 export async function getModuleController(
-  req: Request<zod.GetModule["params"]>,
+  req: Request<z.GetModule["params"]>,
   res: Response
 ) {
   var course = await getCourseService({ _id: req.params.courseId });
@@ -217,7 +216,7 @@ export async function getModuleController(
  * - verifyModuleOwnership
  */
 export async function deleteModuleController(
-  req: Request<zod.DeleteModule["params"]>,
+  req: Request<z.DeleteModule["params"]>,
   res: Response
 ) {
   var course = req.course;
@@ -270,7 +269,7 @@ export async function deleteModuleController(
  * - verifyModuleOwnership
  */
 export async function reorderLessonsController(
-  req: Request<zod.ReorderLessons["params"], {}, zod.ReorderLessons["body"]>,
+  req: Request<z.ReorderLessons["params"], {}, z.ReorderLessons["body"]>,
   res: Response
 ) {
   var course = req.course;

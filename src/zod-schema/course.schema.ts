@@ -1,5 +1,5 @@
 import { Types } from "mongoose";
-import { array, number, object, string, TypeOf } from "zod";
+import { number, object, string, TypeOf } from "zod";
 
 import { CourseCourseDifficulty } from "../models/course.model";
 
@@ -40,7 +40,6 @@ var difficulty = string().refine(
   { message: "Invalid", path: ["difficulty"] }
 );
 var tags = string().array().max(10, "Too many tags");
-
 var lessons = string()
   .array()
   .refine(
