@@ -3,7 +3,7 @@ import { startSession, Types } from "mongoose";
 
 import { CourseLessonModel } from "../models/course-lesson.model";
 import { ModuleMetadata } from "../models/course.model";
-import { createCourseService, getCourseService } from "../services/course.service";
+import * as services from "../services/course.service";
 import { sendResponse } from "../utils/client-response";
 import { BaseApiError } from "../utils/handle-error";
 import * as z from "../zod-schema/course.schema";
@@ -23,7 +23,7 @@ import * as z from "../zod-schema/course.schema";
  */
 export async function createCourseController(req: Request, res: Response) {
   var user = req.user;
-  var course = await createCourseService({ instructors: [user._id] });
+  var course = await services.createCourseService({ instructors: [user._id] });
 
   return sendResponse(res, {
     status: 201,
@@ -125,6 +125,47 @@ export async function reorderModulesController(req: Request, res: Response) {
   });
 }
 
+/**
+ * Get a course
+ *
+ * @route GET /api/course/:courseId
+ * @remark Here the instructor and course lessons (only needed fields) are populated
+ */
+export async function getCourseController(
+  req: Request<z.GetCourse["params"]>,
+  res: Response
+) {
+  var course = await services.getCourseService(
+    { _id: req.params.courseId },
+    true
+  );
+  if (!course) throw new BaseApiError(404, "Course not found");
+
+  return sendResponse(res, {
+    status: 200,
+    msg: "Course fetched successfully",
+    data: course,
+  });
+}
+
+/**
+ * Get all the courses
+ *
+ * @route GET /api/course/all
+ * @remark Here the instructor and course lessons (only needed fields) are populated
+ */
+export async function getCoursesController(req: Request, res: Response) {
+  const LIMIT = 2;
+  var next = req.query.next as string;
+  var courses = await services.getAllCoursesService(LIMIT, next);
+
+  return sendResponse(res, {
+    status: 200,
+    msg: "Courses fetched successfully",
+    data: courses,
+  });
+}
+
 // ==================================
 // MODULE CONTROLLERS
 // ==================================
@@ -192,7 +233,7 @@ export async function getModuleController(
   req: Request<z.GetModule["params"]>,
   res: Response
 ) {
-  var course = await getCourseService({ _id: req.params.courseId });
+  var course = await services.getCourseService({ _id: req.params.courseId });
   if (!course) throw new BaseApiError(404, "Course not found");
 
   var module = course.modules.find((m) => m.id == req.params.moduleId);
