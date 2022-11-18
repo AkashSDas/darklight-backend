@@ -2,9 +2,11 @@ import { object, string, TypeOf, z } from "zod";
 
 import { zodUser } from "./";
 
-// ============================================
-// Schemas
-// ============================================
+// =========================
+// SCHEMAS
+// =========================
+
+// SIGNUP
 
 export var signupSchema = z.object({
   body: z.object({
@@ -24,6 +26,8 @@ export var completeOAuthSchema = z.object({
   body: object({ username: zodUser.username, email: zodUser.email }),
 });
 
+// LOGIN
+
 export var loginSchema = z.object({
   body: object({
     email: z.string({ required_error: "Required" }).email("Invalid"),
@@ -34,13 +38,17 @@ export var loginSchema = z.object({
   }),
 });
 
-export var getEmailVerificationLinkSchema = object({
+// EMAIL VERIFICATION
+
+export var verifyEmailSchema = object({
   body: object({ email: zodUser.email }),
 });
 
 export var confirmEmailVerificationSchema = object({
   params: object({ token: string() }),
 });
+
+// PASSWORD RESET
 
 export var forgotPasswordSchema = object({
   body: object({ email: zodUser.email }),
@@ -59,19 +67,18 @@ export var resetPasswordSchema = object({
   ),
 });
 
-// ============================================
-// Types
-// ============================================
+// =========================
+// TYPES
+// =========================
 
 export type SignupSchema = z.infer<typeof signupSchema>;
 export type CompleteOAuthSchema = z.infer<typeof completeOAuthSchema>;
+
 export type LoginSchema = z.infer<typeof loginSchema>;
 
-export type ZodGetEmailVerificationLink = TypeOf<
-  typeof getEmailVerificationLinkSchema
->;
-export type ZodConfirmEmailVerification = TypeOf<
+export type VerifyEmail = TypeOf<typeof verifyEmailSchema>;
+export type ConfirmEmailVerification = TypeOf<
   typeof confirmEmailVerificationSchema
 >;
-export type ZodForgotPassword = TypeOf<typeof forgotPasswordSchema>;
-export type ZodResetPassword = TypeOf<typeof resetPasswordSchema>;
+export type ForgotPassword = TypeOf<typeof forgotPasswordSchema>;
+export type ResetPassword = TypeOf<typeof resetPasswordSchema>;

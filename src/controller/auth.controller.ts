@@ -2,35 +2,42 @@ import crypto from "crypto";
 import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 
-import { createUserService, deleteUserService, getUserService, getUserWithNotSelectedFields, updateUserService } from "../services/user.service";
+import * as services from "../services/user.service";
 import { loginCookieConfig } from "../utils/auth";
 import { sendResponse } from "../utils/client-response";
 import { BaseApiError } from "../utils/handle-error";
-import logger from "../utils/logger";
 import { EmailOptions, sendEmail } from "../utils/send-email";
 import { userDataToSend } from "../utils/user";
 import * as z from "../zod-schema/auth.schema";
 
-// ========================
-// Controllers
-// ========================
+// ==================================
+// SIGNUP CONTROLLERS
+// ==================================
 
+/**
+ * Create a new user account and send a verification email
+ *
+ * @route POST /api/auth/signup
+ * @remark username, email, and password are used for this signup
+ */
 export async function signupController(
   req: Request<{}, {}, z.SignupSchema["body"]>,
   res: Response
 ) {
   // Creating new user
   var { username, email, password } = req.body;
-  var user = await createUserService({
+  var user = await services.createUserService({
     username,
     email,
     passwordDigest: password,
   });
 
-  // Send email verification mail
+  // Get verification token
   var token = user.getEmailVerificationToken();
   await user.save({ validateModifiedOnly: true });
   user.passwordDigest = undefined; // rm pwd hash after updating user in the db
+
+  // Create email options
   var url = `${req.protocol}://${req.get("host")}`;
   url += `/api/auth/confirm-email/${token}`;
   var opts: EmailOptions = {
@@ -41,6 +48,7 @@ export async function signupController(
   };
 
   try {
+    // Send verification email
     await sendEmail(opts);
     var status = 201;
     var msg = "Account created successfully. Email sent to verify your email";
@@ -50,7 +58,6 @@ export async function signupController(
     user.emailVerificationTokenExpiresAt = undefined;
     await user.save({ validateModifiedOnly: true });
 
-    logger.error(`Error sending email: ${error}`);
     var status = 500;
     var msg = "Account created successfully";
   } finally {
@@ -67,10 +74,18 @@ export async function signupController(
   }
 }
 
+/**
+ * Cancel OAuth signup and delete the user
+ *
+ * @route POST /api/auth/cancel-oauth
+ *
+ * Middlewares used
+ * - verifyAuth
+ */
 export async function cancelOAuthController(req: Request, res: Response) {
   if (!req.user) return sendResponse(res, { status: 401, msg: "Unauthorized" });
 
-  await deleteUserService({ _id: req.user?._id });
+  await services.deleteUserService({ _id: req.user._id });
   if (req.logOut) {
     // OAuth logout
     req.logOut(function logout() {
@@ -79,15 +94,32 @@ export async function cancelOAuthController(req: Request, res: Response) {
   }
 }
 
+/**
+ * Save the necessary info of the user and complete OAuth signup
+ *
+ * @route POST /api/auth/complete-oauth
+ *
+ * Middlewares used
+ * - verifyAuth
+ */
 export async function completeOAuthController(
   req: Request<{}, {}, z.CompleteOAuthSchema["body"]>,
   res: Response
 ) {
   var { username, email } = req.body;
-  await updateUserService({ _id: req.user?._id }, { username, email });
+  await services.updateUserService({ _id: req.user?._id }, { username, email });
   return sendResponse(res, { status: 200, msg: "Signup completed" });
 }
 
+// ==================================
+// LOGIN CONTROLLERS
+// ==================================
+
+/**
+ * Login user with email and password
+ *
+ * @route POST /api/auth/login
+ */
 export async function loginController(
   req: Request<{}, {}, z.LoginSchema["body"]>,
   res: Response
@@ -95,7 +127,10 @@ export async function loginController(
   // Check if the user exists. Also get passwordDigest too as it will be
   // used while using checkPassword method
   var { email, password } = req.body;
-  var user = await getUserWithNotSelectedFields({ email }, "+passwordDigest");
+  var user = await services.getUserWithNotSelectedFields(
+    { email },
+    "+passwordDigest"
+  );
   if (!user) throw new BaseApiError(404, "User not found");
 
   // If the user doesn't have a password field, meaning user has signed up using OAuth
@@ -133,13 +168,56 @@ export async function loginController(
   });
 }
 
-export async function getEmailVerificationLinkController(
-  req: Request<{}, {}, z.ZodGetEmailVerificationLink["body"]>,
+/**
+ * Get a new access token using the refresh token
+ *
+ * @route GET /api/auth/access-token
+ */
+export async function accessTokenController(req: Request, res: Response) {
+  var refreshToken = req.cookies?.refreshToken;
+  if (!refreshToken) throw new BaseApiError(401, "Unauthorized");
+
+  try {
+    // Verify the refresh token and generate a new access token
+    jwt.verify(
+      refreshToken,
+      process.env.REFRESH_TOKEN_SECRET,
+      async function getNewAccessToken(
+        error: jwt.VerifyErrors,
+        decoded: string | jwt.JwtPayload
+      ) {
+        if (error) throw new BaseApiError(401, "Invalid refresh token");
+        var user = await services.getUserService({ _id: (decoded as any).id });
+        if (!user) throw new BaseApiError(404, "User not found");
+        var accessToken = user.generateAccessToken();
+        return sendResponse(res, {
+          status: 200,
+          msg: "New access token generated successfully",
+          data: { user, accessToken },
+        });
+      }
+    );
+  } catch (error) {
+    throw new BaseApiError(401, "Invalid refresh token");
+  }
+}
+
+// ==================================
+// EMAIL VERIFICATION CONTROLLERS
+// ==================================
+
+/**
+ * Get email verification mail on the registered email
+ *
+ * @route POST /api/auth/verify-email
+ */
+export async function verifyEmailController(
+  req: Request<{}, {}, z.VerifyEmail["body"]>,
   res: Response
 ) {
   // Check if the user exists
   var email = req.body.email;
-  var user = await getUserService({ email });
+  var user = await services.getUserService({ email });
   if (!user) throw new BaseApiError(404, "User not found");
 
   // Check if the user's email is already verified OR not
@@ -171,14 +249,19 @@ export async function getEmailVerificationLinkController(
   }
 }
 
+/**
+ * Verify user's email and active their account
+ *
+ * @route GET /api/auth/confirm-email/:token
+ */
 export async function confirmEmailVerificationController(
-  req: Request<z.ZodConfirmEmailVerification["params"]>,
+  req: Request<z.ConfirmEmailVerification["params"]>,
   res: Response
 ) {
   // Verify the token
   var token = req.params.token;
   var encryptedToken = crypto.createHash("sha256").update(token).digest("hex");
-  var user = await getUserService({
+  var user = await services.getUserService({
     emailVerificationToken: encryptedToken,
     emailVerificationTokenExpiresAt: { $gt: new Date(Date.now()) }, // token should not be expired
   });
@@ -194,47 +277,22 @@ export async function confirmEmailVerificationController(
   res.redirect(301, `${process.env.FRONTEND_BASE_URL}`);
 }
 
-export async function testAuthController(req: Request, res: Response) {
-  sendResponse(res, { status: 200, msg: "You are authorized" });
-}
+// ==================================
+// PASSWORD RESET CONTROLLERS
+// ==================================
 
-export async function getNewAccessTokenController(req: Request, res: Response) {
-  var refreshToken = req.cookies?.refreshToken;
-  if (!refreshToken) throw new BaseApiError(401, "Unauthorized");
-
-  try {
-    // Verify the refresh token and generate a new access token
-    jwt.verify(
-      refreshToken,
-      process.env.REFRESH_TOKEN_SECRET,
-      async function getNewAccessToken(
-        error: jwt.VerifyErrors,
-        decoded: string | jwt.JwtPayload
-      ) {
-        if (error) throw new BaseApiError(401, "Invalid refresh token");
-        var user = await getUserService({ _id: (decoded as any).id });
-        if (!user) throw new BaseApiError(404, "User not found");
-        var accessToken = user.generateAccessToken();
-        return sendResponse(res, {
-          status: 200,
-          msg: "New access token generated successfully",
-          data: { user, accessToken },
-        });
-      }
-    );
-  } catch (error) {
-    throw new BaseApiError(401, "Invalid refresh token");
-  }
-}
-
-// TODO: set the endpoint to the front-end's password reset URL
+/**
+ * Send email with password reset link with contains the token
+ *
+ * @route POST /api/auth/forgot-password
+ */
 export async function forgotPasswordController(
-  req: Request<{}, {}, z.ZodForgotPassword["body"]>,
+  req: Request<{}, {}, z.ForgotPassword["body"]>,
   res: Response
 ) {
   // Chech if the user exists
   var email = req.body.email;
-  var user = await getUserService({ email });
+  var user = await services.getUserService({ email });
   if (!user) throw new BaseApiError(404, "User not found");
 
   // Send reset password link to user's email
@@ -262,14 +320,19 @@ export async function forgotPasswordController(
   }
 }
 
+/**
+ * Reset user's password
+ *
+ * @route POST /api/auth/reset-password/:token
+ */
 export async function resetPasswordController(
-  req: Request<z.ZodResetPassword["params"], {}, z.ZodResetPassword["body"]>,
+  req: Request<z.ResetPassword["params"], {}, z.ResetPassword["body"]>,
   res: Response
 ) {
   // Check the token
   var token = req.params.token;
   var encryptedToken = crypto.createHash("sha256").update(token).digest("hex");
-  var user = await getUserService({
+  var user = await services.getUserService({
     passwordResetToken: encryptedToken,
     passwordResetTokenExpiresAt: { $gt: new Date(Date.now()) }, // token should not be expired
   });
@@ -286,6 +349,24 @@ export async function resetPasswordController(
   return sendResponse(res, { status: 200, msg: "Password reset successfully" });
 }
 
+// ==================================
+// OTHER CONTROLLERS
+// ==================================
+
+/**
+ * No use of this route
+ *
+ * @route GET /api/auth/test
+ */
+export async function testAuthController(req: Request, res: Response) {
+  sendResponse(res, { status: 200, msg: "You are authorized" });
+}
+
+/**
+ * Logout user with email/password login OR social login
+ *
+ * @route POST /api/auth/logout
+ */
 export async function logoutController(req: Request, res: Response) {
   if (req.cookies?.refreshToken) {
     res.clearCookie("refreshToken", {

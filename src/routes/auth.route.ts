@@ -1,24 +1,47 @@
 import { Router } from "express";
 import passport from "passport";
 
-import { cancelOAuthController, completeOAuthController, confirmEmailVerificationController, forgotPasswordController, getEmailVerificationLinkController, getNewAccessTokenController, loginController, logoutController, resetPasswordController, signupController, testAuthController } from "../controller/auth.controller";
+import * as authCtrl from "../controller/auth.controller";
 import { validateResource } from "../middlewares/validate-resource";
 import verifyAuth from "../middlewares/verify-auth";
 import { Strategies } from "../passport";
 import { handleMiddlewarelError } from "../utils/handle-async";
 import { sendErrorResponse } from "../utils/handle-error";
-import { completeOAuthSchema, confirmEmailVerificationSchema, forgotPasswordSchema, getEmailVerificationLinkSchema, loginSchema, resetPasswordSchema, signupSchema } from "../zod-schema/auth.schema";
+import * as schema from "../zod-schema/auth.schema";
 
 export var router = Router();
 
-// Signup
+// ==================================
+// SIGNUP ROUTES
+// ==================================
+
+// Email/password signup
+router.post(
+  "/signup",
+  validateResource(schema.signupSchema),
+  handleMiddlewarelError(authCtrl.signupController),
+  sendErrorResponse
+);
+
+// Cancel oauth signup (post oauth signup)
+router.post(
+  "/cancel-oauth",
+  handleMiddlewarelError(verifyAuth),
+  handleMiddlewarelError(authCtrl.cancelOAuthController),
+  sendErrorResponse
+);
+
+// Complete OAuth signup (post oauth signup)
+router.post(
+  "/complete-oauth",
+  validateResource(schema.completeOAuthSchema),
+  handleMiddlewarelError(verifyAuth),
+  handleMiddlewarelError(authCtrl.completeOAuthController),
+  sendErrorResponse
+);
+
+// Goggle OAuth signup
 router
-  .post(
-    "/signup",
-    validateResource(signupSchema),
-    handleMiddlewarelError(signupController),
-    sendErrorResponse
-  )
   .get(
     "/signup/google",
     passport.authenticate(Strategies.GoogleSignup, {
@@ -33,7 +56,10 @@ router
       successRedirect: process.env.OAUTH_SIGNUP_SUCCESS_REDIRECT_URL,
       failureRedirect: process.env.OAUTH_SIGNUP_FAILURE_REDIRECT_URL,
     })
-  )
+  );
+
+// Facebook OAuth signup
+router
   .get(
     "/signup/facebook",
     passport.authenticate(Strategies.FacebookSignup),
@@ -47,7 +73,10 @@ router
       failureRedirect: process.env.OAUTH_SIGNUP_FAILURE_REDIRECT_URL,
     }),
     function signupWithFacebookRedirect() {}
-  )
+  );
+
+// Twitter OAuth signup
+router
   .get(
     "/signup/twitter",
     passport.authenticate(Strategies.TwitterSignup),
@@ -63,29 +92,27 @@ router
     function signupWithTwitterRedirect() {}
   );
 
-// Email verification
-router
-  .post(
-    "/verify-email",
-    validateResource(getEmailVerificationLinkSchema),
-    handleMiddlewarelError(getEmailVerificationLinkController),
-    sendErrorResponse
-  )
-  .get(
-    "/confirm-email/:token",
-    validateResource(confirmEmailVerificationSchema),
-    handleMiddlewarelError(confirmEmailVerificationController),
-    sendErrorResponse
-  );
+// ==================================
+// LOGIN ROUTES
+// ==================================
 
-// Login
+// Email/password login
+router.post(
+  "/login",
+  validateResource(schema.loginSchema),
+  handleMiddlewarelError(authCtrl.loginController),
+  sendErrorResponse
+);
+
+// Get new access token (email/password login)
+router.get(
+  "/access-token",
+  handleMiddlewarelError(authCtrl.accessTokenController),
+  sendErrorResponse
+);
+
+// Goggle OAuth login
 router
-  .post(
-    "/login",
-    validateResource(loginSchema),
-    handleMiddlewarelError(loginController),
-    sendErrorResponse
-  )
   .get(
     "/login/google",
     passport.authenticate(Strategies.GoogleLogin, {
@@ -101,7 +128,10 @@ router
       failureRedirect: `${process.env.OAUTH_LOGIN_FAILURE_REDIRECT_URL}?info=signup-invalid`,
     }),
     function loginWithGoogleRedirect() {}
-  )
+  );
+
+// Facebook OAuth login
+router
   .get(
     "/login/facebook",
     passport.authenticate(Strategies.FacebookLogin),
@@ -115,7 +145,10 @@ router
       failureRedirect: `${process.env.OAUTH_LOGIN_FAILURE_REDIRECT_URL}?info=signup-invalid`,
     }),
     function loginWithFacebookRedirect() {}
-  )
+  );
+
+// Twitter OAuth login
+router
   .get(
     "/login/twitter",
     passport.authenticate(Strategies.TwitterLogin),
@@ -131,55 +164,57 @@ router
     function loginWithTwitterRedirect() {}
   );
 
-// Test auth
-router.get(
-  "/test",
-  handleMiddlewarelError(verifyAuth),
-  handleMiddlewarelError(testAuthController),
-  sendErrorResponse
-);
+// ==================================
+// EMAIL VERIFICATION ROUTES
+// ==================================
 
-// Get new access token
-router.get(
-  "/access-token",
-  handleMiddlewarelError(getNewAccessTokenController),
-  sendErrorResponse
-);
+router
+  .post(
+    "/verify-email",
+    validateResource(schema.verifyEmailSchema),
+    handleMiddlewarelError(authCtrl.verifyEmailController),
+    sendErrorResponse
+  )
+  .get(
+    "/confirm-email/:token",
+    validateResource(schema.confirmEmailVerificationSchema),
+    handleMiddlewarelError(authCtrl.confirmEmailVerificationController),
+    sendErrorResponse
+  );
 
-// Forgot password and reset password
+// ==================================
+// PASSWORD RESET ROUTES
+// ==================================
+
 router
   .post(
     "/forgot-password",
-    validateResource(forgotPasswordSchema),
-    handleMiddlewarelError(forgotPasswordController),
+    validateResource(schema.forgotPasswordSchema),
+    handleMiddlewarelError(authCtrl.forgotPasswordController),
     sendErrorResponse
   )
   .post(
     "/reset-password/:token",
-    validateResource(resetPasswordSchema),
-    handleMiddlewarelError(resetPasswordController),
+    validateResource(schema.resetPasswordSchema),
+    handleMiddlewarelError(authCtrl.resetPasswordController),
     sendErrorResponse
   );
+
+// ==================================
+// OTHER ROUTES
+// ==================================
+
+// Test auth
+router.get(
+  "/test",
+  handleMiddlewarelError(verifyAuth),
+  handleMiddlewarelError(authCtrl.testAuthController),
+  sendErrorResponse
+);
 
 // Logout
 router.post(
   "/logout",
-  handleMiddlewarelError(logoutController),
+  handleMiddlewarelError(authCtrl.logoutController),
   sendErrorResponse
 );
-
-// Post OAuth signup
-router
-  .post(
-    "/cancel-oauth",
-    handleMiddlewarelError(verifyAuth),
-    handleMiddlewarelError(cancelOAuthController),
-    sendErrorResponse
-  )
-  .post(
-    "/complete-oauth",
-    validateResource(completeOAuthSchema),
-    handleMiddlewarelError(verifyAuth),
-    handleMiddlewarelError(completeOAuthController),
-    sendErrorResponse
-  );
