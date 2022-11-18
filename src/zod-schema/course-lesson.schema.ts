@@ -1,24 +1,58 @@
+import { Types } from "mongoose";
 import { boolean, number, object, string, TypeOf } from "zod";
 
 import { EditorContentType } from "../models/editor-content.model";
 
-// ============================================
-// Schemas
-// ============================================
+// =========================
+// UTILS
+// =========================
 
-export var createCourseLessonSchema = object({
-  params: object({
-    courseId: string({ required_error: "Course id is required" }),
-    moduleId: string({ required_error: "Module id is required" }),
+// PARAMS
+
+var courseId = string({ required_error: "Required" }).refine(
+  function validateId(id) {
+    return Types.ObjectId.isValid(id);
+  },
+  { message: "Invalid", path: ["courseId"] }
+);
+
+var moduleId = string({ required_error: "Required" });
+
+var lessonId = string({ required_error: "Required" }).refine(
+  function validateId(id) {
+    return Types.ObjectId.isValid(id);
+  },
+  { message: "Invalid", path: ["lessonId"] }
+);
+
+// =========================
+// SCHEMAS
+// =========================
+
+// LESSON
+
+export var createLessonSchema = object({
+  params: object({ courseId, moduleId }),
+});
+
+export var updateLessonMetadataSchema = object({
+  params: object({ courseId, moduleId, lessonId }),
+  body: object({
+    title: string({ required_error: "Required" }),
+    description: string({ required_error: "Required" }),
+    emoji: string({ required_error: "Required" }),
+    isFree: boolean({ required_error: "Required" }),
   }),
 });
 
-export var addContentInLessonSchema = object({
-  params: object({
-    courseId: string({ required_error: "Course id is required" }),
-    moduleId: string({ required_error: "Module id is required" }),
-    lessonId: string({ required_error: "Lesson id is required" }),
-  }),
+export var deleteLessonSchema = object({
+  params: object({ courseId, moduleId, lessonId }),
+});
+
+// CONTENT
+
+export var addContentSchema = object({
+  params: object({ courseId, moduleId, lessonId }),
   body: object({
     type: string({ required_error: "Type is required" }).refine(
       function checkContentType(value) {
@@ -32,12 +66,8 @@ export var addContentInLessonSchema = object({
   }),
 });
 
-export var updateContentInLessonSchema = object({
-  params: object({
-    courseId: string({ required_error: "Course id is required" }),
-    moduleId: string({ required_error: "Module id is required" }),
-    lessonId: string({ required_error: "Lesson id is required" }),
-  }),
+export var updateContentSchema = object({
+  params: object({ courseId, moduleId, lessonId }),
   body: object({
     updateAt: number({ required_error: "Add at is required" }).min(
       0,
@@ -46,38 +76,18 @@ export var updateContentInLessonSchema = object({
   }),
 });
 
-export var deleteContentInLessonSchema = object({
-  params: object({
-    courseId: string({ required_error: "Course id is required" }),
-    moduleId: string({ required_error: "Module id is required" }),
-    lessonId: string({ required_error: "Lesson id is required" }),
-  }),
+export var deleteContentSchema = object({
+  params: object({ courseId, moduleId, lessonId }),
 });
 
-export var updateLessonMetadataSchema = object({
-  params: object({
-    courseId: string({ required_error: "Course id is required" }),
-    moduleId: string({ required_error: "Module id is required" }),
-    lessonId: string({ required_error: "Lesson id is required" }),
-  }),
-  body: object({
-    title: string({ required_error: "Title is required" }),
-    description: string({ required_error: "Description is required" }),
-    emoji: string({ required_error: "Emoji is required" }),
-    isFree: boolean({ required_error: "Is free is required" }),
-  }),
-});
+// =========================
+// TYPES
+// =========================
 
-// ============================================
-// Types
-// ============================================
+export type CreateLesson = TypeOf<typeof createLessonSchema>;
+export type UpdateLessonMetadata = TypeOf<typeof updateLessonMetadataSchema>;
+export type DeleteLesson = TypeOf<typeof deleteLessonSchema>;
 
-export type ZodCreateCourseLesson = TypeOf<typeof createCourseLessonSchema>;
-export type ZodAddContentInLesson = TypeOf<typeof addContentInLessonSchema>;
-export type ZodUpdateContentInLesson = TypeOf<
-  typeof updateContentInLessonSchema
->;
-export type ZodDeleteContentInLesson = TypeOf<
-  typeof deleteContentInLessonSchema
->;
-export type ZodUpdateLessonMetadata = TypeOf<typeof updateLessonMetadataSchema>;
+export type AddContent = TypeOf<typeof addContentSchema>;
+export type UpdateContent = TypeOf<typeof updateContentSchema>;
+export type DeleteContent = TypeOf<typeof deleteContentSchema>;

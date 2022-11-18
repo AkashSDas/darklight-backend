@@ -1,9 +1,10 @@
 import { NextFunction, Request, Response } from "express";
 
+import { getCourseLessonService } from "../services/course-lesson.service";
 import { getCourseService } from "../services/course.service";
 import { BaseApiError } from "../utils/handle-error";
 
-export default async function verifyModuleOwnership(
+export default async function verifyLessonOwnership(
   req: Request,
   res: Response,
   next: NextFunction
@@ -24,7 +25,12 @@ export default async function verifyModuleOwnership(
   var module = course.modules.find((m) => m.id == req.params.moduleId);
   if (!module) throw new BaseApiError(404, "Module not found");
 
+  // Get the lesson
+  var lesson = await getCourseLessonService({ _id: req.params.lessonId });
+  if (!lesson) throw new BaseApiError(404, "Lesson not found");
+
   req.course = course;
   req.module = module;
+  req.lesson = lesson;
   next();
 }

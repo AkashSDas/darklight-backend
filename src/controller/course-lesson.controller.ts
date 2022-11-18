@@ -1,15 +1,26 @@
 import { Request, Response } from "express";
 
 import { createCourseLessonService, deleteCourseLessonService, getCourseLessonService } from "../services/course-lesson.service";
-import { getAllCoursesService, getCourseService } from "../services/course.service";
 import { sendResponse } from "../utils/client-response";
 import { batchUpdateCourseAndLessonEditTime, validateCourseAndOwnership, validateCourseLesson } from "../utils/course";
 import { BaseApiError } from "../utils/handle-error";
-import { ZodAddContentInLesson, ZodCreateCourseLesson, ZodUpdateContentInLesson, ZodUpdateLessonMetadata } from "../zod-schema/course-lesson.schema";
-import { GetCourse } from "../zod-schema/course.schema";
+import { AddContent, CreateLesson, DeleteLesson, UpdateContent, UpdateLessonMetadata } from "../zod-schema/course-lesson.schema";
 
-export async function createCourseLessonController(
-  req: Request<ZodCreateCourseLesson["params"]>,
+// ==================================
+// LESSON CONTROLLERS
+// ==================================
+
+// TODO: add module check middleware
+/**
+ * Create a lesson and add it to the "module.lessons" list in the course
+ *
+ * @route POST /api/course/:courseId/:moduleId
+ *
+ * Middlewares used
+ * - verifyAuth
+ */
+export async function createLessonController(
+  req: Request<CreateLesson["params"]>,
   res: Response
 ) {
   var course = await validateCourseAndOwnership(req, res);
@@ -35,38 +46,38 @@ export async function createCourseLessonController(
   });
 }
 
-// TODO: move this to course.controller.ts
-export async function getCourseController(
-  req: Request<GetCourse["params"]>,
-  res: Response
-) {
-  var course = await getCourseService({ _id: req.params.courseId }, true);
-  if (!course) throw new BaseApiError(404, "Course not found");
-
-  return sendResponse(res, {
-    status: 200,
-    msg: "Course fetched successfully",
-    data: course,
-  });
-}
-
 // TODO: add zod schema
+// TODO: add module check middleware
+/**
+ * Get a lesson
+ *
+ * @route GET /api/course/:courseId/:moduleId/:lessonId
+ */
 export async function getLessonController(req: Request, res: Response) {
   var lesson = await getCourseLessonService({ _id: req.params.lessonId });
   if (!lesson) throw new BaseApiError(404, "Lesson not found");
 
   sendResponse(res, {
     status: 201,
-    msg: "Content added to lesson successfully",
+    msg: "Lesson fetched successfully",
     data: lesson,
   });
 }
 
+// TODO: add module check middleware
+/**
+ * Update lesson's metadata (everything except content)
+ *
+ * @route PUT /api/course/:courseId/:moduleId/:lessonId/metadata
+ *
+ * Middlewares used
+ * - verifyAuth
+ */
 export async function updateLessonMetadataController(
   req: Request<
-    ZodUpdateLessonMetadata["params"],
+    UpdateLessonMetadata["params"],
     {},
-    ZodUpdateLessonMetadata["body"]
+    UpdateLessonMetadata["body"]
   >,
   res: Response
 ) {
@@ -93,8 +104,17 @@ export async function updateLessonMetadataController(
   });
 }
 
+// TODO: add module check middleware
+/**
+ * Delete lesson
+ *
+ * @route DELETE /api/course/:courseId/:moduleId/:lessonId
+ *
+ * Middlewares used
+ * - verifyAuth
+ */
 export async function deleteLessonController(
-  req: Request<ZodUpdateLessonMetadata["params"]>,
+  req: Request<DeleteLesson["params"]>,
   res: Response
 ) {
   var { course } = await validateCourseLesson(req, res);
@@ -108,21 +128,26 @@ export async function deleteLessonController(
   });
 }
 
-// =============================
-// Content related controllers
-// =============================
+// ==================================
+// CONTENT CONTROLLERS
+// ==================================
 
-// TODO: Test batch update
-export async function addContentInLessonController(
-  req: Request<
-    ZodAddContentInLesson["params"],
-    {},
-    ZodAddContentInLesson["body"]
-  >,
+/**
+ * Add content block to the lesson
+ *
+ * @route POST /api/course/:courseId/:moduleId/:lessonId
+ *
+ * Middlewares used
+ * - verifyAuth
+ * - verifyInstructor
+ * - verifyLessonOwnership
+ */
+export async function addContentController(
+  req: Request<AddContent["params"], {}, AddContent["body"]>,
   res: Response
 ) {
-  var course = await validateCourseAndOwnership(req, res);
-  var lesson = await getCourseLessonService({ _id: req.params.lessonId });
+  var course = req.course;
+  var lesson = req.lesson;
   var { type, addAt, data } = req.body as any;
 
   // Check if trying to content at a valid index. If adding a new
@@ -142,16 +167,22 @@ export async function addContentInLessonController(
   });
 }
 
-export async function updateContentInLessonController(
-  req: Request<
-    ZodUpdateContentInLesson["params"],
-    {},
-    ZodUpdateContentInLesson["body"]
-  >,
+/**
+ * Update content block in the lesson
+ *
+ * @route PUT /api/course/:courseId/:moduleId/:lessonId
+ *
+ * Middlewares used
+ * - verifyAuth
+ * - verifyInstructor
+ * - verifyLessonOwnership
+ */
+export async function updateContentController(
+  req: Request<UpdateContent["params"], {}, UpdateContent["body"]>,
   res: Response
 ) {
-  var { course } = await validateCourseLesson(req, res);
-  var lesson = await getCourseLessonService({ _id: req.params.lessonId });
+  var course = req.course;
+  var lesson = req.lesson;
   var { updateAt, data } = req.body as any;
 
   // Check if trying to update at a valid index
@@ -169,12 +200,54 @@ export async function updateContentInLessonController(
   });
 }
 
-export async function deleteContentInLessonController(
-  req: Request<ZodUpdateContentInLesson["params"]>,
+/**
+ * Reorder content blocks in the lesson
+ *
+ * @route PUT /api/course/:courseId/:moduleId/:lessonId/reorder
+ *
+ * Middlewares used
+ * - verifyAuth
+ * - verifyInstructor
+ * - verifyLessonOwnership
+ */
+export async function reorderContentController(req: Request, res: Response) {
+  var course = req.course;
+  var lesson = req.lesson;
+  var { content } = req.body as any;
+
+  try {
+    lesson.updateContentOrder(content);
+  } catch (err) {
+    if (err instanceof BaseApiError) throw err;
+  }
+
+  await (lesson as any).save();
+  course.updateLastEditedOn();
+  await course.save();
+
+  return sendResponse(res, {
+    status: 200,
+    msg: "Content reordered successfully",
+    data: { contents: lesson.contents },
+  });
+}
+
+/**
+ * Delete content block from the lesson
+ *
+ * @route DELETE /api/course/:courseId/:moduleId/:lessonId/reorder
+ *
+ * Middlewares used
+ * - verifyAuth
+ * - verifyInstructor
+ * - verifyLessonOwnership
+ */
+export async function deleteContentController(
+  req: Request<UpdateContent["params"]>,
   res: Response
 ) {
-  var { course } = await validateCourseLesson(req, res);
-  var lesson = await getCourseLessonService({ _id: req.params.lessonId });
+  var course = req.course;
+  var lesson = req.lesson;
   var { deleteAt } = req.body as any;
 
   // Check if trying to delete at a valid index
@@ -189,39 +262,5 @@ export async function deleteContentInLessonController(
       msg: "Content deleted in lesson successfully",
       data: { contents: lesson.contents },
     });
-  });
-}
-
-export async function reorderContentController(req: Request, res: Response) {
-  var { course } = await validateCourseLesson(req, res);
-  var lesson = await getCourseLessonService({ _id: req.params.lessonId });
-  var { content } = req.body as any;
-
-  try {
-    lesson.updateContentOrder(content);
-  } catch (err) {
-    if (err instanceof BaseApiError) throw err;
-  }
-
-  await lesson.save();
-  course.updateLastEditedOn();
-  await course.save();
-
-  return sendResponse(res, {
-    status: 200,
-    msg: "Content reordered successfully",
-    data: { contents: lesson.contents },
-  });
-}
-
-export async function getCoursesController(req: Request, res: Response) {
-  const LIMIT = 2;
-  var next = req.query.next as string;
-  var courses = await getAllCoursesService(LIMIT, next);
-
-  return sendResponse(res, {
-    status: 200,
-    msg: "Courses fetched successfully",
-    data: courses,
   });
 }
