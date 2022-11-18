@@ -6,17 +6,21 @@ import { sendResponse } from "../utils/client-response";
 import { BaseApiError } from "../utils/handle-error";
 import { UserExistsSchema } from "../zod-schema/user.schema";
 
-// ========================
-// Types
-// ========================
+// ==================================
+// OTHER CONTROLLERS
+// ==================================
 
-type UserExistsReq = Request<{}, {}, {}, UserExistsSchema["query"]>;
-
-// ========================
-// Controllers
-// ========================
-
-export async function userExistsController(req: UserExistsReq, res: Response) {
+/**
+ * Check if the user exists OR not
+ *
+ * @remark Fields that can be used to check if the user exists are:
+ * - email
+ * - username
+ */
+export async function userExistsController(
+  req: Request<{}, {}, {}, UserExistsSchema["query"]>,
+  res: Response
+) {
   var { email, username } = req.query;
 
   // Check if email exists
@@ -43,7 +47,19 @@ export async function userExistsController(req: UserExistsReq, res: Response) {
   return sendResponse(res, { status: 400, msg: "Invalid request" });
 }
 
-export async function getLoggedInUserController(req: Request, res: Response) {
+// ==================================
+// INFO CONTROLLERS
+// ==================================
+
+/**
+ * Get logged in user info
+ *
+ * @route GET /user/me
+ *
+ * Middlewares used:
+ * - verifyAuth
+ */
+export async function loggedInUserController(req: Request, res: Response) {
   return sendResponse(res, {
     status: 200,
     msg: "User details",
@@ -51,6 +67,18 @@ export async function getLoggedInUserController(req: Request, res: Response) {
   });
 }
 
+// ==================================
+// INSTRUCTOR CONTROLLERS
+// ==================================
+
+/**
+ * Add instructor role to the user
+ *
+ * @route POST /user/instructor-signup
+ *
+ * Middlewares used:
+ * - verifyAuth
+ */
 export async function instructorSignupController(req: Request, res: Response) {
   var user = req.user;
   if (!user) throw new BaseApiError(404, "User not found");

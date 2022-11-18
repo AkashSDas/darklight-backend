@@ -1,8 +1,10 @@
 import { z } from "zod";
 
 // =========================
-// Schema
+// SCHEMAS
 // =========================
+
+// OTHERS
 
 export var userExistsSchema = z.object({
   query: z.object({
@@ -12,7 +14,7 @@ export var userExistsSchema = z.object({
 });
 
 // =========================
-// Types
+// TYPES
 // =========================
 
 export type UserExistsSchema = z.infer<typeof userExistsSchema>;

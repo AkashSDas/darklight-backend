@@ -9,6 +9,10 @@ import * as schemas from "../zod-schema/user.schema";
 
 export var router = Router();
 
+// ==================================
+// OTHER ROUTES
+// ==================================
+
 router.get(
   "/available",
   validateResource(schemas.userExistsSchema),
@@ -16,13 +20,21 @@ router.get(
   sendErrorResponse
 );
 
+// ==================================
+// INFO ROUTES
+// ==================================
+
 // Get user details
 router.get(
   "/me",
   handleMiddlewarelError(verifyAuth),
-  handleMiddlewarelError(ctrls.getLoggedInUserController),
+  handleMiddlewarelError(ctrls.loggedInUserController),
   sendErrorResponse
 );
+
+// ==================================
+// INSTRUCTOR ROUTES
+// ==================================
 
 router.post(
   "/instructor-signup",
