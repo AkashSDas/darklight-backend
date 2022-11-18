@@ -1,7 +1,9 @@
+import { Types } from "mongoose";
+
 import { CourseProfile } from "../models/course-profile";
 
 export async function createCourseProfileService(
-  userId: string,
+  userId: Types.ObjectId,
   courseId: string
 ) {
   return await CourseProfile.create({
@@ -14,7 +16,7 @@ export async function createCourseProfileService(
 }
 
 export async function courseProfileExistsService(
-  userId: string,
+  userId: Types.ObjectId,
   courseId: string
 ) {
   return await CourseProfile.exists({
@@ -24,7 +26,7 @@ export async function courseProfileExistsService(
 }
 
 export async function getCourseProfileService(
-  userId: string,
+  userId: Types.ObjectId,
   courseId: string
 ) {
   return await CourseProfile.findOne({
@@ -33,14 +35,14 @@ export async function getCourseProfileService(
   });
 }
 
-export async function getCourseProfilesService(userId: string) {
+export async function getCourseProfilesService(userId: Types.ObjectId) {
   return await CourseProfile.find({
     user: userId,
   });
 }
 
 export async function updateCourseProfileService(
-  userId: string,
+  userId: Types.ObjectId,
   courseId: string,
   update: any
 ) {
