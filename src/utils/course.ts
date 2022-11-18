@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { startSession, Types } from "mongoose";
+import { startSession } from "mongoose";
 
 import { getCourseService } from "../services/course.service";
 import { BaseApiError } from "./handle-error";
@@ -39,7 +39,7 @@ export async function validateCourseLesson(req: Request, res: Response) {
   return { course, moduleIdx, lessonIdx };
 }
 
-/** TODO: Fix input types */
+// TODO: Fix input types
 export async function batchUpdateCourseAndLessonEditTime(
   course: any,
   lesson: any,
@@ -65,4 +65,6 @@ export async function batchUpdateCourseAndLessonEditTime(
     await session.abortTransaction();
     throw error;
   }
+
+  session.endSession();
 }
