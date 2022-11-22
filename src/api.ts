@@ -5,7 +5,6 @@ import express from "express";
 import expressSession from "express-session";
 import morgan from "morgan";
 import passport from "passport";
-
 import swaggerUI from "swagger-ui-express";
 import YAML from "yamljs";
 
@@ -58,6 +57,9 @@ app.use("/api/auth", require("./routes/auth.route").router);
 app.use("/api/user", require("./routes/user.route").router);
 app.use("/api/course", require("./routes/course.route").router);
 app.use("/api/course-profile", require("./routes/course-profile.route").router);
+
+// Version 2
+app.use("/api/v2/test", require("./_route/test.route").router);
 
 app.all("*", function handleRemainingRoute(req, res) {
   sendResponse(res, {
