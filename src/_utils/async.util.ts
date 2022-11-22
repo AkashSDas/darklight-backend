@@ -18,7 +18,7 @@ export type AsyncMid = (
   req: Request,
   res: Response,
   next: NextFunction
-) => Promise<void>;
+) => Promise<unknown>;
 
 /**
  * Handle async middleware errors
