@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { userExistsController } from "../_controller/user.controller";
+import * as ctrl from "../_controller/user.controller";
 import { validateResource } from "../_middlewares/zod.middleware";
 import { userExistsSchema } from "../_schema/user.schema";
 import { handleMiddlewareError } from "../_utils/async.util";
@@ -11,6 +11,6 @@ export var router = Router();
 router.get(
   "/exists",
   validateResource(userExistsSchema),
-  handleMiddlewareError(userExistsController),
+  handleMiddlewareError(ctrl.userExistsController),
   sendErrorResponse
 );

@@ -52,7 +52,7 @@ class ImageClass {
     toJSON: { virtuals: true },
     typeKey: "type",
   },
-  options: { allowMixed: Severity.ALLOW, customName: "user" },
+  options: { allowMixed: Severity.ALLOW, customName: "-user" },
 })
 export class UserClass {
   // ============================

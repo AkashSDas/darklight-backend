@@ -10,6 +10,10 @@ export async function getUserService(filter: FilterQuery<UserClass>) {
   return await User.findOne(filter, "-__v");
 }
 
-export async function userExistsService(filter: FilterQuery<UserClass>) {
-  return await User.exists(filter);
+export function userExistsService(filter: FilterQuery<UserClass>) {
+  return User.exists(filter);
+}
+
+export async function deleteUserService(filter: FilterQuery<UserClass>) {
+  return User.findOneAndDelete(filter);
 }
