@@ -48,3 +48,10 @@ router.post(
   handleMiddlewareError(ctrl.loginController),
   sendErrorResponse
 );
+
+// Get new access token (email/password login)
+router.get(
+  "/access-token",
+  handleMiddlewareError(ctrl.accessTokenController),
+  sendErrorResponse
+);

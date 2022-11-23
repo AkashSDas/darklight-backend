@@ -2,7 +2,7 @@ import {
   describe,
   it,
   expect,
-  beforeEach,
+  afterEach,
   afterAll,
   beforeAll,
 } from "@jest/globals";
@@ -37,7 +37,7 @@ describe("Auth controller", () => {
     await mongoose.connection.close();
   });
 
-  beforeEach(async function deleteUser() {
+  afterEach(async function deleteUser() {
     await deleteUserService({ email: userPayload.email });
   });
 
@@ -170,6 +170,65 @@ describe("Auth controller", () => {
           user: expect.any(Object),
           accessToken: expect.any(String),
         });
+      });
+    });
+  });
+
+  describe("accessTokenController", () => {
+    describe("given that there is no refresh token", () => {
+      it("should given an unauthorized error", async () => {
+        var { statusCode, body } = await supertest(app).get(
+          "/api/v2/auth/access-token"
+        );
+
+        expect(statusCode).toBe(401);
+        expect(body).toEqual({ message: "Unauthorized" });
+      });
+    });
+
+    describe("given that the user has a valid refresh token", () => {
+      it("should return the new access token along with the user", async () => {
+        var user = await createUserService(userPayload);
+        var refreshToken = user.refreshToken();
+
+        var { statusCode, body } = await supertest(app)
+          .get("/api/v2/auth/access-token")
+          .set("Cookie", [`refreshToken=${refreshToken}`]);
+
+        expect(statusCode).toBe(200);
+        expect(body).toEqual({
+          user: expect.any(Object),
+          accessToken: expect.any(String),
+        });
+      });
+    });
+
+    describe("given that the user has a invalid refresh token", () => {
+      it("should throw an invalid token error", async () => {
+        await createUserService(userPayload);
+        var refreshToken = "invalid token";
+
+        var { statusCode, body } = await supertest(app)
+          .get("/api/v2/auth/access-token")
+          .set("Cookie", [`refreshToken=${refreshToken}`]);
+
+        expect(statusCode).toBe(401);
+        expect(body).toEqual({ message: "Invalid refresh token" });
+      });
+    });
+
+    describe("given that the user doesn't exists but there's a valid refresh token", () => {
+      it("should throw a user not found error", async () => {
+        var user = await createUserService(userPayload);
+        var refreshToken = user.refreshToken();
+        await deleteUserService({ email: user.email });
+
+        var { statusCode, body } = await supertest(app)
+          .get("/api/v2/auth/access-token")
+          .set("Cookie", [`refreshToken=${refreshToken}`]);
+
+        expect(statusCode).toBe(404);
+        expect(body).toEqual({ message: "User not found" });
       });
     });
   });

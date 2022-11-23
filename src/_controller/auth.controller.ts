@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import jwt from "jsonwebtoken";
 import * as z from "../_schema/auth.schema";
 import * as service from "../_services/user.service";
 import { loginCookieConfig } from "../_utils/auth.util";
@@ -147,4 +148,45 @@ export async function loginController(
 
   user.password = undefined; // rm pwd hash from response
   return res.status(200).json({ user, accessToken });
+}
+
+// TODO: send descriptive msgs like token expired and so
+/**
+ * Get a new access token using the refresh token
+ *
+ * @route GET /api/auth/access-token
+ *
+ * @remark throwning an error inside the callback of jwt.verify was not working
+ * and there was a timeout error. So, I sent a response instead of throwing an error
+ * and it working fine. Follow the test cases regarding this.
+ */
+export async function accessTokenController(req: Request, res: Response) {
+  var refreshToken = req.cookies?.refreshToken;
+  if (!refreshToken) throw new BaseApiError(401, "Unauthorized");
+
+  try {
+    // Verify the refresh token and generate a new access token
+    jwt.verify(
+      refreshToken,
+      process.env.REFRESH_TOKEN_SECRET,
+      async function getNewAccessToken(
+        error: jwt.VerifyErrors,
+        decoded: string | jwt.JwtPayload
+      ) {
+        if (error) {
+          return res.status(401).json({ message: "Invalid refresh token" });
+        }
+
+        var user = await service.getUserService({ _id: (decoded as any)._id });
+        if (!user) {
+          return res.status(404).json({ message: "User not found" });
+        }
+
+        var accessToken = user.accessToken();
+        return res.status(200).json({ user, accessToken });
+      }
+    );
+  } catch (error) {
+    throw new BaseApiError(401, "Invalid refresh token");
+  }
 }
