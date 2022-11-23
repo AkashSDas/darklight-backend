@@ -67,7 +67,7 @@ describe("Auth controller", () => {
   });
 
   describe("cancelOAuthController", () => {
-    describe("given that user is not logged in", () => {
+    describe("given that the user is not logged in", () => {
       it("should return response with error message", async () => {
         var { statusCode, body } = await supertest(app).post(
           "/api/v2/auth/cancel-oauth"
@@ -76,6 +76,12 @@ describe("Auth controller", () => {
         expect(statusCode).toBe(401);
         expect(body).toEqual({ message: expect.any(String) });
       });
+    });
+
+    // TODO: This is for user authenticated with OAuth during signup
+    // and wants to cancel the signup process
+    describe("given that the user is logged in using oauth", () => {
+      it.todo("should delete the user and logout it out");
     });
   });
 });

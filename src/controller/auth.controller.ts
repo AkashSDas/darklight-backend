@@ -75,7 +75,7 @@ export async function signupController(
 }
 
 /**
- * Cancel OAuth signup and delete the user
+ * Cancel OAuth signup process and delete the user
  *
  * @route POST /api/auth/cancel-oauth
  *
