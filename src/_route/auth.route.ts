@@ -21,9 +21,18 @@ router.post(
 );
 
 // Cancel oauth signup (post oauth signup)
-router.post(
+router.delete(
   "/cancel-oauth",
   handleMiddlewareError(verifyAuth),
   handleMiddlewareError(ctrl.cancelOAuthController),
+  sendErrorResponse
+);
+
+// Complete OAuth signup (post oauth signup)
+router.put(
+  "/complete-oauth",
+  validateResource(z.completeOAuthSchema),
+  handleMiddlewareError(verifyAuth),
+  handleMiddlewareError(ctrl.completeOAuthController),
   sendErrorResponse
 );

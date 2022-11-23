@@ -17,3 +17,10 @@ export function userExistsService(filter: FilterQuery<UserClass>) {
 export async function deleteUserService(filter: FilterQuery<UserClass>) {
   return User.findOneAndDelete(filter);
 }
+
+export async function updateUserService(
+  filter: FilterQuery<UserClass>,
+  update: Partial<UserClass>
+) {
+  return User.findOneAndUpdate(filter, update, { new: true, fields: "-__v" });
+}

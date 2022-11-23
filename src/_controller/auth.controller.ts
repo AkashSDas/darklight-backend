@@ -16,7 +16,7 @@ import { EmailOptions, sendEmail } from "../_utils/mail.util";
  * @remark username, email, and password are used for this signup
  */
 export async function signupController(
-  req: Request<{}, {}, z.SignupSchema["body"]>,
+  req: Request<{}, {}, z.Signup["body"]>,
   res: Response
 ) {
   var { username, email, password } = req.body;
@@ -84,4 +84,21 @@ export async function cancelOAuthController(req: Request, res: Response) {
       return res.status(200).json({ message: "Signup cancelled" });
     });
   }
+}
+
+/**
+ * Save the necessary info of the user and complete OAuth signup
+ *
+ * @route POST /api/auth/complete-oauth
+ *
+ * Middlewares used
+ * - verifyAuth
+ */
+export async function completeOAuthController(
+  req: Request<{}, {}, z.CompleteOAuth["body"]>,
+  res: Response
+) {
+  var { username, email } = req.body;
+  await service.updateUserService({ _id: req.user._id }, { username, email });
+  return res.status(200).json({ message: "Signup is completed" });
 }

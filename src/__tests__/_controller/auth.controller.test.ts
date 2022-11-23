@@ -69,7 +69,7 @@ describe("Auth controller", () => {
   describe("cancelOAuthController", () => {
     describe("given that the user is not logged in", () => {
       it("should return response with error message", async () => {
-        var { statusCode, body } = await supertest(app).post(
+        var { statusCode, body } = await supertest(app).delete(
           "/api/v2/auth/cancel-oauth"
         );
 
@@ -82,6 +82,26 @@ describe("Auth controller", () => {
     // and wants to cancel the signup process
     describe("given that the user is logged in using oauth", () => {
       it.todo("should delete the user and logout it out");
+    });
+  });
+
+  describe("completeOAuthController", () => {
+    describe("given that the user is not logged in", () => {
+      it("should return response with error message", async () => {
+        var { statusCode } = await supertest(app).put(
+          "/api/v2/auth/complete-oauth"
+        );
+
+        expect(statusCode).toBe(400);
+      });
+    });
+
+    describe("given the user doesn't exists", () => {
+      it.todo("should give an error with status 404");
+    });
+
+    describe("given the user exists", () => {
+      it.todo("should complete user's signup process");
     });
   });
 });
