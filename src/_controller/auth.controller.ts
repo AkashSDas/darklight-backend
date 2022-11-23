@@ -72,7 +72,7 @@ export async function signupController(
 /**
  * Cancel OAuth signup process and delete the user
  *
- * @route POST /api/v2/auth/cancel-oauth
+ * @route DELETE /api/v2/auth/cancel-oauth
  *
  * Middlewares used
  * - verifyAuth
@@ -91,7 +91,7 @@ export async function cancelOAuthController(req: Request, res: Response) {
 /**
  * Save the necessary info of the user and complete OAuth signup
  *
- * @route POST /api/auth/complete-oauth
+ * @route PUT /api/auth/complete-oauth
  *
  * Middlewares used
  * - verifyAuth
@@ -243,7 +243,7 @@ export async function verifyEmailController(
 /**
  * Verify user's email and active their account
  *
- * @route GET /api/auth/confirm-email/:token
+ * @route PUT /api/auth/confirm-email/:token
  */
 export async function confrimEmailController(
   req: Request<z.ConfirmEmail["params"]>,
