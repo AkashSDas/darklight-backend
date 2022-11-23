@@ -1,14 +1,29 @@
-import { describe, it, expect, afterAll, beforeAll } from "@jest/globals";
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterAll,
+  beforeAll,
+} from "@jest/globals";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose from "mongoose";
 import supertest from "supertest";
 import { app } from "../../api";
-import { createUserService } from "../../_services/user.service";
+import {
+  createUserService,
+  deleteUserService,
+} from "../../_services/user.service";
 
 var userPayload = {
-  username: "james",
-  email: "james@gmail.com",
+  username: "rock",
+  email: "rock@gmail.com",
   password: "testing",
+};
+
+var loginPayload = {
+  email: userPayload.email,
+  password: userPayload.password,
 };
 
 describe("Auth controller", () => {
@@ -21,6 +36,14 @@ describe("Auth controller", () => {
     await mongoose.disconnect();
     await mongoose.connection.close();
   });
+
+  beforeEach(async function deleteUser() {
+    await deleteUserService({ email: userPayload.email });
+  });
+
+  // ==================================
+  // SIGNUP CONTROLLER
+  // ==================================
 
   describe("signupController", () => {
     describe("given that response body is invalid", () => {
@@ -102,6 +125,52 @@ describe("Auth controller", () => {
 
     describe("given the user exists", () => {
       it.todo("should complete user's signup process");
+    });
+  });
+
+  // ==================================
+  // LOGIN CONTROLLER
+  // ==================================
+
+  describe("loginController", () => {
+    describe("given that the user doesn't exists", () => {
+      it("should return response with error message", async () => {
+        var { statusCode, body } = await supertest(app)
+          .post("/api/v2/auth/login")
+          .send(loginPayload);
+
+        expect(statusCode).toBe(400);
+        expect(body).toEqual({ message: "Invalid email or password" });
+      });
+    });
+
+    describe("given that the password is incorrect", () => {
+      it("should throw an error", async () => {
+        await createUserService(userPayload);
+
+        var { statusCode, body } = await supertest(app)
+          .post("/api/v2/auth/login")
+          .send({ ...loginPayload, password: "wrong password" });
+
+        expect(statusCode).toBe(401);
+        expect(body).toEqual({ message: "Incorrect password" });
+      });
+    });
+
+    describe("given that the the password is correct", () => {
+      it("should return user and an access token", async () => {
+        await createUserService(userPayload);
+
+        var { statusCode, body } = await supertest(app)
+          .post("/api/v2/auth/login")
+          .send(loginPayload);
+
+        expect(statusCode).toBe(200);
+        expect(body).toEqual({
+          user: expect.any(Object),
+          accessToken: expect.any(String),
+        });
+      });
     });
   });
 });

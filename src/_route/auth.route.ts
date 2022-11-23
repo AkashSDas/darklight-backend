@@ -36,3 +36,15 @@ router.put(
   handleMiddlewareError(ctrl.completeOAuthController),
   sendErrorResponse
 );
+
+// ==================================
+// LOGIN ROUTES
+// ==================================
+
+// Email/password login
+router.post(
+  "/login",
+  validateResource(z.loginSchema),
+  handleMiddlewareError(ctrl.loginController),
+  sendErrorResponse
+);

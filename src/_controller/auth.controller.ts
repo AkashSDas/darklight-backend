@@ -102,3 +102,49 @@ export async function completeOAuthController(
   await service.updateUserService({ _id: req.user._id }, { username, email });
   return res.status(200).json({ message: "Signup is completed" });
 }
+
+// ==================================
+// LOGIN CONTROLLERS
+// ==================================
+
+/**
+ * Login user with email and password
+ *
+ * @route POST /api/auth/login
+ */
+export async function loginController(
+  req: Request<{}, {}, z.Login["body"]>,
+  res: Response
+) {
+  // Check if the user exists. Also get password too as it will be
+  // used while using verifyPassword method
+  var { email, password } = req.body;
+  var user = await service.getUserWithSelectService({ email }, "+password");
+  if (!user) throw new BaseApiError(400, "Invalid email or password");
+
+  // If the user doesn't have a password then it means that the user has
+  // use OAuth for signup
+  if (!user.password) {
+    throw new BaseApiError(400, "You have signed up with OAuth");
+  }
+
+  // Check if the password is correct
+  if (!(await user.verifyPassword(password))) {
+    throw new BaseApiError(401, "Incorrect password");
+  }
+
+  // Generate access and refresh tokens for successful login
+  var accessToken = user.accessToken();
+  var refreshToken = user.refreshToken();
+  res.cookie("refreshToken", refreshToken, {
+    httpOnly: true, // so that the cookie cannot be accessed/modified in the frontend
+    // secure: process.env.NODE_ENV == "production", // cookie will only be sent in a HTTPS connection in production
+    secure: true,
+    sameSite: "none", // to allow the cookie to be sent to the server in cross-site requests
+    // maxAge: 2 * 60 * 1000, // 2 minutes, should match the expiresIn of the refresh token
+    maxAge: 1 * 24 * 60 * 60 * 1000, // 1 days
+  });
+
+  user.password = undefined; // rm pwd hash from response
+  return res.status(200).json({ user, accessToken });
+}

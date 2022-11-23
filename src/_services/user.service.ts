@@ -24,3 +24,10 @@ export async function updateUserService(
 ) {
   return User.findOneAndUpdate(filter, update, { new: true, fields: "-__v" });
 }
+
+export async function getUserWithSelectService(
+  filter: FilterQuery<UserClass>,
+  select: string
+) {
+  return User.findOne(filter).select(`${select} -__v`);
+}

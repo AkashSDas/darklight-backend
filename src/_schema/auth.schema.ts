@@ -30,9 +30,71 @@ export var completeOAuthSchema = z.object({
   }),
 });
 
+// LOGIN
+
+export var loginSchema = z.object({
+  body: z.object({
+    email: z.string({ required_error: "Required" }).email("Invalid"),
+    password: z
+      .string({ required_error: "Required" })
+      .min(6, "Too short")
+      .max(120, "Too long"),
+  }),
+});
+
+// EMAIL VERIFICATION
+
+export var verifyEmailSchema = z.object({
+  body: z.object({
+    email: z.string({ required_error: "Required" }).email("Invalid"),
+  }),
+});
+
+// TODO: add length validation to the token
+export var confirmEmailSchema = z.object({
+  params: z.object({ token: z.string() }),
+});
+
+// PASSWORD RESET
+
+export var forgotPasswordSchema = z.object({
+  body: z.object({
+    email: z.string({ required_error: "Required" }).email("Invalid"),
+  }),
+});
+
+export var passwordResetSchema = z.object({
+  params: z.object({ token: z.string() }),
+  body: z
+    .object({
+      password: z
+        .string({ required_error: "Required" })
+        .min(6, "Too short")
+        .max(120, "Too long"),
+      confirmPassword: z
+        .string({ required_error: "Required" })
+        .min(6, "Too short")
+        .max(120, "Too long"),
+    })
+    .refine(
+      function validatePassword(data) {
+        return data.password == data.confirmPassword;
+      },
+      { message: "Passwords do not match", path: ["confirmPassword"] }
+    ),
+});
+
 // =========================
 // TYPES
 // =========================
 
 export type Signup = z.infer<typeof signupSchema>;
 export type CompleteOAuth = z.infer<typeof completeOAuthSchema>;
+
+export type Login = z.infer<typeof loginSchema>;
+
+export type VerifyEmail = z.infer<typeof verifyEmailSchema>;
+export type ConfirmEmail = z.infer<typeof confirmEmailSchema>;
+
+export type ForgotPassword = z.infer<typeof forgotPasswordSchema>;
+export type PasswordReset = z.infer<typeof passwordResetSchema>;
