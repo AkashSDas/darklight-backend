@@ -73,5 +73,7 @@ export async function instructorSignupController(req: Request, res: Response) {
 
   (user.roles as UserRole[]).push(UserRole.TEACHER);
   await (user as any).save();
-  return res.status(200).json({ msg: "Successfully signed up as a teacher" });
+  return res
+    .status(200)
+    .json({ message: "Successfully signed up as a teacher" });
 }
