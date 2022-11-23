@@ -83,11 +83,11 @@ export async function instructorSignupController(req: Request, res: Response) {
   var user = req.user;
   if (!user) throw new BaseApiError(404, "User not found");
 
-  if (user.roles.includes(UserRole.INSTRUCTOR)) {
+  if ((user.roles as UserRole[]).includes(UserRole.INSTRUCTOR)) {
     throw new BaseApiError(400, "User is already an instructor");
   }
 
-  user.roles.push(UserRole.INSTRUCTOR);
+  (user.roles as UserRole[]).push(UserRole.INSTRUCTOR);
   await (user as any).save();
   return sendResponse(res, {
     status: 200,

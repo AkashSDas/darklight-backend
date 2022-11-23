@@ -2,6 +2,11 @@ import { Request, Response } from "express";
 import { UserExistsSchema } from "../_schema/user.schema";
 import { userExistsService } from "../_services/user.service";
 import { BaseApiError } from "../_utils/error.util";
+import { UserRole } from "../_utils/user.util";
+
+// ==================================
+// OTHER CONTROLLERS
+// ==================================
 
 /**
  * Check if the user exists OR not
@@ -29,4 +34,44 @@ export async function userExistsController(
   }
 
   return res.status(200).json({ exists });
+}
+
+// ==================================
+// INFO CONTROLLERS
+// ==================================
+
+/**
+ * Get logged in user info
+ *
+ * @route GET /user/me
+ *
+ * Middlewares used:
+ * - verifyAuth
+ */
+export async function getUserController(req: Request, res: Response) {
+  return res.status(200).json(req.user);
+}
+
+// ==================================
+// INSTRUCTOR CONTROLLERS
+// ==================================
+
+/**
+ * Add instructor role to the user
+ *
+ * @route PUT /user/instructor-signup
+ *
+ * Middlewares used:
+ * - verifyAuth
+ */
+export async function instructorSignupController(req: Request, res: Response) {
+  var user = req.user;
+
+  if ((user.roles as UserRole[]).includes(UserRole.TEACHER)) {
+    throw new BaseApiError(400, "Already a teacher");
+  }
+
+  (user.roles as UserRole[]).push(UserRole.TEACHER);
+  await (user as any).save();
+  return res.status(200).json({ msg: "Successfully signed up as a teacher" });
 }
