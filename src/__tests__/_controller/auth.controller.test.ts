@@ -12,6 +12,8 @@ import supertest from "supertest";
 import { app } from "../../api";
 import {
   createUserService,
+  getUserService,
+  getUserWithSelectService,
   deleteUserService,
 } from "../../_services/user.service";
 
@@ -230,6 +232,90 @@ describe("Auth controller", () => {
         expect(statusCode).toBe(404);
         expect(body).toEqual({ message: "User not found" });
       });
+    });
+  });
+
+  describe("verifyEmailController", () => {
+    describe("given that the user doesn't exists", () => {
+      it("should throw an error", async () => {
+        var { statusCode, body } = await supertest(app)
+          .post("/api/v2/auth/verify-email")
+          .send({ email: "non-existing-email@gmail.com" });
+
+        expect(statusCode).toBe(404);
+        expect(body).toEqual({ message: "User not found" });
+      });
+    });
+
+    // Skipping this test because it sends an email
+    describe.skip("given that the user exists", () => {
+      it("should send an email and return a verify token", async () => {
+        var user = await createUserService(userPayload);
+
+        var { statusCode, body } = await supertest(app)
+          .post("/api/v2/auth/verify-email")
+          .send({ email: user.email });
+
+        // Check if the verification token and expires at are set Or not
+        var updatedUser = await getUserWithSelectService(
+          { email: user.email },
+          "+verificationToken +verificationTokenExpiresAt"
+        );
+        expect(updatedUser.verificationToken).toBeDefined();
+        expect(updatedUser.verificationTokenExpiresAt).toBeDefined();
+
+        expect(statusCode).toBe(200);
+        expect(body).toEqual({
+          message: "Verification email sent",
+          token: expect.any(String),
+        });
+      }, 30000);
+    });
+  });
+
+  describe("confrimEmailController", () => {
+    describe("given a valid token", () => {
+      it("should verify the user and make the account active", async () => {
+        var user = await createUserService(userPayload);
+        var token = user.generateVerificationToken();
+        await user.save();
+
+        // Check if the verification token and expires at are set Or not
+        expect(user.verificationToken).toBeDefined();
+        expect(user.verificationTokenExpiresAt).toBeDefined();
+
+        var { statusCode } = await supertest(app).put(
+          `/api/v2/auth/confirm-email/${token}`
+        );
+        expect(statusCode).toBe(301);
+
+        var updatedUser = await getUserService({ email: user.email });
+        expect(updatedUser.verified).toBe(true);
+        expect(updatedUser.active).toBe(true);
+
+        // Check if the verification token and expires at are unset Or not
+        expect(updatedUser.verificationToken).toBeUndefined();
+        expect(updatedUser.verificationTokenExpiresAt).toBeUndefined();
+      });
+    });
+
+    describe("given a invalid token", () => {
+      it("should return an error", async () => {
+        var user = await createUserService(userPayload);
+        user.generateVerificationToken();
+        await user.save();
+        var token = "invalid token";
+
+        var { statusCode, body } = await supertest(app).put(
+          `/api/v2/auth/confirm-email/${token}`
+        );
+        expect(statusCode).toBe(400);
+        expect(body).toEqual({ message: "Invalid or expired token" });
+      });
+    });
+
+    describe("given a expired token", () => {
+      it.todo("should return an error and delete the token from the database");
     });
   });
 });

@@ -55,3 +55,21 @@ router.get(
   handleMiddlewareError(ctrl.accessTokenController),
   sendErrorResponse
 );
+
+// ==================================
+// EMAIL VERIFICATION ROUTES
+// ==================================
+
+router
+  .post(
+    "/verify-email",
+    validateResource(z.verifyEmailSchema),
+    handleMiddlewareError(ctrl.verifyEmailController),
+    sendErrorResponse
+  )
+  .put(
+    "/confirm-email/:token",
+    validateResource(z.confirmEmailSchema),
+    handleMiddlewareError(ctrl.confrimEmailController),
+    sendErrorResponse
+  );

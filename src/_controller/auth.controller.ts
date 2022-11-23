@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import crypto from "crypto";
 import jwt from "jsonwebtoken";
 import * as z from "../_schema/auth.schema";
 import * as service from "../_services/user.service";
@@ -189,4 +190,81 @@ export async function accessTokenController(req: Request, res: Response) {
   } catch (error) {
     throw new BaseApiError(401, "Invalid refresh token");
   }
+}
+
+// ==================================
+// EMAIL VERIFICATION CONTROLLERS
+// ==================================
+
+/**
+ * Get email verification mail on the registered email
+ *
+ * @route POST /api/auth/verify-email
+ */
+export async function verifyEmailController(
+  req: Request<{}, {}, z.VerifyEmail["body"]>,
+  res: Response
+) {
+  // Check if the user exists
+  var { email } = req.body;
+  var user = await service.getUserService({ email });
+  if (!user) throw new BaseApiError(404, "User not found");
+
+  // Check if the user has already verified the email
+  if (user.verified) {
+    throw new BaseApiError(400, "Email is already verified");
+  }
+
+  // Generate a verification token and send it to the user
+  var token = user.generateVerificationToken();
+  await user.save({ validateModifiedOnly: true });
+
+  // Send verification email
+  var url = `${process.env.BASE_URL}/api/v2/auth/confirm-email/${token}`;
+  var opts: EmailOptions = {
+    to: user.email,
+    subject: "Verify your email",
+    text: `Please click on the link to confirm your email: ${url}`,
+    html: `Please click on the link to confirm your email: 🔗 <a href="${url}">Link</a>`,
+  };
+
+  try {
+    await sendEmail(opts);
+    return res.status(200).json({ message: "Verification email sent", token });
+  } catch (error) {
+    // Reset the token and tokenExpiresAt
+    user.verificationToken = undefined;
+    user.verificationTokenExpiresAt = undefined;
+    await user.save({ validateModifiedOnly: true });
+    return res.status(500).json({ message: "Failed to send email" });
+  }
+}
+
+/**
+ * Verify user's email and active their account
+ *
+ * @route GET /api/auth/confirm-email/:token
+ */
+export async function confrimEmailController(
+  req: Request<z.ConfirmEmail["params"]>,
+  res: Response
+) {
+  // Verify the token
+  var { token } = req.params;
+  var encryptedToken = crypto.createHash("sha256").update(token).digest("hex");
+  var user = await service.getUserService({
+    verificationToken: encryptedToken,
+    verificationTokenExpiresAt: { $gt: Date.now() },
+  });
+
+  if (!user) throw new BaseApiError(400, "Invalid or expired token");
+
+  // Update the user's verified and active status
+  user.verified = true;
+  user.active = true;
+  user.verificationToken = undefined;
+  user.verificationTokenExpiresAt = undefined;
+  await user.save({ validateModifiedOnly: true });
+
+  return res.redirect(301, process.env.FRONTEND_BASE_URL);
 }
