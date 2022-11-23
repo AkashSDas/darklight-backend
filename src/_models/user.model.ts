@@ -13,6 +13,7 @@ import { SchemaTypes, Types } from "mongoose";
 import isEmail from "validator/lib/isEmail";
 import { BaseApiError } from "../_utils/error.util";
 import { OAuthProvider, UserRole } from "../_utils/user.util";
+import { ImageClass } from "./image.model";
 
 class OAuthProviderClass {
   @prop({ type: SchemaTypes.String, required: true })
@@ -20,14 +21,6 @@ class OAuthProviderClass {
 
   @prop({ type: SchemaTypes.String, required: true, enum: OAuthProvider })
   provider: OAuthProvider;
-}
-
-class ImageClass {
-  @prop({ type: SchemaTypes.String })
-  id?: string;
-
-  @prop({ type: SchemaTypes.String, required: true })
-  URL: string;
 }
 
 // TODO: set size limit for tokens
