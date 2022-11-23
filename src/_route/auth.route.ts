@@ -1,7 +1,9 @@
 import { Router } from "express";
+import passport from "passport";
 import * as ctrl from "../_controller/auth.controller";
 import verifyAuth from "../_middlewares/auth.middleware";
 import { validateResource } from "../_middlewares/zod.middleware";
+import { Strategies } from "../_passport";
 import * as z from "../_schema/auth.schema";
 import { handleMiddlewareError } from "../_utils/async.util";
 import { sendErrorResponse } from "../_utils/error.util";
@@ -37,6 +39,58 @@ router.put(
   sendErrorResponse
 );
 
+// Google OAuth signup
+router
+  .get(
+    "/signup/google",
+    passport.authenticate(Strategies.GoogleSignup, {
+      scope: ["profile", "email"],
+    }),
+    function signupWithGoogle() {}
+  )
+  .get(
+    "/signup/google/redirect",
+    passport.authenticate(Strategies.GoogleSignup, {
+      failureMessage: "Cannot signup with Google, please try again",
+      successRedirect: process.env.OAUTH_SIGNUP_SUCCESS_REDIRECT_URL,
+      failureRedirect: process.env.OAUTH_SIGNUP_FAILURE_REDIRECT_URL,
+    })
+  );
+
+// Facebook OAuth signup
+router
+  .get(
+    "/signup/facebook",
+    passport.authenticate(Strategies.FacebookSignup),
+    function signupWithFacebook() {}
+  )
+  .get(
+    "/signup/facebook/redirect",
+    passport.authenticate(Strategies.FacebookSignup, {
+      failureMessage: "Cannot signup with Facebook, please try again",
+      successRedirect: process.env.OAUTH_SIGNUP_SUCCESS_REDIRECT_URL,
+      failureRedirect: process.env.OAUTH_SIGNUP_FAILURE_REDIRECT_URL,
+    }),
+    function signupWithFacebookRedirect() {}
+  );
+
+// Twitter OAuth signup
+router
+  .get(
+    "/signup/twitter",
+    passport.authenticate(Strategies.TwitterSignup),
+    function signupWithTwitter() {}
+  )
+  .get(
+    "/signup/twitter/redirect",
+    passport.authenticate(Strategies.TwitterSignup, {
+      failureMessage: "Cannot signup up Twitter, please try again",
+      successRedirect: process.env.OAUTH_SIGNUP_SUCCESS_REDIRECT_URL,
+      failureRedirect: process.env.OAUTH_SIGNUP_FAILURE_REDIRECT_URL,
+    }),
+    function signupWithTwitterRedirect() {}
+  );
+
 // ==================================
 // LOGIN ROUTES
 // ==================================
@@ -55,6 +109,59 @@ router.get(
   handleMiddlewareError(ctrl.accessTokenController),
   sendErrorResponse
 );
+
+// Goggle OAuth login
+router
+  .get(
+    "/login/google",
+    passport.authenticate(Strategies.GoogleLogin, {
+      scope: ["profile", "email"],
+    }),
+    function loginWithGoogle() {}
+  )
+  .get(
+    "/login/google/redirect",
+    passport.authenticate(Strategies.GoogleLogin, {
+      failureMessage: "Cannot login with Google, please try again",
+      successRedirect: process.env.OAUTH_LOGIN_SUCCESS_REDIRECT_URL,
+      failureRedirect: `${process.env.OAUTH_LOGIN_FAILURE_REDIRECT_URL}?info=signup-invalid`,
+    }),
+    function loginWithGoogleRedirect() {}
+  );
+
+// Facebook OAuth login
+router
+  .get(
+    "/login/facebook",
+    passport.authenticate(Strategies.FacebookLogin),
+    function loginWithFacebook() {}
+  )
+  .get(
+    "/login/facebook/redirect",
+    passport.authenticate(Strategies.FacebookLogin, {
+      failureMessage: "Cannot login with Facebook, Please try again",
+      successRedirect: process.env.OAUTH_LOGIN_SUCCESS_REDIRECT_URL,
+      failureRedirect: `${process.env.OAUTH_LOGIN_FAILURE_REDIRECT_URL}?info=signup-invalid`,
+    }),
+    function loginWithFacebookRedirect() {}
+  );
+
+// Twitter OAuth login
+router
+  .get(
+    "/login/twitter",
+    passport.authenticate(Strategies.TwitterLogin),
+    function loginWithTwitter() {}
+  )
+  .get(
+    "/login/twitter/redirect",
+    passport.authenticate(Strategies.TwitterLogin, {
+      failureMessage: "Cannot login with Twitter, please try again",
+      successRedirect: process.env.OAUTH_LOGIN_SUCCESS_REDIRECT_URL,
+      failureRedirect: `${process.env.OAUTH_LOGIN_FAILURE_REDIRECT_URL}?info=signup-invalid`,
+    }),
+    function loginWithTwitterRedirect() {}
+  );
 
 // ==================================
 // EMAIL VERIFICATION ROUTES

@@ -20,6 +20,13 @@ import "./passport/facebook-login.strategy";
 import "./passport/twitter-signup.strategy";
 import "./passport/twitter-login.strategy";
 
+import "./_passport/google-signup.strategy";
+import "./_passport/google-login.strategy";
+import "./_passport/facebook-signup.strategy";
+import "./_passport/facebook-login.strategy";
+import "./_passport/twitter-signup.strategy";
+import "./_passport/twitter-login.strategy";
+
 /** Express app */
 export var app = express();
 
