@@ -6,7 +6,11 @@ import { BaseApiError } from "../_utils/error.util";
 async function verifyJwt(req: Request, res: Response, next: NextFunction) {
   // Check if the bearer token is present in the request header
   var authHeader =
-    req.headers.authorization || (req.headers.Authorization as string);
+    req.headers.authorization ||
+    (req.headers.Authorization as string) ||
+    req.cookies.accessToken ||
+    req.body.accessToken;
+
   if (!authHeader?.startsWith("Bearer ")) {
     throw new BaseApiError(401, "Unauthorized");
   }
