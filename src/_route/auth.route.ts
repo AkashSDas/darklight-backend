@@ -73,3 +73,32 @@ router
     handleMiddlewareError(ctrl.confrimEmailController),
     sendErrorResponse
   );
+
+// ==================================
+// PASSWORD RESET ROUTES
+// ==================================
+
+router
+  .post(
+    "/forgot-password",
+    validateResource(z.forgotPasswordSchema),
+    handleMiddlewareError(ctrl.forgotPasswordController),
+    sendErrorResponse
+  )
+  .put(
+    "/password-reset/:token",
+    validateResource(z.passwordResetSchema),
+    handleMiddlewareError(ctrl.passwordResetController),
+    sendErrorResponse
+  );
+
+// ==================================
+// OTHER ROUTES
+// ==================================
+
+// Logout
+router.get(
+  "/logout",
+  handleMiddlewareError(ctrl.logoutController),
+  sendErrorResponse
+);

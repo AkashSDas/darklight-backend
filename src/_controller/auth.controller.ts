@@ -268,3 +268,99 @@ export async function confrimEmailController(
 
   return res.redirect(301, process.env.FRONTEND_BASE_URL);
 }
+
+// ==================================
+// PASSWORD RESET CONTROLLERS
+// ==================================
+
+/**
+ * Send email with password reset link with contains the token
+ *
+ * @route POST /api/auth/forgot-password
+ */
+export async function forgotPasswordController(
+  req: Request<{}, {}, z.ForgotPassword["body"]>,
+  res: Response
+) {
+  // Check if the user exists
+  var { email } = req.body;
+  var user = await service.getUserService({ email });
+  if (!user) throw new BaseApiError(404, "User not found");
+
+  // Generate a reset token and send it to the user
+  var token = user.generatePasswordResetToken();
+  await user.save({ validateModifiedOnly: true });
+
+  // Send password reset email
+  var url = `${process.env.BASE_URL}/api/v2/auth/reset-password/${token}`;
+  var opts: EmailOptions = {
+    to: user.email,
+    subject: "Reset your password",
+    text: `Please click on the link to reset your password: ${url}`,
+    html: `Please click on the link to reset your password: 🔗 <a href="${url}">Link</a>`,
+  };
+
+  try {
+    await sendEmail(opts);
+    return res.status(200).json({ token });
+  } catch (error) {
+    // Reset the token and tokenExpiresAt
+    user.passwordResetToken = undefined;
+    user.passwordResetTokenExpiresAt = undefined;
+    await user.save({ validateModifiedOnly: true });
+    return res.status(500).json({ message: "Failed to send email" });
+  }
+}
+
+/**
+ * Reset user's password
+ *
+ * @route PUT /api/auth/password-reset/:token
+ */
+export async function passwordResetController(
+  req: Request<z.PasswordReset["params"], {}, z.PasswordReset["body"]>,
+  res: Response
+) {
+  // Verify the token
+  var { token } = req.params;
+  var encryptedToken = crypto.createHash("sha256").update(token).digest("hex");
+  var user = await service.getUserService({
+    passwordResetToken: encryptedToken,
+    passwordResetTokenExpiresAt: { $gt: Date.now() },
+  });
+
+  if (!user) throw new BaseApiError(400, "Invalid or expired token");
+
+  // Update the user's password
+  var { password } = req.body;
+  user.password = password;
+  user.passwordResetToken = undefined;
+  user.passwordResetTokenExpiresAt = undefined;
+  await user.save({ validateModifiedOnly: true });
+
+  return res.status(200).json({ message: "Password reset successful" });
+}
+
+// ==================================
+// OTHER CONTROLLERS
+// ==================================
+
+/**
+ * Logout user with email/password login OR social login
+ *
+ * @route GET /api/auth/logout
+ */
+export async function logoutController(req: Request, res: Response) {
+  if (req.cookies?.refreshToken) {
+    res.clearCookie("refreshToken", {
+      httpOnly: true,
+      sameSite: "none",
+      secure: true,
+      // secure: process.env.NODE_ENV == "production",
+    });
+  } else if (req.logOut) {
+    req.logOut(function successfulOAuthLogout() {});
+  }
+
+  return res.status(200).json({ message: "Logout successful" });
+}
