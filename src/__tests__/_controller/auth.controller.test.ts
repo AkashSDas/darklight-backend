@@ -318,4 +318,92 @@ describe("Auth controller", () => {
       it.todo("should return an error and delete the token from the database");
     });
   });
+
+  // Skipping this test because it sends an email
+  describe.skip("forgotPasswordController", () => {
+    describe("given that a user has valid email", () => {
+      it("should send an email and return reset password token", async () => {
+        var user = await createUserService(userPayload);
+
+        var { statusCode, body } = await supertest(app)
+          .post("/api/v2/auth/forgot-password")
+          .send({ email: user.email });
+
+        // Check if the reset password token and expires at are set Or not
+        var updatedUser = await getUserWithSelectService(
+          { email: user.email },
+          "+passwordResetToken +passwordResetTokenExpiresAt"
+        );
+        expect(updatedUser.passwordResetToken).toBeDefined();
+        expect(updatedUser.passwordResetTokenExpiresAt).toBeDefined();
+
+        expect(statusCode).toBe(200);
+        expect(body).toEqual({ token: expect.any(String) });
+      });
+    });
+  });
+
+  describe("resetPasswordController", () => {
+    describe("given that the password reset token is valid", () => {
+      it("should reset the password and unset the it's token related fields", async () => {
+        var user = await createUserService(userPayload);
+        var token = user.generatePasswordResetToken();
+        await user.save();
+
+        // Check if the fields are set
+        var updatedUser = await getUserWithSelectService(
+          { email: user.email },
+          "+passwordResetToken +passwordResetTokenExpiresAt"
+        );
+        expect(updatedUser.passwordResetToken).toBeDefined();
+        expect(updatedUser.passwordResetTokenExpiresAt).toBeDefined();
+
+        var { statusCode, body } = await supertest(app)
+          .put(`/api/v2/auth/password-reset/${token}`)
+          .send({ password: "newPassword", confirmPassword: "newPassword" });
+
+        expect(statusCode).toBe(200);
+        expect(body).toEqual({ message: "Password reset successfully" });
+
+        var updatedUser2 = await getUserWithSelectService(
+          { email: user.email },
+          "+passwordResetToken +passwordResetTokenExpiresAt"
+        );
+        expect(updatedUser2.passwordResetToken).toBeUndefined();
+        expect(updatedUser2.passwordResetTokenExpiresAt).toBeUndefined();
+      });
+    });
+
+    describe("given that the password reset token is invalid", () => {
+      it("should throw an error", async () => {
+        var user = await createUserService(userPayload);
+        user.generatePasswordResetToken();
+        await user.save();
+        var token = "invalid token";
+
+        var { statusCode, body } = await supertest(app)
+          .put(`/api/v2/auth/password-reset/${token}`)
+          .send({ password: "newPassword", confirmPassword: "newPassword" });
+
+        expect(statusCode).toBe(400);
+        expect(body).toEqual({ message: "Invalid or expired token" });
+      });
+    });
+  });
+
+  describe("logoutController", () => {
+    describe("given that user is logged in", () => {
+      it("should logout the user", async () => {
+        var user = await createUserService(userPayload);
+        var token = user.accessToken();
+
+        var { statusCode, body } = await supertest(app)
+          .get("/api/v2/auth/logout")
+          .set("Authorization", `Bearer ${token}`);
+
+        expect(statusCode).toBe(200);
+        expect(body).toEqual({ message: "Logged out successfully" });
+      });
+    });
+  });
 });

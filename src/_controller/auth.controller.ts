@@ -338,7 +338,7 @@ export async function passwordResetController(
   user.passwordResetTokenExpiresAt = undefined;
   await user.save({ validateModifiedOnly: true });
 
-  return res.status(200).json({ message: "Password reset successful" });
+  return res.status(200).json({ message: "Password reset successfully" });
 }
 
 // ==================================
@@ -362,5 +362,5 @@ export async function logoutController(req: Request, res: Response) {
     req.logOut(function successfulOAuthLogout() {});
   }
 
-  return res.status(200).json({ message: "Logout successful" });
+  return res.status(200).json({ message: "Logged out successfully" });
 }
