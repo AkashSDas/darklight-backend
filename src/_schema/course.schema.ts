@@ -42,9 +42,17 @@ export var updateCoverImageSchema = z.object({
   params: z.object({ courseId: mongoIdSchema("courseId") }),
 });
 
+// GROUP
+
+export var createGroupSchema = z.object({
+  params: z.object({ courseId: mongoIdSchema("courseId") }),
+});
+
 // =========================
 // TYPES
 // =========================
 
 export type Settings = z.infer<typeof settingsSchema>;
 export type UpdateCoverImage = z.infer<typeof updateCoverImageSchema>;
+
+export type CreateGroup = z.infer<typeof createGroupSchema>;

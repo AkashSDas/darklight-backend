@@ -96,7 +96,7 @@ class GroupClass {
     required: true,
     immutable: true,
   })
-  id: string;
+  _id: string;
 
   @prop({ type: SchemaTypes.String, trim: true })
   emoji?: string;

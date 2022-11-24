@@ -36,3 +36,16 @@ router.put(
   handleMiddlewareError(ctrl.updateCoverImageController),
   sendErrorResponse
 );
+
+// ==================================
+// GROUP
+// ==================================
+
+// Add group
+router.post(
+  "/:courseId/group",
+  validateResource(z.createGroupSchema),
+  handleMiddlewareError(verifyAuth),
+  handleMiddlewareError(ctrl.createGroupController),
+  sendErrorResponse
+);

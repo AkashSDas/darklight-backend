@@ -157,4 +157,41 @@ describe("Course controllers", () => {
       }, 30000);
     });
   });
+
+  // ============================
+  // GROUP
+  // ============================
+
+  describe("createGroupController", () => {
+    var course: DocumentType<CourseClass>;
+
+    beforeAll(async () => {
+      course = new Course();
+      course.instructors.push(user._id);
+      await course.save();
+    });
+
+    describe("given that the instructor is creating a group", () => {
+      it("should create a group", async () => {
+        var { statusCode, body } = await supertest(app)
+          .post(`/api/v2/course/${course._id}/group`)
+          .set("Authorization", `Bearer ${token}`);
+
+        expect(statusCode).toBe(201);
+        expect(body).toMatchObject({ group: { lessons: [] } });
+      });
+    });
+
+    describe("given that the lesson doesn't exists", () => {
+      it("should return Forbidden message", async () => {
+        var invalidId = new mongoose.Types.ObjectId();
+        var { statusCode, body } = await supertest(app)
+          .post(`/api/v2/course/${invalidId}/group`)
+          .set("Authorization", `Bearer ${token}`);
+
+        expect(statusCode).toBe(403);
+        expect(body).toMatchObject({ message: "Forbidden" });
+      });
+    });
+  });
 });

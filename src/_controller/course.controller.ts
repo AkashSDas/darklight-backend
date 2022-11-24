@@ -4,6 +4,7 @@ import * as z from "../_schema/course.schema";
 import { UserRole } from "../_utils/user.util";
 import { UploadedFile } from "express-fileupload";
 import { updateCourseCoverImage } from "../_utils/course.util";
+import mongoose from "mongoose";
 
 // ==================================
 // COURSE CONTROLLERS
@@ -101,4 +102,43 @@ export async function updateCoverImageController(
   await course.save();
 
   return res.status(200).json({ image });
+}
+
+// ==================================
+// GROUP CONTROLLERS
+// ==================================
+
+/**
+ * Create a new group in a course
+ *
+ * @route POST /api/course/:courseId/group
+ *
+ * @remark Middlewares used:
+ * - verifyAuth
+ */
+export async function createGroupController(
+  req: Request<z.CreateGroup["params"]>,
+  res: Response
+) {
+  var user = req.user;
+  var course = await Course.findOneAndUpdate(
+    { _id: req.params.courseId, instructors: user._id },
+    {
+      $push: {
+        groups: {
+          _id: new mongoose.Types.ObjectId(),
+          lessons: [],
+          lastEditedOn: new Date(Date.now()),
+        },
+      },
+    },
+    { new: true, fields: "-__v" }
+  );
+
+  if (!course) {
+    return res.status(403).json({ message: "Forbidden" });
+  }
+
+  var group = course.groups[course.groups.length - 1];
+  return res.status(201).json({ group });
 }
