@@ -11,6 +11,7 @@ import {
   updateUserService,
 } from "../../_services/user.service";
 import { UserRole } from "../../_utils/user.util";
+import path from "path";
 import { connectToCloudinary } from "../../_utils/cloudinary.util";
 
 var userPayload = {
@@ -127,9 +128,33 @@ describe("Course controllers", () => {
         });
       });
     });
+  });
+
+  // Skipping this test because it upload image to the cloudinary
+  describe.skip("updateCoverImageController", () => {
+    var course: DocumentType<CourseClass>;
+
+    beforeAll(async () => {
+      course = new Course();
+      course.instructors.push(user._id);
+      await course.save();
+    });
 
     describe("given that the instructor is updating the course", () => {
-      it.todo("update course cover image");
+      it("update course cover image", async () => {
+        var { statusCode, body } = await supertest(app)
+          .put(`/api/v2/course/${course._id}/cover`)
+          .set("Authorization", `Bearer ${token}`)
+          .attach(
+            "coverImage",
+            path.resolve(__dirname, "../../../media/cover-image.jpg")
+          );
+
+        expect(statusCode).toBe(200);
+        expect(body).toMatchObject({
+          image: { id: expect.any(String), URL: expect.any(String) },
+        });
+      }, 30000);
     });
   });
 });

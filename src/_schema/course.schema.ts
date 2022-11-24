@@ -38,8 +38,13 @@ export var settingsSchema = z.object({
   }),
 });
 
+export var updateCoverImageSchema = z.object({
+  params: z.object({ courseId: mongoIdSchema("courseId") }),
+});
+
 // =========================
 // TYPES
 // =========================
 
 export type Settings = z.infer<typeof settingsSchema>;
+export type UpdateCoverImage = z.infer<typeof updateCoverImageSchema>;

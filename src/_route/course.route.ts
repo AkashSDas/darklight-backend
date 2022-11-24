@@ -27,3 +27,12 @@ router.put(
   handleMiddlewareError(ctrl.updateSettingsController),
   sendErrorResponse
 );
+
+// Update course cover image
+router.put(
+  "/:courseId/cover",
+  validateResource(z.updateCoverImageSchema),
+  handleMiddlewareError(verifyAuth),
+  handleMiddlewareError(ctrl.updateCoverImageController),
+  sendErrorResponse
+);

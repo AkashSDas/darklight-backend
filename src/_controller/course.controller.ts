@@ -1,7 +1,9 @@
 import { Request, Response } from "express";
 import { Course } from "../_models/course.model";
-import { Settings } from "../_schema/course.schema";
+import * as z from "../_schema/course.schema";
 import { UserRole } from "../_utils/user.util";
+import { UploadedFile } from "express-fileupload";
+import { updateCourseCoverImage } from "../_utils/course.util";
 
 // ==================================
 // COURSE CONTROLLERS
@@ -52,7 +54,7 @@ export async function createCourseController(req: Request, res: Response) {
  * @remark This makes 1 request to the db
  */
 export async function updateSettingsController(
-  req: Request<Settings["params"], {}, Settings["body"]>,
+  req: Request<z.Settings["params"], {}, z.Settings["body"]>,
   res: Response
 ) {
   // This check whether the course exists and whether the user is an instructor
@@ -64,4 +66,39 @@ export async function updateSettingsController(
 
   if (!course) return res.status(404).json({ message: "Course not found" });
   return res.status(200).json({ course });
+}
+
+/**
+ * Update course cover image
+ *
+ * @route PUT /api/course/:courseId/cover
+ *
+ * @remark Middlewares used:
+ * - verifyAuth
+ *
+ * @remark Verification of course ownership is done by the query for getting
+ * the course
+ */
+export async function updateCoverImageController(
+  req: Request<z.UpdateCoverImage["params"]>,
+  res: Response
+) {
+  if (!req.files?.coverImage) {
+    return res.status(400).json({ message: "No cover image provided" });
+  }
+
+  var course = await Course.findOne({
+    _id: req.params.courseId,
+    instructors: req.user._id,
+  });
+  if (!course) return res.status(404).json({ message: "Course not found" });
+
+  var image = await updateCourseCoverImage(
+    req.files.coverImage as UploadedFile,
+    course
+  );
+  course.coverImage = image;
+  await course.save();
+
+  return res.status(200).json({ image });
 }
