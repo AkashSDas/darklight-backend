@@ -16,6 +16,7 @@
   "dependencies": {
     "@typegoose/typegoose": "^9.12.1",
     "bcryptjs": "^2.4.3",
+    "cloudinary": "^1.32.0",
     "concurrently": "^7.4.0",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
