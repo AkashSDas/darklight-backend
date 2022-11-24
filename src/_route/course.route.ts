@@ -49,3 +49,12 @@ router.post(
   handleMiddlewareError(ctrl.createGroupController),
   sendErrorResponse
 );
+
+// Update group
+router.put(
+  "/:courseId/group/:groupId",
+  validateResource(z.updateGroupSchema),
+  handleMiddlewareError(verifyAuth),
+  handleMiddlewareError(ctrl.updateGroupController),
+  sendErrorResponse
+);

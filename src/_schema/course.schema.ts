@@ -48,6 +48,18 @@ export var createGroupSchema = z.object({
   params: z.object({ courseId: mongoIdSchema("courseId") }),
 });
 
+export var updateGroupSchema = z.object({
+  params: z.object({
+    courseId: mongoIdSchema("courseId"),
+    groupId: mongoIdSchema("groupId"),
+  }),
+  body: z.object({
+    emoji: z.string().optional(),
+    title: z.string().max(120, "Too long").optional(),
+    description: z.string().max(120, "Too long").optional(),
+  }),
+});
+
 // =========================
 // TYPES
 // =========================
@@ -56,3 +68,4 @@ export type Settings = z.infer<typeof settingsSchema>;
 export type UpdateCoverImage = z.infer<typeof updateCoverImageSchema>;
 
 export type CreateGroup = z.infer<typeof createGroupSchema>;
+export type UpdateGroup = z.infer<typeof updateGroupSchema>;

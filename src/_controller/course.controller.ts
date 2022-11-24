@@ -126,7 +126,6 @@ export async function createGroupController(
     {
       $push: {
         groups: {
-          _id: new mongoose.Types.ObjectId(),
           lessons: [],
           lastEditedOn: new Date(Date.now()),
         },
@@ -141,4 +140,48 @@ export async function createGroupController(
 
   var group = course.groups[course.groups.length - 1];
   return res.status(201).json({ group });
+}
+
+/**
+ * Update a group in a course
+ *
+ * @route PUT /api/course/:courseId/group/:groupId
+ *
+ * @remark Fields that can be updated are:
+ * - title
+ * - description
+ * - emoji
+ * - lastEditedOn
+ *
+ * @remark Middlewares used:
+ * - verifyAuth
+ */
+export async function updateGroupController(
+  req: Request<z.UpdateGroup["params"], {}, z.UpdateGroup["body"]>,
+  res: Response
+) {
+  var user = req.user;
+  var course = await Course.findOneAndUpdate(
+    {
+      _id: req.params.courseId,
+      "groups._id": new mongoose.Types.ObjectId(req.params.groupId),
+      instructors: user._id,
+    },
+    {
+      $set: {
+        "groups.$.emoji": req.body.emoji,
+        "groups.$.title": req.body.title,
+        "groups.$.description": req.body.description,
+        "groups.$.lastEditedOn": new Date(Date.now()),
+      },
+    },
+    { new: true, fields: "-__v" }
+  );
+
+  if (!course) {
+    return res.status(403).json({ message: "Forbidden" });
+  }
+
+  var group = course.groups.find((group) => group._id == req.params.groupId);
+  return res.status(200).json({ group });
 }

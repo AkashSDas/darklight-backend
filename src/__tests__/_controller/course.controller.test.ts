@@ -194,4 +194,44 @@ describe("Course controllers", () => {
       });
     });
   });
+
+  describe("updateGroupController", () => {
+    var course: DocumentType<CourseClass>;
+
+    beforeAll(async () => {
+      course = new Course();
+      course.instructors.push(user._id);
+      await course.save();
+    });
+
+    describe("given that course settings is updated", () => {
+      it("should update the course", async () => {
+        var group = {
+          _id: new mongoose.Types.ObjectId(),
+          lessons: [],
+          lastEditedOn: new Date(Date.now()),
+        };
+        course.groups.push(group as any);
+        await course.save();
+
+        var { statusCode, body } = await supertest(app)
+          .put(`/api/v2/course/${course._id}/group/${group._id}`)
+          .set("Authorization", `Bearer ${token}`)
+          .send({
+            emoji: "👍",
+            title: "Test title",
+            description: "Test description",
+          });
+
+        expect(statusCode).toBe(200);
+        expect(body).toMatchObject({
+          group: {
+            emoji: "👍",
+            title: "Test title",
+            description: "Test description",
+          },
+        });
+      });
+    });
+  });
 });
