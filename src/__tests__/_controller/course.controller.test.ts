@@ -234,4 +234,43 @@ describe("Course controllers", () => {
       });
     });
   });
+
+  describe("reorderLessonsController", () => {
+    var course: DocumentType<CourseClass>;
+
+    beforeAll(async () => {
+      course = new Course();
+      course.instructors.push(user._id);
+      await course.save();
+    });
+
+    describe("given that the new order is sent", () => {
+      it("should update the order of the lessons", async () => {
+        var lesson1 = new mongoose.Types.ObjectId();
+        var lesson2 = new mongoose.Types.ObjectId();
+        var lesson3 = new mongoose.Types.ObjectId();
+        var lesson4 = new mongoose.Types.ObjectId();
+
+        var group = {
+          _id: new mongoose.Types.ObjectId(),
+          lessons: [lesson1, lesson2, lesson3, lesson4],
+          lastEditedOn: new Date(Date.now()),
+        };
+        course.groups.push(group as any);
+        await course.save();
+
+        var { statusCode, body } = await supertest(app)
+          .put(`/api/v2/course/${course._id}/group/${group._id}/reorder`)
+          .set("Authorization", `Bearer ${token}`)
+          .send({ lessons: [lesson3, lesson2, lesson1, lesson4] });
+
+        expect(statusCode).toBe(200);
+        expect(body).toMatchObject({
+          group: {
+            lessons: [lesson3, lesson2, lesson1, lesson4],
+          },
+        });
+      });
+    });
+  });
 });

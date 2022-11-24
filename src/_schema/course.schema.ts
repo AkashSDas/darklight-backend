@@ -60,6 +60,16 @@ export var updateGroupSchema = z.object({
   }),
 });
 
+export var reorderLessonsSchema = z.object({
+  params: z.object({
+    courseId: mongoIdSchema("courseId"),
+    groupId: mongoIdSchema("groupId"),
+  }),
+  body: z.object({
+    lessons: z.array(mongoIdSchema("lessons")),
+  }),
+});
+
 // =========================
 // TYPES
 // =========================
@@ -69,3 +79,4 @@ export type UpdateCoverImage = z.infer<typeof updateCoverImageSchema>;
 
 export type CreateGroup = z.infer<typeof createGroupSchema>;
 export type UpdateGroup = z.infer<typeof updateGroupSchema>;
+export type ReorderLessons = z.infer<typeof reorderLessonsSchema>;

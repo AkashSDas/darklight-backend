@@ -58,3 +58,12 @@ router.put(
   handleMiddlewareError(ctrl.updateGroupController),
   sendErrorResponse
 );
+
+// Reorder lessons
+router.put(
+  "/:courseId/group/:groupId/reorder",
+  validateResource(z.reorderLessonsSchema),
+  handleMiddlewareError(verifyAuth),
+  handleMiddlewareError(ctrl.reorderLessonsController),
+  sendErrorResponse
+);
