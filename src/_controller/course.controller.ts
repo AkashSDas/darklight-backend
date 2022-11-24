@@ -1,13 +1,32 @@
 import { Request, Response } from "express";
 import { Course } from "../_models/course.model";
 import { Settings } from "../_schema/course.schema";
-import { UploadedFile } from "express-fileupload";
-import { updateCourseCoverImage } from "../_utils/cloudinary.util";
-import { allowedCourseSettings } from "../_utils/course.util";
+import { UserRole } from "../_utils/user.util";
 
 // ==================================
-// COURSE SETTINGS CONTROLLERS
+// COURSE CONTROLLERS
 // ==================================
+
+/**
+ * Create a brand new course
+ *
+ * @route POST /api/course
+ *
+ * @remark Middlewares used:
+ * - verifyAuth
+ */
+export async function createCourseController(req: Request, res: Response) {
+  var user = req.user;
+  if (!(user.roles as UserRole[]).includes(UserRole.TEACHER)) {
+    return res.status(403).json({ message: "Forbidden" });
+  }
+
+  var course = new Course();
+  course.instructors.push(user._id);
+  await course.save();
+
+  return res.status(201).json({ course });
+}
 
 /**
  * Update course settings
@@ -20,49 +39,29 @@ import { allowedCourseSettings } from "../_utils/course.util";
  * - price
  * - difficulty
  * - tags
- * - coverImage
  * - faqs
+ *
+ * @route PUT /api/course/:courseId/settings
  *
  * @remark Middlewares used:
  * - verifyAuth
- * - validateCourseOwnership
+ *
+ * @remark Verification of course ownership is done by the query for getting
+ * the course
+ *
+ * @remark This makes 1 request to the db
  */
-export async function updateSettings(
+export async function updateSettingsController(
   req: Request<Settings["params"], {}, Settings["body"]>,
   res: Response
 ) {
-  // Cost is only 1 request to database (when there is no cover image)
-  if (req.files?.coverImage == undefined) {
-    // This check whether the course exists and whether the user is an instructor
-    let course = await Course.findOneAndUpdate(
-      { _id: req.params.courseId, instructors: req.user._id },
-      { $set: { ...req.body } },
-      { new: true, fields: "-__v" }
-    );
+  // This check whether the course exists and whether the user is an instructor
+  var course = await Course.findOneAndUpdate(
+    { _id: req.params.courseId, instructors: req.user._id },
+    { $set: { ...req.body } },
+    { new: true, fields: "-__v" }
+  );
 
-    if (!course) return res.status(404).json({ message: "Course not found" });
-    return res.status(200).json({ course });
-  } else {
-    let course = await Course.findOne({
-      _id: req.params.courseId,
-      instructors: req.user._id,
-    });
-
-    if (!course) return res.status(404).json({ message: "Course not found" });
-
-    // Upload cover image
-    let file = req.files.coverImage as UploadedFile;
-    let image = await updateCourseCoverImage(file, course);
-
-    // Update course
-    for (let key in req.body) {
-      if (key in allowedCourseSettings) {
-        course[key] = req.body[key];
-      }
-    }
-    course.coverImage = image;
-    await course.save();
-
-    return res.status(200).json({ course });
-  }
+  if (!course) return res.status(404).json({ message: "Course not found" });
+  return res.status(200).json({ course });
 }

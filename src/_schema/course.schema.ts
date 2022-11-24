@@ -15,6 +15,8 @@ function mongoIdSchema(path: string) {
 // SCHEMAS
 // =========================
 
+// COURSE
+
 export var settingsSchema = z.object({
   params: z.object({ courseId: mongoIdSchema("courseId") }),
   body: z.object({
@@ -24,7 +26,7 @@ export var settingsSchema = z.object({
     stage: z.nativeEnum(CourseStage).optional(),
     price: z.number().min(0, "Too low").optional(),
     difficulty: z.nativeEnum(CourseDifficulty).optional(),
-    tags: z.array(z.string()).optional(),
+    tags: z.array(z.string().max(32, "Too long")).optional(),
     faqs: z
       .array(
         z.object({
