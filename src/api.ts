@@ -71,6 +71,7 @@ app.use("/api/course-profile", require("./routes/course-profile.route").router);
 app.use("/api/v2/test", require("./_route/test.route").router);
 app.use("/api/v2/user", require("./_route/user.route").router);
 app.use("/api/v2/auth", require("./_route/auth.route").router);
+app.use("/api/v2/course", require("./_route/course.route").router);
 
 app.all("*", function handleRemainingRoute(req, res) {
   sendResponse(res, {

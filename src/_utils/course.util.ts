@@ -15,3 +15,14 @@ export enum FileType {
   DOCUMENT = "document",
   IMAGE = "image",
 }
+
+export var allowedCourseSettings = [
+  "emoji",
+  "title",
+  "description",
+  "stage",
+  "price",
+  "difficulty",
+  "tags",
+  "faqs",
+];
