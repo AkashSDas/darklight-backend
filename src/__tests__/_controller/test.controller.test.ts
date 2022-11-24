@@ -4,7 +4,7 @@ import { describe, it } from "@jest/globals";
 
 import { app } from "../../api";
 
-describe("[controller] /test", () => {
+describe.skip("[controller] /test", () => {
   describe("[GET] /", () => {
     describe("given a request is made", () => {
       it("should return a json response with a message", async () => {

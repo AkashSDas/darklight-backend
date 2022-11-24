@@ -22,7 +22,7 @@ var userPayload = {
   email: "james@gmail.com",
 };
 
-describe("User controller", () => {
+describe.skip("User controller", () => {
   beforeAll(async function connectToMongoDB() {
     var mongoServer = await MongoMemoryServer.create();
     await mongoose.connect(mongoServer.getUri());

@@ -2,7 +2,7 @@ import { describe, expect, it, jest } from "@jest/globals";
 
 import { handleAsync, handleMiddlewareError } from "../../_utils/async.util";
 
-describe("[utils] async", () => {
+describe.skip("[utils] async", () => {
   describe("[handleAsync]", () => {
     describe("given that the promise is resolved", () => {
       it("should return data and no error in an object", async () => {

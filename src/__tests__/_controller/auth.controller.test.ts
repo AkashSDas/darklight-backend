@@ -28,7 +28,7 @@ var loginPayload = {
   password: userPayload.password,
 };
 
-describe("Auth controller", () => {
+describe.skip("Auth controller", () => {
   beforeAll(async function connectToMongoDB() {
     var mongoServer = await MongoMemoryServer.create();
     await mongoose.connect(mongoServer.getUri());
