@@ -7,6 +7,7 @@ import morgan from "morgan";
 import passport from "passport";
 import swaggerUI from "swagger-ui-express";
 import YAML from "yamljs";
+import fileUpload from "express-fileupload";
 
 import { sendResponse } from "./utils/client-response";
 
@@ -39,6 +40,7 @@ app.use(cors({ origin: process.env.FRONTEND_BASE_URL, credentials: true })); // 
 app.use(cookieParser()); // Parse Cookie header and populate req.cookies with an object keyed by the cookie names
 app.use(express.json()); // for parsing incoming data
 app.use(express.urlencoded({ extended: true })); // parses incoming requests with urlencoded payloads
+app.use(fileUpload({ useTempFiles: true, tempFileDir: "/tmp/" }));
 app.use(passport.initialize());
 app.use(
   expressSession({
