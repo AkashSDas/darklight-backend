@@ -15,4 +15,4 @@ export var userExistsSchema = z.object({
 // TYPES
 // =========================
 
-export type UserExistsSchema = z.infer<typeof userExistsSchema>;
+export type UserExists = z.infer<typeof userExistsSchema>;

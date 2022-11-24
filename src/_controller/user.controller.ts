@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { UserExistsSchema } from "../_schema/user.schema";
+import { UserExists } from "../_schema/user.schema";
 import { userExistsService } from "../_services/user.service";
 import { BaseApiError } from "../_utils/error.util";
 import { UserRole } from "../_utils/user.util";
@@ -19,7 +19,7 @@ import { UserRole } from "../_utils/user.util";
  * - username
  */
 export async function userExistsController(
-  req: Request<{}, {}, {}, UserExistsSchema["query"]>,
+  req: Request<{}, {}, {}, UserExists["query"]>,
   res: Response
 ) {
   var { email, username } = req.query;
