@@ -7,7 +7,7 @@ export async function connectToCloudinary() {
   cloudinary.v2.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
     api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET,
+    api_secret: process.env.CLOUDINARY_SECRET_KEY,
   });
 }
 
@@ -30,7 +30,7 @@ export async function updateCourseCoverImage(
 
   // Upload the new image in cloudinary
   var result = await cloudinary.v2.uploader.upload(file.tempFilePath, {
-    folder: COURSE_COVER_IMG_DIR,
+    folder: `${COURSE_COVER_IMG_DIR}/${course._id}`,
     crop: "scale",
   });
 

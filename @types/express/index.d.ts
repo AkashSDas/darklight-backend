@@ -28,15 +28,19 @@
 import { DocumentType } from "@typegoose/typegoose";
 
 import { TCourseLessonClass } from "../../src/models/course-lesson.model";
-import { TCourseModuleClass } from "../../src/models/course.model";
+import {
+  TCourseClass,
+  TCourseModuleClass,
+} from "../../src/models/course.model";
+import { TUserClass } from "../../src/models/user.model";
 import { CourseClass } from "../../src/_models/course.model";
 import { UserClass } from "../../src/_models/user.model";
 
 declare module "express-serve-static-core" {
   interface Request {
     // TODO: fix types
-    user?: DocumentType<UserClass>;
-    course?: DocumentType<CourseClass>;
+    user?: DocumentType<UserClass> | TUserClass;
+    course?: DocumentType<CourseClass> | TCourseClass;
 
     module?: TCourseModuleClass;
     lesson?: TCourseLessonClass;

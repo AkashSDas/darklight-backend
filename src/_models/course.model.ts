@@ -57,10 +57,16 @@ export class CourseClass {
   @prop({ type: SchemaTypes.Array, required: true, default: [] })
   faqs: FaqClass[];
 
-  @prop({ type: SchemaTypes.Number, required: true, min: 0 })
+  @prop({ type: SchemaTypes.Number, required: true, min: 0, default: 0 })
   enrolled: number;
 
-  @prop({ type: SchemaTypes.Number, required: true, min: 0, max: 5 })
+  @prop({
+    type: SchemaTypes.Number,
+    required: true,
+    min: 0,
+    max: 5,
+    default: 0,
+  })
   ratings: number;
 
   // ===============================
