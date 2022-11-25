@@ -273,4 +273,39 @@ describe("Course controllers", () => {
       });
     });
   });
+
+  // ============================
+  // LESSON
+  // ============================
+
+  describe("createLessonController", () => {
+    var course: DocumentType<CourseClass>;
+    var groupId = new mongoose.Types.ObjectId();
+
+    beforeAll(async () => {
+      course = new Course({
+        groups: [
+          {
+            _id: groupId,
+            lessons: [],
+            lastEditedOn: new Date(Date.now()),
+          },
+        ],
+      });
+      course.instructors.push(user._id);
+      await course.save();
+    });
+
+    // MongoServerError: Transaction numbers are only allowed on a replica set member or mongos
+    describe.skip("given that the instructor is creating a lesson", () => {
+      it("should create a lesson", async () => {
+        var { statusCode, body } = await supertest(app)
+          .post(`/api/v2/course/${course._id}/group/${groupId}/lesson`)
+          .set("Authorization", `Bearer ${token}`);
+
+        expect(statusCode).toBe(201);
+        expect(body).toMatchObject({ lesson: { content: [] } });
+      });
+    });
+  });
 });
