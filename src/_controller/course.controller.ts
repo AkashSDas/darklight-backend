@@ -11,6 +11,8 @@ import {
 import mongoose, { startSession } from "mongoose";
 import { Lesson } from "../_models/lesson.model";
 
+// TODO: update lastEditedOn
+
 // ==================================
 // COURSE CONTROLLERS
 // ==================================
@@ -451,3 +453,19 @@ export async function removeLessonVideoController(
   session.endSession();
   return res.status(200).json({ message: "Video removed successfully" });
 }
+
+function addLessonAttachmentController() {}
+
+function removeLessonAttachmentController() {}
+
+// ==================================
+// CONTENT CONTROLLERS
+// ==================================
+
+function addContentController() {}
+
+function updateContentController() {}
+
+function removeContentController() {}
+
+function reorderContentController() {}

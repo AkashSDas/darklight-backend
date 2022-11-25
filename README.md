@@ -39,5 +39,3 @@ FROM_EMAIL=
 
 FRONTEND_BASE_URL=http://localhost:3000
 ```
-
-1h 30m
