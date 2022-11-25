@@ -514,6 +514,15 @@ describe("Course controllers", () => {
           console.log(body.course.groups[0]);
         });
       });
+
+      describe("given courses are requested", () => {
+        it("should return courses", async () => {
+          var { statusCode, body } = await supertest(app).get(`/api/v2/course`);
+
+          expect(statusCode).toBe(200);
+          console.log(body.courses);
+        });
+      });
     });
   });
 });

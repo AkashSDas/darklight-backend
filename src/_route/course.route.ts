@@ -45,6 +45,13 @@ router.get(
   sendErrorResponse
 );
 
+// Get all courses
+router.get(
+  "",
+  handleMiddlewareError(ctrl.getCoursesController),
+  sendErrorResponse
+);
+
 // ==================================
 // GROUP
 // ==================================

@@ -4,6 +4,7 @@ import * as z from "../_schema/course.schema";
 import { UserRole } from "../_utils/user.util";
 import { UploadedFile } from "express-fileupload";
 import {
+  CourseStage,
   generateContentBlock,
   removeLessonVideo,
   updateContentBlock,
@@ -125,6 +126,20 @@ export async function getCourseController(
   if (!course) return res.status(404).json({ message: "Course not found" });
 
   return res.status(200).json({ course });
+}
+
+export async function getCoursesController(req: Request, res: Response) {
+  const LIMIT = 2;
+  var next = req.query.next as string;
+
+  var courses = await (Course as any).paginateCourse({
+    query: { stage: CourseStage.PUBLISHED },
+    limit: LIMIT,
+    paginatedField: "updatedAt",
+    next,
+  });
+
+  return res.status(200).json({ ...courses, courses: courses.results });
 }
 
 // ==================================
