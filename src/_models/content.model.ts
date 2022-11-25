@@ -1,18 +1,15 @@
 import { prop } from "@typegoose/typegoose";
 import mongoose, { SchemaTypes } from "mongoose";
 
-enum ContentType {
+export enum ContentType {
+  PARAGRAPH = "paragraph",
+  IMAGE = "image",
   H1 = "h1",
   H2 = "h2",
   H3 = "h3",
-  Callout = "callout",
-  Paragraph = "paragraph",
-  Code = "code",
-  Image = "image",
-  Quote = "quote",
-  Divider = "divider",
-  UnorderedList = "unordered-list",
-  OrderedList = "ordered-list",
+  DIVIDER = "divider",
+  QUOTE = "quote",
+  CODE = "code",
 }
 
 class ContentDataClass {

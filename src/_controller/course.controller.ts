@@ -4,6 +4,7 @@ import * as z from "../_schema/course.schema";
 import { UserRole } from "../_utils/user.util";
 import { UploadedFile } from "express-fileupload";
 import {
+  generateContentBlock,
   removeLessonVideo,
   updateCourseCoverImage,
   uploadLessonVideo,
@@ -454,18 +455,48 @@ export async function removeLessonVideoController(
   return res.status(200).json({ message: "Video removed successfully" });
 }
 
-function addLessonAttachmentController() {}
+// function addLessonAttachmentController() {}
 
-function removeLessonAttachmentController() {}
+// function removeLessonAttachmentController() {}
 
 // ==================================
 // CONTENT CONTROLLERS
 // ==================================
 
-function addContentController() {}
+/**
+ * Add content to a lesson
+ *
+ * @route POST /api/course/:courseId/group/:groupId/lesson/:lessonId/content
+ *
+ * @remark Middlewares used:
+ * - verifyAuth
+ */
+export async function createContentController(
+  req: Request<z.CreateContent["params"]>,
+  res: Response
+) {
+  var user = req.user;
+  var [course, lesson] = await Promise.all([
+    Course.findOne({ _id: req.params.courseId, instructors: user._id }),
+    Lesson.findOne({ _id: req.params.lessonId }),
+  ]);
 
-function updateContentController() {}
+  if (!course || !lesson) {
+    return res.status(403).json({ message: "Forbidden" });
+  }
 
-function removeContentController() {}
+  var content = generateContentBlock(req.body.type);
+  if (!content) {
+    return res.status(400).json({ message: "Invalid content type" });
+  }
+  lesson.content.push(content);
+  lesson.save();
 
-function reorderContentController() {}
+  return res.status(201).json({ content });
+}
+
+// function updateContentController() {}
+
+// function removeContentController() {}
+
+// function reorderContentController() {}

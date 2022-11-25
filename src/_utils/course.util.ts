@@ -1,6 +1,8 @@
 import { DocumentType } from "@typegoose/typegoose";
 import cloudinary from "cloudinary";
 import { UploadedFile } from "express-fileupload";
+import { nanoid } from "nanoid";
+import { ContentType } from "../_models/content.model";
 import { CourseClass } from "../_models/course.model";
 import { LessonClass } from "../_models/lesson.model";
 import { COURSE_COVER_IMG_DIR, LESSON_VIDEO_DIR } from "./cloudinary.util";
@@ -81,4 +83,66 @@ export async function uploadLessonVideo(
     URL: result.secure_url,
     duration: result.duration,
   };
+}
+
+export function generateContentBlock(type: ContentType) {
+  switch (type) {
+    case ContentType.PARAGRAPH:
+      return {
+        id: nanoid(10),
+        type: ContentType.PARAGRAPH,
+        data: [{ key: "text", value: "" }],
+      };
+    case ContentType.IMAGE:
+      return {
+        id: nanoid(10),
+        type: ContentType.IMAGE,
+        data: [
+          { key: "URL", value: null },
+          { key: "caption", value: null },
+          { key: "id", value: null },
+        ],
+      };
+    case ContentType.H1:
+      return {
+        id: nanoid(10),
+        type: ContentType.H1,
+        data: [{ key: "text", value: "" }],
+      };
+    case ContentType.H2:
+      return {
+        id: nanoid(10),
+        type: ContentType.H2,
+        data: [{ key: "text", value: "" }],
+      };
+    case ContentType.H3:
+      return {
+        id: nanoid(10),
+        type: ContentType.H3,
+        data: [{ key: "text", value: "" }],
+      };
+    case ContentType.DIVIDER:
+      return {
+        id: nanoid(10),
+        type: ContentType.DIVIDER,
+        data: [],
+      };
+    case ContentType.QUOTE:
+      return {
+        id: nanoid(10),
+        type: ContentType.QUOTE,
+        data: [{ key: "text", value: "" }],
+      };
+    case ContentType.CODE:
+      return {
+        id: nanoid(10),
+        type: ContentType.CODE,
+        data: [
+          { key: "text", value: "" },
+          { key: "catpion", value: null },
+        ],
+      };
+    default:
+      return null;
+  }
 }

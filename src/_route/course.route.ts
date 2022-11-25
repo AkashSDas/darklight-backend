@@ -107,3 +107,16 @@ router.delete(
   handleMiddlewareError(ctrl.removeLessonVideoController),
   sendErrorResponse
 );
+
+// ==================================
+// CONTENT
+// ==================================
+
+// Add content
+router.post(
+  "/:courseId/group/:groupId/lesson/:lessonId/content",
+  validateResource(z.createContentSchema),
+  handleMiddlewareError(verifyAuth),
+  handleMiddlewareError(ctrl.createContentController),
+  sendErrorResponse
+);

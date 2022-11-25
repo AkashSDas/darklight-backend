@@ -13,12 +13,23 @@ import {
 import { UserRole } from "../../_utils/user.util";
 import path from "path";
 import { connectToCloudinary } from "../../_utils/cloudinary.util";
+import { Lesson, LessonClass } from "../../_models/lesson.model";
+import { ContentType } from "../../_models/content.model";
 
 var userPayload = {
   username: "james",
   email: "james@gmail.com",
   password: "testing",
 };
+
+function createGroup(label: string) {
+  return {
+    title: label,
+    _id: new mongoose.Types.ObjectId(),
+    lessons: [],
+    lastEditedOn: new Date(Date.now()),
+  };
+}
 
 describe("Course controllers", () => {
   var user: DocumentType<UserClass>;
@@ -305,6 +316,60 @@ describe("Course controllers", () => {
 
         expect(statusCode).toBe(201);
         expect(body).toMatchObject({ lesson: { content: [] } });
+      });
+    });
+  });
+
+  describe.only("Content", () => {
+    var course: DocumentType<CourseClass>;
+    var lesson: DocumentType<LessonClass>;
+    var groupId: mongoose.Types.ObjectId;
+
+    beforeAll(async () => {
+      // Create course and groups
+      course = new Course();
+      course.instructors.push(user._id);
+      var grp1 = createGroup("Group 1") as any;
+      groupId = grp1._id;
+      var grp2 = createGroup("Group 2") as any;
+      course.groups.push(grp1);
+      course.groups.push(grp2);
+      await course.save();
+
+      // Create lessons and update course
+      lesson = new Lesson();
+      var lesson2 = new Lesson();
+      var idx = course.groups.findIndex((g) => g._id == grp1._id);
+      var grp = course.groups[idx];
+      grp.lessons.push(lesson._id);
+      grp.lessons.push(lesson2._id);
+      course.groups[idx] = grp;
+
+      // TODO: have a transaction here
+      await course.save();
+      await lesson.save();
+      await lesson2.save();
+    });
+
+    describe("add content", () => {
+      describe("given a valid type of content", () => {
+        it("should create a content block", async () => {
+          var { statusCode, body } = await supertest(app)
+            .post(
+              `/api/v2/course/${course._id}/group/${groupId}/lesson/${lesson._id}/content`
+            )
+            .set("Authorization", `Bearer ${token}`)
+            .send({ type: ContentType.PARAGRAPH });
+
+          expect(statusCode).toBe(201);
+          expect(body).toMatchObject({
+            content: {
+              id: expect.any(String),
+              type: ContentType.PARAGRAPH,
+              data: expect.any(Array),
+            },
+          });
+        });
       });
     });
   });
