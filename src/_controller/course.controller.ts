@@ -292,6 +292,11 @@ export async function createLessonController(
  *
  * @route PUT /api/course/:courseId/group/:groupId/lesson/:lessonId/settings
  *
+ * @remark Fields that can be updated are:
+ * - title
+ * - emoji
+ * - free
+ *
  * @remark Middlewares used:
  * - verifyAuth
  */
@@ -391,6 +396,14 @@ export async function updateLessonVideoController(
   return res.status(200).json({ message: "Video uploaded successfully" });
 }
 
+/**
+ * Remove lesson video
+ *
+ * @route DELETE /api/course/:courseId/group/:groupId/lesson/:lessonId/video
+ *
+ * @remark Middlewares used:
+ * - verifyAuth
+ */
 export async function removeLessonVideoController(
   req: Request<z.UpdateLessonVideo["params"]>,
   res: Response
