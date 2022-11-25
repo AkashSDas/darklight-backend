@@ -1,10 +1,18 @@
-import { getModelForClass, prop, Ref, Severity } from "@typegoose/typegoose";
+import {
+  getModelForClass,
+  plugin,
+  prop,
+  Ref,
+  Severity,
+} from "@typegoose/typegoose";
 import mongoose, { SchemaTypes, Types } from "mongoose";
 import { CourseDifficulty, CourseStage } from "../_utils/course.util";
 import { ImageClass } from "./image.model";
 import { LessonClass } from "./lesson.model";
 import { UserClass } from "./user.model";
+import MongoPaging from "mongo-cursor-pagination";
 
+@plugin(MongoPaging.mongoosePlugin, { name: "paginateCourse" })
 export class CourseClass {
   @prop({ type: SchemaTypes.String, trim: true })
   emoji?: string;

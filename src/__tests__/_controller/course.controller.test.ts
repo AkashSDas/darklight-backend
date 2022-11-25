@@ -503,6 +503,17 @@ describe("Course controllers", () => {
           ).toBeDefined();
         }, 100000);
       });
+
+      describe("given a course is requested", () => {
+        it("should return the course", async () => {
+          var { statusCode, body } = await supertest(app).get(
+            `/api/v2/course/${course._id}`
+          );
+
+          expect(statusCode).toBe(200);
+          console.log(body.course.groups[0]);
+        });
+      });
     });
   });
 });

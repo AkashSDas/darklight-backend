@@ -113,6 +113,20 @@ export async function updateCoverImageController(
   return res.status(200).json({ image });
 }
 
+export async function getCourseController(
+  req: Request<z.GetCourse["params"]>,
+  res: Response
+) {
+  var course = await Course.findOne({
+    _id: req.params.courseId,
+  })
+    .populate({ path: "instructors", model: "-user" })
+    .populate({ path: "groups.lessons", model: "-lesson" });
+  if (!course) return res.status(404).json({ message: "Course not found" });
+
+  return res.status(200).json({ course });
+}
+
 // ==================================
 // GROUP CONTROLLERS
 // ==================================

@@ -37,6 +37,14 @@ router.put(
   sendErrorResponse
 );
 
+// Get a course
+router.get(
+  "/:courseId",
+  validateResource(z.getCourseSchema),
+  handleMiddlewareError(ctrl.getCourseController),
+  sendErrorResponse
+);
+
 // ==================================
 // GROUP
 // ==================================
