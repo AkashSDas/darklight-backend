@@ -4,6 +4,7 @@ import * as z from "../_schema/course.schema";
 import { UserRole } from "../_utils/user.util";
 import { UploadedFile } from "express-fileupload";
 import {
+  removeLessonVideo,
   updateCourseCoverImage,
   uploadLessonVideo,
 } from "../_utils/course.util";
@@ -388,4 +389,52 @@ export async function updateLessonVideoController(
 
   session.endSession();
   return res.status(200).json({ message: "Video uploaded successfully" });
+}
+
+export async function removeLessonVideoController(
+  req: Request<z.UpdateLessonVideo["params"]>,
+  res: Response
+) {
+  var user = req.user;
+  var course = await Course.findOne({
+    _id: req.params.courseId,
+    instructors: user._id,
+  });
+
+  if (!course) {
+    return res.status(403).json({ message: "Forbidden" });
+  }
+
+  var lesson = await Lesson.findOne({ _id: req.params.lessonId });
+  if (!lesson) {
+    return res.status(403).json({ message: "Forbidden" });
+  }
+
+  await removeLessonVideo(lesson);
+
+  // Updating video duration in the course
+  let idx = course.groups.findIndex((g) => {
+    if (g._id == req.params.groupId) return true;
+    return false;
+  });
+  let group = course.groups[idx];
+  group.videoDuration = group.videoDuration - lesson.videoDuration;
+  course.groups[idx] = group;
+
+  lesson.video = undefined;
+  lesson.videoDuration = 0;
+  var session = await startSession();
+  session.startTransaction();
+
+  try {
+    await lesson.save({ session });
+    await course.save({ session });
+    await session.commitTransaction();
+  } catch (error) {
+    await session.abortTransaction();
+    throw error;
+  }
+
+  session.endSession();
+  return res.status(200).json({ message: "Video removed successfully" });
 }

@@ -47,6 +47,15 @@ export async function updateCourseCoverImage(
   return { id: result.public_id, URL: result.secure_url };
 }
 
+export async function removeLessonVideo(lesson: DocumentType<LessonClass>) {
+  // Delete the old video
+  if (lesson.video && lesson.video.id) {
+    await cloudinary.v2.uploader.destroy(lesson.video.id, {
+      resource_type: "video",
+    });
+  }
+}
+
 export async function uploadLessonVideo(
   file: UploadedFile,
   lesson: DocumentType<LessonClass>,

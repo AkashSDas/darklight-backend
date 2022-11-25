@@ -98,3 +98,12 @@ router.post(
   handleMiddlewareError(ctrl.updateLessonVideoController),
   sendErrorResponse
 );
+
+// Remove lesson video
+router.delete(
+  "/:courseId/group/:groupId/lesson/:lessonId/video",
+  validateResource(z.updateLessonVideoSchema),
+  handleMiddlewareError(verifyAuth),
+  handleMiddlewareError(ctrl.removeLessonVideoController),
+  sendErrorResponse
+);
