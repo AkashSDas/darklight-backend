@@ -369,6 +369,11 @@ describe("Course controllers", () => {
               data: expect.any(Array),
             },
           });
+
+          var updatedLesson = await Lesson.findById(lesson._id);
+          expect(updatedLesson?.content).toHaveLength(1);
+          expect(updatedLesson?.content[0].type).toBe(ContentType.PARAGRAPH);
+          expect(updatedLesson?.content[0].id).toBe(body.content.id);
         });
       });
     });
