@@ -89,3 +89,12 @@ router.put(
   handleMiddlewareError(ctrl.updateLessonSettingsController),
   sendErrorResponse
 );
+
+// Update lesson video
+router.post(
+  "/:courseId/group/:groupId/lesson/:lessonId/video",
+  validateResource(z.updateLessonVideoSchema),
+  handleMiddlewareError(verifyAuth),
+  handleMiddlewareError(ctrl.updateLessonVideoController),
+  sendErrorResponse
+);

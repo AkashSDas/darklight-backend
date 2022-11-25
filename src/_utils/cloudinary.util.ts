@@ -9,3 +9,4 @@ export async function connectToCloudinary() {
 }
 
 export const COURSE_COVER_IMG_DIR = "darklight/courses/cover-images";
+export const LESSON_VIDEO_DIR = "darklight/courses/lesson-videos";

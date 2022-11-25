@@ -3,7 +3,10 @@ import { Course } from "../_models/course.model";
 import * as z from "../_schema/course.schema";
 import { UserRole } from "../_utils/user.util";
 import { UploadedFile } from "express-fileupload";
-import { updateCourseCoverImage } from "../_utils/course.util";
+import {
+  updateCourseCoverImage,
+  uploadLessonVideo,
+} from "../_utils/course.util";
 import mongoose, { startSession } from "mongoose";
 import { Lesson } from "../_models/lesson.model";
 
@@ -127,6 +130,7 @@ export async function createGroupController(
     {
       $push: {
         groups: {
+          _id: new mongoose.Types.ObjectId(),
           lessons: [],
           lastEditedOn: new Date(Date.now()),
         },
@@ -231,6 +235,11 @@ export async function reorderLessonsController(
  *
  * @route POST /api/course/:courseId/group/:groupId/lesson
  *
+ * @remark Saving the lesson in the course's respective group
+ * this way works. Directly updating the group like using the
+ * .map method OR course.groups[idx].lessons.push(lesson._id)
+ * DOES NOT WORK
+ *
  * @remark Middlewares used:
  * - verifyAuth
  */
@@ -248,18 +257,24 @@ export async function createLessonController(
     return res.status(403).json({ message: "Forbidden" });
   }
 
-  var lesson = new Lesson();
-  course.groups.map((g) => {
-    if (g._id == req.params.groupId) {
-      g.lessons.push(lesson);
-    }
-  });
-
   var session = await startSession();
   session.startTransaction();
 
   try {
-    await lesson.save({ session });
+    var lesson = await Lesson.create({ session });
+
+    // Saving the lesson in the course's respective group
+    // this way works. Directly updating the group like
+    // using the .map method OR course.groups[idx].lessons.push(lesson._id)
+    // DOES NOT WORK
+    let idx = course.groups.findIndex((g) => {
+      if (g._id == req.params.groupId) return true;
+      return false;
+    });
+    let group = course.groups[idx];
+    group.lessons.push(lesson._id);
+    course.groups[idx] = group;
+
     await course.save({ session });
     await session.commitTransaction();
   } catch (error) {
@@ -314,4 +329,63 @@ export async function updateLessonSettingsController(
   }
 
   return res.status(200).json({ message: "Lesson updated successfully" });
+}
+
+/**
+ * Upload a lesson video
+ *
+ * @route POST /api/course/:courseId/group/:groupId/lesson/:lessonId/video
+ *
+ * @remark Middlewares used:
+ * - verifyAuth
+ */
+export async function updateLessonVideoController(
+  req: Request<z.UpdateLessonVideo["params"]>,
+  res: Response
+) {
+  var file = req.files?.lessonVideo as UploadedFile;
+  if (!file) return res.status(400).json({ message: "No video file found" });
+
+  var user = req.user;
+  var course = await Course.findOne({
+    _id: req.params.courseId,
+    instructors: user._id,
+  });
+
+  if (!course) {
+    return res.status(403).json({ message: "Forbidden" });
+  }
+
+  var lesson = await Lesson.findOne({ _id: req.params.lessonId });
+  if (!lesson) {
+    return res.status(403).json({ message: "Forbidden" });
+  }
+
+  var video = await uploadLessonVideo(file, lesson, course._id.toString());
+  lesson.video = { id: video.id, URL: video.URL };
+  lesson.videoDuration = video.duration;
+
+  // Updating video duration in the course
+  let idx = course.groups.findIndex((g) => {
+    if (g._id == req.params.groupId) return true;
+    return false;
+  });
+  let group = course.groups[idx];
+  group.videoDuration = group.videoDuration + video.duration;
+  course.groups[idx] = group;
+
+  var session = await startSession();
+  session.startTransaction();
+
+  try {
+    await lesson.save({ session });
+    await course.save({ session });
+    await session.commitTransaction();
+  } catch (error) {
+    await session.abortTransaction();
+    throw error;
+  }
+
+  session.endSession();
+  return res.status(200).json({ message: "Video uploaded successfully" });
 }

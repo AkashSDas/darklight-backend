@@ -92,6 +92,14 @@ export var updateLessonSettingsSchema = z.object({
   }),
 });
 
+export var updateLessonVideoSchema = z.object({
+  params: z.object({
+    courseId: mongoIdSchema("courseId"),
+    groupId: mongoIdSchema("groupId"),
+    lessonId: mongoIdSchema("lessonId"),
+  }),
+});
+
 // =========================
 // TYPES
 // =========================
@@ -105,3 +113,4 @@ export type ReorderLessons = z.infer<typeof reorderLessonsSchema>;
 
 export type CreateLesson = z.infer<typeof createLessonSchema>;
 export type UpdateLessonSettings = z.infer<typeof updateLessonSettingsSchema>;
+export type UpdateLessonVideo = z.infer<typeof updateLessonVideoSchema>;

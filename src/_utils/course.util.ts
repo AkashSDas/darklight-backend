@@ -2,7 +2,8 @@ import { DocumentType } from "@typegoose/typegoose";
 import cloudinary from "cloudinary";
 import { UploadedFile } from "express-fileupload";
 import { CourseClass } from "../_models/course.model";
-import { COURSE_COVER_IMG_DIR } from "./cloudinary.util";
+import { LessonClass } from "../_models/lesson.model";
+import { COURSE_COVER_IMG_DIR, LESSON_VIDEO_DIR } from "./cloudinary.util";
 
 export enum CourseStage {
   DRAFT = "draft",
@@ -44,4 +45,31 @@ export async function updateCourseCoverImage(
   });
 
   return { id: result.public_id, URL: result.secure_url };
+}
+
+export async function uploadLessonVideo(
+  file: UploadedFile,
+  lesson: DocumentType<LessonClass>,
+  courseId: string
+) {
+  // Delete the old video
+  if (lesson.video && lesson.video.id) {
+    await cloudinary.v2.uploader.destroy(lesson.video.id, {
+      resource_type: "video",
+    });
+  }
+
+  // Upload new video
+  var result = await cloudinary.v2.uploader.upload(file.tempFilePath, {
+    folder: `${LESSON_VIDEO_DIR}/${courseId}`,
+    resource_type: "video",
+    filename_override: lesson._id.toString(),
+    image_metadata: true,
+  });
+
+  return {
+    id: result.public_id,
+    URL: result.secure_url,
+    duration: result.duration,
+  };
 }
