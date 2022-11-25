@@ -47,7 +47,7 @@ export class LessonClass {
   }
 }
 
-export var CourseLessonModel = getModelForClass(LessonClass, {
+export var Lesson = getModelForClass(LessonClass, {
   schemaOptions: {
     timestamps: true,
     toJSON: { virtuals: true },

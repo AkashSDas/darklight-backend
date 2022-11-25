@@ -4,7 +4,8 @@ import * as z from "../_schema/course.schema";
 import { UserRole } from "../_utils/user.util";
 import { UploadedFile } from "express-fileupload";
 import { updateCourseCoverImage } from "../_utils/course.util";
-import mongoose from "mongoose";
+import mongoose, { startSession } from "mongoose";
+import { Lesson } from "../_models/lesson.model";
 
 // ==================================
 // COURSE CONTROLLERS
@@ -219,4 +220,98 @@ export async function reorderLessonsController(
 
   var group = course.groups.find((group) => group._id == req.params.groupId);
   return res.status(200).json({ group });
+}
+
+// ==================================
+// LESSON CONTROLLERS
+// ==================================
+
+/**
+ * Create a new lesson
+ *
+ * @route POST /api/course/:courseId/group/:groupId/lesson
+ *
+ * @remark Middlewares used:
+ * - verifyAuth
+ */
+export async function createLessonController(
+  req: Request<z.CreateLesson["params"]>,
+  res: Response
+) {
+  var user = req.user;
+  var course = await Course.findOne({
+    _id: req.params.courseId,
+    instructors: user._id,
+  });
+
+  if (!course) {
+    return res.status(403).json({ message: "Forbidden" });
+  }
+
+  var lesson = new Lesson();
+  course.groups.map((g) => {
+    if (g._id == req.params.groupId) {
+      g.lessons.push(lesson);
+    }
+  });
+
+  var session = await startSession();
+  session.startTransaction();
+
+  try {
+    await lesson.save({ session });
+    await course.save({ session });
+    await session.commitTransaction();
+  } catch (error) {
+    await session.abortTransaction();
+    throw error;
+  }
+
+  session.endSession();
+  return res.status(201).json({ lesson });
+}
+
+/**
+ * Update a lesson settings
+ *
+ * @route PUT /api/course/:courseId/group/:groupId/lesson/:lessonId/settings
+ *
+ * @remark Middlewares used:
+ * - verifyAuth
+ */
+export async function updateLessonSettingsController(
+  req: Request<
+    z.UpdateLessonSettings["params"],
+    {},
+    z.UpdateLessonSettings["body"]
+  >,
+  res: Response
+) {
+  var user = req.user;
+  var course = await Course.findOne({
+    _id: req.params.courseId,
+    instructors: user._id,
+  });
+
+  if (!course) {
+    return res.status(403).json({ message: "Forbidden" });
+  }
+
+  var lesson = await Lesson.findOneAndUpdate(
+    { _id: req.params.lessonId },
+    {
+      $set: {
+        emoji: req.body.emoji,
+        title: req.body.title,
+        lastEditedOn: new Date(Date.now()),
+      },
+    },
+    { new: true, fields: "-__v" }
+  );
+
+  if (!lesson) {
+    return res.status(403).json({ message: "Forbidden" });
+  }
+
+  return res.status(200).json({ message: "Lesson updated successfully" });
 }

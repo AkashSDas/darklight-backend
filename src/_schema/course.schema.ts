@@ -70,6 +70,28 @@ export var reorderLessonsSchema = z.object({
   }),
 });
 
+// LESSON
+
+export var createLessonSchema = z.object({
+  params: z.object({
+    courseId: mongoIdSchema("courseId"),
+    groupId: mongoIdSchema("groupId"),
+  }),
+});
+
+export var updateLessonSettingsSchema = z.object({
+  params: z.object({
+    courseId: mongoIdSchema("courseId"),
+    groupId: mongoIdSchema("groupId"),
+    lessonId: mongoIdSchema("lessonId"),
+  }),
+  body: z.object({
+    emoji: z.string().optional(),
+    title: z.string().max(120, "Too long").optional(),
+    free: z.boolean().optional(),
+  }),
+});
+
 // =========================
 // TYPES
 // =========================
@@ -80,3 +102,6 @@ export type UpdateCoverImage = z.infer<typeof updateCoverImageSchema>;
 export type CreateGroup = z.infer<typeof createGroupSchema>;
 export type UpdateGroup = z.infer<typeof updateGroupSchema>;
 export type ReorderLessons = z.infer<typeof reorderLessonsSchema>;
+
+export type CreateLesson = z.infer<typeof createLessonSchema>;
+export type UpdateLessonSettings = z.infer<typeof updateLessonSettingsSchema>;

@@ -67,3 +67,25 @@ router.put(
   handleMiddlewareError(ctrl.reorderLessonsController),
   sendErrorResponse
 );
+
+// ==================================
+// LESSON
+// ==================================
+
+// Add lesson
+router.post(
+  "/:courseId/group/:groupId/lesson",
+  validateResource(z.createLessonSchema),
+  handleMiddlewareError(verifyAuth),
+  handleMiddlewareError(ctrl.createLessonController),
+  sendErrorResponse
+);
+
+// Update lesson settings
+router.put(
+  "/:courseId/group/:groupId/lesson/:lessonId/settings",
+  validateResource(z.updateLessonSettingsSchema),
+  handleMiddlewareError(verifyAuth),
+  handleMiddlewareError(ctrl.updateLessonSettingsController),
+  sendErrorResponse
+);
