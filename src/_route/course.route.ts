@@ -120,3 +120,12 @@ router.post(
   handleMiddlewareError(ctrl.createContentController),
   sendErrorResponse
 );
+
+// Update content
+router.put(
+  "/:courseId/group/:groupId/lesson/:lessonId/content/:contentId",
+  validateResource(z.updateContentSchema),
+  handleMiddlewareError(verifyAuth),
+  handleMiddlewareError(ctrl.updateContentController),
+  sendErrorResponse
+);

@@ -6,6 +6,7 @@ import { UploadedFile } from "express-fileupload";
 import {
   generateContentBlock,
   removeLessonVideo,
+  updateContentBlock,
   updateCourseCoverImage,
   uploadLessonVideo,
 } from "../_utils/course.util";
@@ -495,7 +496,43 @@ export async function createContentController(
   return res.status(201).json({ content });
 }
 
-// function updateContentController() {}
+export async function updateContentController(
+  // req: Request<z.UpdateContent["params"], {}, z.UpdateContent["body"]>,
+  req: Request<z.UpdateContent["params"]>,
+  res: Response
+) {
+  var user = req.user;
+
+  var [course, lesson] = await Promise.all([
+    Course.findOne({ _id: req.params.courseId, instructors: user._id }),
+    Lesson.findOne({ _id: req.params.lessonId }),
+  ]);
+
+  if (!course || !lesson) {
+    return res.status(403).json({ message: "Forbidden" });
+  }
+
+  var idx = lesson.content.findIndex((c) => c.id == req.params.contentId);
+  var content = lesson.content[idx];
+  if (!content) {
+    return res.status(404).json({ message: "Content not found" });
+  }
+
+  var updatedcontent = await updateContentBlock(
+    course._id.toString(),
+    lesson._id.toString(),
+    content,
+    req.body as any,
+    req.files
+  );
+
+  var contentBlocks = lesson.content;
+  contentBlocks[idx] = updatedcontent;
+  lesson.content = contentBlocks;
+  await lesson.save();
+
+  return res.status(200).json({ content: updatedcontent });
+}
 
 // function removeContentController() {}
 

@@ -1,11 +1,15 @@
 import { DocumentType } from "@typegoose/typegoose";
 import cloudinary from "cloudinary";
-import { UploadedFile } from "express-fileupload";
+import { FileArray, UploadedFile } from "express-fileupload";
 import { nanoid } from "nanoid";
-import { ContentType } from "../_models/content.model";
+import { ContentClass, ContentType } from "../_models/content.model";
 import { CourseClass } from "../_models/course.model";
 import { LessonClass } from "../_models/lesson.model";
-import { COURSE_COVER_IMG_DIR, LESSON_VIDEO_DIR } from "./cloudinary.util";
+import {
+  COURSE_COVER_IMG_DIR,
+  LESSON_CONTENT_IMAGE_DIR,
+  LESSON_VIDEO_DIR,
+} from "./cloudinary.util";
 
 export enum CourseStage {
   DRAFT = "draft",
@@ -83,6 +87,133 @@ export async function uploadLessonVideo(
     URL: result.secure_url,
     duration: result.duration,
   };
+}
+
+/**
+ * data - { type }
+ */
+export async function updateContentBlock(
+  courseId: string,
+  lessonId: string,
+  content: ContentClass,
+  data: {
+    id: string;
+    type: ContentType;
+    data: { key: string; value: any }[] | string;
+  },
+  files: FileArray
+) {
+  if (content.type != data.type) throw new TypeError("Content type mismatch");
+
+  switch (content.type) {
+    case ContentType.PARAGRAPH:
+      if (typeof data.data == "string") return null;
+      return {
+        ...content,
+        data: [
+          {
+            key: "text",
+            value: data.data.find((d) => d.key == "text")?.value ?? "",
+          },
+        ],
+      };
+    case ContentType.IMAGE:
+      let caption =
+        (JSON.parse(data.data.toString()) as any).find(
+          (d) => d.key == "caption"
+        )?.value ?? null;
+
+      let contentImage = files?.contentImage as UploadedFile;
+      if (!contentImage) throw new Error("No image provided");
+
+      // Delete old image, if there
+      let id = content.data.find((d) => d.key == "id").value;
+      if (id) await cloudinary.v2.uploader.destroy(id);
+
+      // Upload new image
+      let result = await cloudinary.v2.uploader.upload(
+        contentImage.tempFilePath,
+        {
+          folder: `${LESSON_CONTENT_IMAGE_DIR}/${courseId}/${lessonId}`,
+          filename_override: content.id,
+        }
+      );
+
+      return {
+        ...content,
+        data: [
+          { key: "id", value: result.public_id },
+          { key: "URL", value: result.secure_url },
+          { key: "caption", value: caption },
+        ],
+      };
+    case ContentType.H1:
+      if (typeof data.data == "string") return null;
+
+      return {
+        ...content,
+        data: [
+          {
+            key: "text",
+            value: data.data.find((d) => d.key == "text")?.value ?? "",
+          },
+        ],
+      };
+    case ContentType.H2:
+      if (typeof data.data == "string") return null;
+
+      return {
+        ...content,
+        data: [
+          {
+            key: "text",
+            value: data.data.find((d) => d.key == "text")?.value ?? "",
+          },
+        ],
+      };
+    case ContentType.H3:
+      if (typeof data.data == "string") return null;
+
+      return {
+        ...content,
+        data: [
+          {
+            key: "text",
+            value: data.data.find((d) => d.key == "text")?.value ?? "",
+          },
+        ],
+      };
+    case ContentType.QUOTE:
+      if (typeof data.data == "string") return null;
+
+      return {
+        ...content,
+        data: [
+          {
+            key: "text",
+            value: data.data.find((d) => d.key == "text")?.value ?? "",
+          },
+        ],
+      };
+    case ContentType.CODE:
+      if (typeof data.data == "string") return null;
+
+      return {
+        ...content,
+        data: [
+          {
+            key: "text",
+            value: data.data.find((d) => d.key == "text")?.value ?? "",
+          },
+          {
+            key: "caption",
+            value: data.data.find((d) => d.key == "caption")?.value ?? null,
+          },
+        ],
+      };
+    default:
+      return content;
+  }
 }
 
 export function generateContentBlock(type: ContentType) {

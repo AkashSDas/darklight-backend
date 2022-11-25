@@ -325,6 +325,9 @@ describe("Course controllers", () => {
     var lesson: DocumentType<LessonClass>;
     var groupId: mongoose.Types.ObjectId;
 
+    var paragraphId: string;
+    var imageId: string;
+
     beforeAll(async () => {
       // Create course and groups
       course = new Course();
@@ -352,8 +355,8 @@ describe("Course controllers", () => {
     });
 
     describe("add content", () => {
-      describe("given a valid type of content", () => {
-        it("should create a content block", async () => {
+      describe("given a paragraph type", () => {
+        it("should add paragraph", async () => {
           var { statusCode, body } = await supertest(app)
             .post(
               `/api/v2/course/${course._id}/group/${groupId}/lesson/${lesson._id}/content`
@@ -374,7 +377,131 @@ describe("Course controllers", () => {
           expect(updatedLesson?.content).toHaveLength(1);
           expect(updatedLesson?.content[0].type).toBe(ContentType.PARAGRAPH);
           expect(updatedLesson?.content[0].id).toBe(body.content.id);
+
+          paragraphId = body.content.id;
         });
+      });
+
+      describe("given a image type", () => {
+        it("should add image", async () => {
+          var { statusCode, body } = await supertest(app)
+            .post(
+              `/api/v2/course/${course._id}/group/${groupId}/lesson/${lesson._id}/content`
+            )
+            .set("Authorization", `Bearer ${token}`)
+            .send({ type: ContentType.IMAGE });
+
+          expect(statusCode).toBe(201);
+          expect(body).toMatchObject({
+            content: {
+              id: expect.any(String),
+              type: ContentType.IMAGE,
+              data: expect.any(Array),
+            },
+          });
+
+          var updatedLesson = await Lesson.findById(lesson._id);
+          var content = updatedLesson.content.find(
+            (c) => c.id == body.content.id
+          );
+
+          expect(content.type).toBe(ContentType.IMAGE);
+          expect(content.id).toBe(body.content.id);
+
+          imageId = content.id;
+        });
+      });
+    });
+
+    describe("update content", () => {
+      describe("given a paragraph to update", () => {
+        it("should update paragraph", async () => {
+          var { statusCode, body } = await supertest(app)
+            .put(
+              `/api/v2/course/${course._id}/group/${groupId}/lesson/${lesson._id}/content/${paragraphId}`
+            )
+            .set("Authorization", `Bearer ${token}`)
+            .send({
+              id: paragraphId,
+              type: ContentType.PARAGRAPH,
+              data: [{ key: "text", value: "Test paragraph" }],
+            });
+
+          expect(statusCode).toBe(200);
+          expect(body).toMatchObject({
+            content: {
+              id: expect.any(String),
+              type: ContentType.PARAGRAPH,
+              data: expect.any(Array),
+            },
+          });
+
+          var text = body.content.data.find((d) => d.key == "text");
+          expect(text).toBeDefined();
+          expect(text.value).toBe("Test paragraph");
+
+          var updatedLesson = await Lesson.findById(lesson._id);
+          var updatedParagraph = updatedLesson?.content.find(
+            (c) => c.id == paragraphId
+          );
+
+          expect(updatedParagraph).toBeDefined();
+          expect(
+            updatedParagraph?.data.find((d) => d.key == "text").value
+          ).toBe("Test paragraph");
+        });
+      });
+
+      describe("given a image to update", () => {
+        it("should update image", async () => {
+          var { statusCode, body } = await supertest(app)
+            .put(
+              `/api/v2/course/${course._id}/group/${groupId}/lesson/${lesson._id}/content/${imageId}`
+            )
+            .set("Authorization", `Bearer ${token}`)
+            .field("id", imageId)
+            .field("type", ContentType.IMAGE)
+            .field("caption", "Test caption")
+            .field(
+              "data",
+              JSON.stringify([
+                { key: "URL", value: null },
+                { key: "id", value: null },
+                { key: "caption", value: null },
+              ])
+            )
+            .attach(
+              "contentImage",
+              path.resolve(__dirname, "../../../media/cover-image.jpg")
+            );
+
+          expect(statusCode).toBe(200);
+          expect(body).toMatchObject({
+            content: {
+              id: imageId,
+              type: ContentType.IMAGE,
+              data: expect.any(Array),
+            },
+          });
+
+          expect(
+            body.content.data.find((d) => d.key == "id").value
+          ).toBeDefined();
+
+          var updatedLesson = await Lesson.findById(lesson._id);
+          var updateImage = updatedLesson?.content.find((c) => c.id == imageId);
+
+          expect(updateImage).toBeDefined();
+          expect(updateImage?.data.find((d) => d.key == "id").value).toBe(
+            body.content.data.find((d) => d.key == "id").value
+          );
+          expect(updateImage?.data.find((d) => d.key == "caption").value).toBe(
+            body.content.data.find((d) => d.key == "caption").value
+          );
+          expect(
+            updateImage?.data.find((d) => d.key == "caption").value
+          ).toBeDefined();
+        }, 100000);
       });
     });
   });
