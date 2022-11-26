@@ -117,11 +117,22 @@ describe.only("Course related controllers", () => {
     await mongoose.connection.close();
   });
 
-  console.log(accessToken);
+  describe("create a course", () => {
+    describe("instructor is creating a course", () => {
+      it("should create and return a course", async () => {
+        var { statusCode, body } = await supertest(app)
+          .post("/api/v2/course")
+          .set("Authorization", `Bearer ${accessToken}`);
 
-  // ============================
-  // NON AUTHENTICATED ROUTES
-  // ============================
+        expect(statusCode).toBe(201);
+        expect(body).toHaveProperty("course");
+        expect(body.course).toHaveProperty("instructors");
+        expect(body.course.instructors).toHaveLength(1);
+        expect(body.course.instructors[0]).toBe(user._id.toString());
+        expect(body.course).toHaveProperty("_id");
+      });
+    });
+  });
 
   describe("fetch a single course", () => {
     describe("when a course does not exists", () => {
