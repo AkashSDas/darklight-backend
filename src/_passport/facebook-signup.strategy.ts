@@ -2,8 +2,8 @@ import { Request } from "express";
 import passport from "passport";
 import { Profile, Strategy } from "passport-facebook";
 import { Strategies } from ".";
-import { BaseApiError } from "../utils/handle-error";
 import { createUserService, getUserService } from "../_services/user.service";
+import { BaseApiError } from "../_utils/error.util";
 import { OAuthProvider } from "../_utils/user.util";
 
 /** Check if the user exists OR not. If not, create a new user else login the user. */
