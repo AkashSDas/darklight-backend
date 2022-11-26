@@ -12,6 +12,7 @@ import { Lesson, LessonClass } from "../../_models/lesson.model";
 import { UserClass } from "../../_models/user.model";
 import { createUserService, updateUserService } from "../../_services/user.service";
 import { connectToCloudinary } from "../../_utils/cloudinary.util";
+import { CourseDifficulty, CourseStage } from "../../_utils/course.util";
 import { UserRole } from "../../_utils/user.util";
 import { app } from "../../api";
 
@@ -31,6 +32,8 @@ var coursePayload = {
   description: "Course 1 description",
   tags: ["fun", "javascript", "typescript"],
   faqs: [{ question: "what is this?", answer: "this is a course" }],
+  difficulty: CourseDifficulty.INTERMEDIATE,
+  stage: CourseStage.PUBLISHED,
 };
 
 function createGroup(label: string) {
@@ -88,7 +91,12 @@ describe.only("Course related controllers", () => {
 
     // Create lessons and update course
     await (async function IIFE() {
-      lesson = new Lesson();
+      lesson = new Lesson({
+        emoji: "🌍",
+        title: "Lesson 1",
+        video: { URL: "https://www.youtube.com/watch?v=KQia57Mw6aA" },
+      });
+
       var lesson2 = new Lesson();
       await lesson2.save();
 
@@ -135,22 +143,17 @@ describe.only("Course related controllers", () => {
         );
 
         expect(status).toBe(200);
-        expect(body).toMatchObject({
-          course: {
+        expect(body).toBeDefined();
+        expect(body.course).toBeDefined();
+
+        (function testCourseBasicInfo(checkCourse) {
+          expect(checkCourse).toMatchObject({
             _id: course._id.toString(),
             emoji: course.emoji,
             title: course.title,
             description: course.description,
             stage: course.stage,
-            instructors: [
-              {
-                _id: user._id.toString(),
-                fullName: user.fullName,
-                username: user.username,
-                profileImage: { URL: user.profileImage.URL },
-                email: user.email,
-              },
-            ],
+            instructors: expect.any(Array),
             difficulty: course.difficulty,
             groups: expect.any(Array),
             tags: course.tags,
@@ -160,9 +163,109 @@ describe.only("Course related controllers", () => {
             createdAt: (course as any).createdAt.toISOString(),
             updatedAt: (course as any).updatedAt.toISOString(),
             lastEditedOn: (course as any).lastEditedOn.toISOString(),
-          },
-        });
+          });
+        })(body.course);
+
+        (function testCourseInstructors(instructors) {
+          expect(instructors).toHaveLength(1);
+          expect(instructors[0]).toMatchObject({
+            _id: user._id.toString(),
+            fullName: user.fullName,
+            username: user.username,
+            profileImage: { URL: user.profileImage.URL },
+            email: user.email,
+          });
+        })(body.course.instructors);
+
+        (function testCourseGroups(groups) {
+          expect(groups).toHaveLength(2);
+          expect(groups[0]).toMatchObject({
+            _id: group._id.toString(),
+            title: group.title,
+            lessons: expect.any(Array),
+            lastEditedOn: group.lastEditedOn.toISOString(),
+          });
+        })(body.course.groups);
+
+        (function testCourseLessons(lessons) {
+          expect(lessons).toHaveLength(2);
+          expect(lessons[0]).toMatchObject({
+            _id: lesson._id.toString(),
+            title: lesson.title,
+            // video: { URL: lesson.video.URL },
+            videoDuration: lesson.videoDuration,
+            createdAt: (lesson as any).createdAt.toISOString(),
+            updatedAt: (lesson as any).updatedAt.toISOString(),
+          });
+        })(body.course.groups[0].lessons);
       });
+    });
+  });
+
+  describe("fetching paginated courses", () => {
+    it("should return limited courses", async () => {
+      var { status, body } = await supertest(app).get("/api/v2/course");
+
+      expect(status).toBe(200);
+      expect(body).toBeDefined();
+      expect(body.hasPrevious).toBe(false);
+      expect(body.hasNext).toBe(false);
+      expect(body.next).toBeDefined();
+      expect(body.courses).toBeDefined();
+      expect(body.courses).toBeInstanceOf(Array);
+
+      (function testCourseBasicInfo(checkCourse) {
+        expect(checkCourse).toMatchObject({
+          _id: course._id.toString(),
+          emoji: course.emoji,
+          title: course.title,
+          description: course.description,
+          stage: course.stage,
+          instructors: expect.any(Array),
+          difficulty: course.difficulty,
+          groups: expect.any(Array),
+          tags: course.tags,
+          faqs: course.faqs,
+          enrolled: course.enrolled,
+          ratings: course.ratings,
+          createdAt: (course as any).createdAt.toISOString(),
+          updatedAt: (course as any).updatedAt.toISOString(),
+          lastEditedOn: (course as any).lastEditedOn.toISOString(),
+        });
+      })(body.courses[0]);
+
+      (function testCourseInstructors(instructors) {
+        expect(instructors).toHaveLength(1);
+        expect(instructors[0]).toMatchObject({
+          _id: user._id.toString(),
+          fullName: user.fullName,
+          username: user.username,
+          profileImage: { URL: user.profileImage.URL },
+          email: user.email,
+        });
+      })(body.courses[0].instructors);
+
+      (function testCourseGroups(groups) {
+        expect(groups).toHaveLength(2);
+        expect(groups[0]).toMatchObject({
+          _id: group._id.toString(),
+          title: group.title,
+          lessons: expect.any(Array),
+          lastEditedOn: group.lastEditedOn.toISOString(),
+        });
+      })(body.courses[0].groups);
+
+      (function testCourseLessons(lessons) {
+        expect(lessons).toHaveLength(2);
+        expect(lessons[0]).toMatchObject({
+          _id: lesson._id.toString(),
+          title: lesson.title,
+          // video: { URL: lesson.video.URL },
+          videoDuration: lesson.videoDuration,
+          createdAt: (lesson as any).createdAt.toISOString(),
+          updatedAt: (lesson as any).updatedAt.toISOString(),
+        });
+      })(body.courses[0].groups[0].lessons);
     });
   });
 });

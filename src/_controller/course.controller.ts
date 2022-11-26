@@ -128,25 +128,52 @@ export async function getCourseController(
         select:
           "-__v -oauthProviders -createdAt -updatedAt -verified -active -roles +profileImage",
       },
-      { path: "groups.lessons", model: "-lesson", select: "-__v" },
+      {
+        path: "groups.lessons",
+        model: "-lesson",
+        select: "-__v -content -video -qna -attachements",
+      },
     ]);
 
   if (!course) return res.status(404).json({ message: "Course not found" });
   return res.status(200).json({ course });
 }
 
+/**
+ * Get courses paginated
+ *
+ * @route GET /api/course
+ */
 export async function getCoursesController(req: Request, res: Response) {
   const LIMIT = 2;
   var next = req.query.next as string;
-
-  var courses = await (Course as any).paginateCourse({
+  var result = await (Course as any).paginateCourse({
     query: { stage: CourseStage.PUBLISHED },
     limit: LIMIT,
     paginatedField: "updatedAt",
     next,
   });
 
-  return res.status(200).json({ ...courses, courses: courses.results });
+  var populatedCourses = await Course.populate(result.results, [
+    {
+      path: "instructors",
+      model: "-user",
+      select:
+        "-__v -oauthProviders -createdAt -updatedAt -verified -active -roles +profileImage",
+    },
+    {
+      path: "groups.lessons",
+      model: "-lesson",
+      select: "-__v -content -video -qna -attachements",
+    },
+  ]);
+
+  return res.status(200).json({
+    courses: populatedCourses,
+    hasPrevious: result.hasPrevious,
+    hasNext: result.hasNext,
+    next: result.next,
+  });
 }
 
 // ==================================
