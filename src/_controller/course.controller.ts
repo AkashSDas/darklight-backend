@@ -1,18 +1,12 @@
 import { Request, Response } from "express";
-import { Course } from "../_models/course.model";
-import * as z from "../_schema/course.schema";
-import { UserRole } from "../_utils/user.util";
 import { UploadedFile } from "express-fileupload";
-import {
-  CourseStage,
-  generateContentBlock,
-  removeLessonVideo,
-  updateContentBlock,
-  updateCourseCoverImage,
-  uploadLessonVideo,
-} from "../_utils/course.util";
 import mongoose, { startSession } from "mongoose";
+
+import { Course } from "../_models/course.model";
 import { Lesson } from "../_models/lesson.model";
+import * as z from "../_schema/course.schema";
+import { CourseStage, generateContentBlock, removeLessonVideo, updateContentBlock, updateCourseCoverImage, uploadLessonVideo } from "../_utils/course.util";
+import { UserRole } from "../_utils/user.util";
 
 // TODO: update lastEditedOn
 
@@ -114,17 +108,30 @@ export async function updateCoverImageController(
   return res.status(200).json({ image });
 }
 
+/**
+ * Get a course
+ *
+ * @route GET /api/course/:courseId
+ *
+ * @remark Here "instructors" and "groups.lessons" are populated
+ */
 export async function getCourseController(
   req: Request<z.GetCourse["params"]>,
   res: Response
 ) {
-  var course = await Course.findOne({
-    _id: req.params.courseId,
-  })
-    .populate({ path: "instructors", model: "-user" })
-    .populate({ path: "groups.lessons", model: "-lesson" });
-  if (!course) return res.status(404).json({ message: "Course not found" });
+  var course = await Course.findById(req.params.courseId)
+    .select("-__v")
+    .populate([
+      {
+        path: "instructors",
+        model: "-user",
+        select:
+          "-__v -oauthProviders -createdAt -updatedAt -verified -active -roles +profileImage",
+      },
+      { path: "groups.lessons", model: "-lesson", select: "-__v" },
+    ]);
 
+  if (!course) return res.status(404).json({ message: "Course not found" });
   return res.status(200).json({ course });
 }
 

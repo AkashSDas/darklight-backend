@@ -1,25 +1,36 @@
-import { describe, it, beforeAll, afterAll, expect } from "@jest/globals";
-import { DocumentType } from "@typegoose/typegoose";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose from "mongoose";
-import supertest from "supertest";
-import { app } from "../../api";
-import { Course, CourseClass } from "../../_models/course.model";
-import { UserClass } from "../../_models/user.model";
-import {
-  createUserService,
-  updateUserService,
-} from "../../_services/user.service";
-import { UserRole } from "../../_utils/user.util";
 import path from "path";
-import { connectToCloudinary } from "../../_utils/cloudinary.util";
-import { Lesson, LessonClass } from "../../_models/lesson.model";
+import supertest from "supertest";
+
+import { afterAll, beforeAll, describe, expect, it } from "@jest/globals";
+import { DocumentType, SubDocumentType } from "@typegoose/typegoose";
+
 import { ContentType } from "../../_models/content.model";
+import { Course, CourseClass, GroupClass } from "../../_models/course.model";
+import { Lesson, LessonClass } from "../../_models/lesson.model";
+import { UserClass } from "../../_models/user.model";
+import { createUserService, updateUserService } from "../../_services/user.service";
+import { connectToCloudinary } from "../../_utils/cloudinary.util";
+import { UserRole } from "../../_utils/user.util";
+import { app } from "../../api";
 
 var userPayload = {
-  username: "james",
+  fullName: "James Bond",
+  username: "james_bond",
   email: "james@gmail.com",
   password: "testing",
+  profileImage: {
+    URL: "https://images.unsplash.com/photo-1628890923662-2cb23c2e0cfe?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2070&q=80",
+  },
+};
+
+var coursePayload = {
+  emoji: "📈",
+  title: "Course 1",
+  description: "Course 1 description",
+  tags: ["fun", "javascript", "typescript"],
+  faqs: [{ question: "what is this?", answer: "this is a course" }],
 };
 
 function createGroup(label: string) {
@@ -31,7 +42,132 @@ function createGroup(label: string) {
   };
 }
 
-describe("Course controllers", () => {
+describe.only("Course related controllers", () => {
+  var user: DocumentType<UserClass>;
+  var accessToken: string;
+  var course: DocumentType<CourseClass>;
+  var group: SubDocumentType<GroupClass>;
+  var lesson: DocumentType<LessonClass>;
+
+  // ============================
+  // GLOBAL SETUP AND TEARDOWN
+  // ============================
+
+  // Initializing the in-memory database
+  beforeAll(async function connectToMongoDB() {
+    var mongoServer = await MongoMemoryServer.create();
+    await mongoose.connect(mongoServer.getUri());
+    await connectToCloudinary();
+  });
+
+  // Creating a user with the role of teacher
+  beforeAll(async function createInstructor() {
+    user = await createUserService({
+      fullName: userPayload.fullName,
+      username: userPayload.username,
+      email: userPayload.email,
+      roles: [UserRole.STUDENT, UserRole.TEACHER],
+      profileImage: userPayload.profileImage,
+    });
+    accessToken = user.accessToken();
+  });
+
+  // Create a course
+  beforeAll(async function createCourse() {
+    course = new Course(coursePayload);
+    course.instructors.push(user._id);
+
+    await (async function IIFE() {
+      var grp1 = createGroup("Group 1") as any;
+      var grp2 = createGroup("Group 2") as any;
+      course.groups.push(grp1);
+      course.groups.push(grp2);
+      await course.save();
+      group = grp1;
+    })();
+
+    // Create lessons and update course
+    await (async function IIFE() {
+      lesson = new Lesson();
+      var lesson2 = new Lesson();
+      await lesson2.save();
+
+      var idx = course.groups.findIndex((g) => g._id == group._id);
+      var grp = course.groups[idx];
+      grp.lessons.push(lesson._id);
+      grp.lessons.push(lesson2._id);
+      course.groups[idx] = grp;
+    })();
+
+    await course.save();
+    await lesson.save();
+  });
+
+  // Disconnecting from the in-memory database
+  afterAll(async function disconnectFromMongoDB() {
+    await mongoose.disconnect();
+    await mongoose.connection.close();
+  });
+
+  console.log(accessToken);
+
+  // ============================
+  // NON AUTHENTICATED ROUTES
+  // ============================
+
+  describe("fetch a single course", () => {
+    describe("when a course does not exists", () => {
+      it("should return course not found with 404", async () => {
+        var invalidCourseId = new mongoose.Types.ObjectId();
+        var { status, body } = await supertest(app).get(
+          `/api/v2/course/${invalidCourseId}`
+        );
+
+        expect(status).toBe(404);
+        expect(body).toEqual({ message: "Course not found" });
+      });
+    });
+
+    describe("when the course exists", () => {
+      it("should return the course containing required data", async () => {
+        var { status, body } = await supertest(app).get(
+          `/api/v2/course/${course._id}`
+        );
+
+        expect(status).toBe(200);
+        expect(body).toMatchObject({
+          course: {
+            _id: course._id.toString(),
+            emoji: course.emoji,
+            title: course.title,
+            description: course.description,
+            stage: course.stage,
+            instructors: [
+              {
+                _id: user._id.toString(),
+                fullName: user.fullName,
+                username: user.username,
+                profileImage: { URL: user.profileImage.URL },
+                email: user.email,
+              },
+            ],
+            difficulty: course.difficulty,
+            groups: expect.any(Array),
+            tags: course.tags,
+            faqs: course.faqs,
+            enrolled: course.enrolled,
+            ratings: course.ratings,
+            createdAt: (course as any).createdAt.toISOString(),
+            updatedAt: (course as any).updatedAt.toISOString(),
+            lastEditedOn: (course as any).lastEditedOn.toISOString(),
+          },
+        });
+      });
+    });
+  });
+});
+
+describe.skip("Course controllers", () => {
   var user: DocumentType<UserClass>;
   var token: string;
 

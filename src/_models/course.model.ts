@@ -1,16 +1,12 @@
-import {
-  getModelForClass,
-  plugin,
-  prop,
-  Ref,
-  Severity,
-} from "@typegoose/typegoose";
+import MongoPaging from "mongo-cursor-pagination";
 import mongoose, { SchemaTypes, Types } from "mongoose";
+
+import { getModelForClass, plugin, prop, Ref, Severity } from "@typegoose/typegoose";
+
 import { CourseDifficulty, CourseStage } from "../_utils/course.util";
 import { ImageClass } from "./image.model";
 import { LessonClass } from "./lesson.model";
 import { UserClass } from "./user.model";
-import MongoPaging from "mongo-cursor-pagination";
 
 @plugin(MongoPaging.mongoosePlugin, { name: "paginateCourse" })
 export class CourseClass {
@@ -97,7 +93,7 @@ export var Course = getModelForClass(CourseClass, {
   options: { allowMixed: Severity.ALLOW, customName: "-course" },
 });
 
-class GroupClass {
+export class GroupClass {
   @prop({
     default: () => new mongoose.Types.ObjectId(),
     type: SchemaTypes.String,
