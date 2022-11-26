@@ -9,18 +9,9 @@ import swaggerUI from "swagger-ui-express";
 import YAML from "yamljs";
 import fileUpload from "express-fileupload";
 
-import { sendResponse } from "./utils/client-response";
-
 if (process.env.NODE_ENV != "production") config();
 
 // OAuth Passport Strategies. Should come after the config() call.
-import "./passport/google-signup.strategy";
-import "./passport/google-login.strategy";
-import "./passport/facebook-signup.strategy";
-import "./passport/facebook-login.strategy";
-import "./passport/twitter-signup.strategy";
-import "./passport/twitter-login.strategy";
-
 import "./_passport/google-signup.strategy";
 import "./_passport/google-login.strategy";
 import "./_passport/facebook-signup.strategy";
@@ -62,11 +53,6 @@ app.get("/api/test", function testRoute(req, res) {
   res.status(200).json({ msg: "🌗 DarkLight back-end (RESTful)" });
 });
 
-app.use("/api/auth", require("./routes/auth.route").router);
-app.use("/api/user", require("./routes/user.route").router);
-app.use("/api/course", require("./routes/course.route").router);
-app.use("/api/course-profile", require("./routes/course-profile.route").router);
-
 // Version 2
 app.use("/api/v2/test", require("./_route/test.route").router);
 app.use("/api/v2/user", require("./_route/user.route").router);
@@ -74,8 +60,7 @@ app.use("/api/v2/auth", require("./_route/auth.route").router);
 app.use("/api/v2/course", require("./_route/course.route").router);
 
 app.all("*", function handleRemainingRoute(req, res) {
-  sendResponse(res, {
-    status: 404,
-    msg: `Cannot find ${req.originalUrl} on this server!`,
+  return res.status(404).json({
+    message: `Cannot find ${req.originalUrl} on this server!`,
   });
 });
