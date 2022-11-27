@@ -203,6 +203,52 @@ describe("AuthController", () => {
       });
     });
   });
+
+  describe("loginController", () => {
+    var userId: string;
+
+    beforeAll(async function createUser() {
+      var user = await User.create({
+        username: userPayload.username,
+        email: userPayload.email,
+        password: userPayload.password,
+      });
+
+      userId = user._id.toString();
+    });
+
+    afterAll(async function deleteUser() {
+      await User.findByIdAndDelete(userId);
+    });
+
+    describe("when logging with correct password", () => {
+      it("should login the user", async () => {
+        var { statusCode, body, headers } = await supertest(app)
+          .post("/api/v2/auth/login")
+          .send({
+            email: userPayload.email,
+            password: userPayload.password,
+          });
+
+        expect(statusCode).toBe(200);
+        expect(body).toMatchObject({
+          user: {
+            _id: userId,
+            username: userPayload.username,
+            email: userPayload.email,
+            verified: false,
+            active: false,
+          },
+          accessToken: expect.any(String),
+        });
+
+        var refreshToken = headers["set-cookie"].find((cookie) =>
+          cookie.includes("refreshToken")
+        );
+        expect(refreshToken).toBeDefined();
+      });
+    });
+  });
 });
 
 // var userPayload2 = {
