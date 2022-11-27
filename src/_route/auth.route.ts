@@ -1,5 +1,6 @@
 import { Router } from "express";
 import passport from "passport";
+
 import * as ctrl from "../_controller/auth.controller";
 import verifyAuth from "../_middlewares/auth.middleware";
 import { validateResource } from "../_middlewares/zod.middleware";

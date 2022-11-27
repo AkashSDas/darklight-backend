@@ -48,21 +48,21 @@ export async function signupController(
 
 /**
  * Cancel OAuth signup process and delete the user
+ * @route DELETE /auth/signup
+ * @remark User that logged in will be deleted and OAuth session
+ * will be logged out
  *
- * @route DELETE /api/v2/auth/cancel-oauth
- *
- * Middlewares used
+ * Middleware used are:
  * - verifyAuth
  */
 export async function cancelOAuthController(req: Request, res: Response) {
-  if (!req.user) throw new BaseApiError(401, "Unauthorized");
+  if (!req.user) return res.status(401).json({ message: "Unauthorized" });
 
-  await service.deleteUserService({ _id: req.user._id });
-  if (req.logOut) {
-    req.logOut(function sendResponse() {
-      return res.status(200).json({ message: "Signup cancelled" });
-    });
-  }
+  var user = await User.findByIdAndDelete(req.user._id);
+  if (!user) return res.status(404).json({ message: "User not found" });
+
+  if (req.logOut) req.logOut(function () {});
+  return res.status(200).json({ user });
 }
 
 /**

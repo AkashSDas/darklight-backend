@@ -4,6 +4,7 @@ import supertest from "supertest";
 
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "@jest/globals";
 
+import User from "../../_models/user.model";
 import { createUserService, deleteUserService, getUserService, getUserWithSelectService } from "../../_services/user.service";
 import { app } from "../../api";
 import { user } from "../payload";
@@ -72,12 +73,20 @@ describe("AuthController", () => {
     });
 
     describe("when user already exists", () => {
+      var userId: string;
+
       beforeAll(async function createUser() {
-        await supertest(app).post("/api/v2/auth/signup").send({
+        var { body } = await supertest(app).post("/api/v2/auth/signup").send({
           username: user.username,
           email: user.email,
           password: user.password,
         });
+
+        userId = body.user._id;
+      });
+
+      afterAll(async function deleteUser() {
+        await User.findByIdAndDelete(userId);
       });
 
       it("should return user already exists message", async () => {
@@ -92,6 +101,46 @@ describe("AuthController", () => {
 
         expect(statusCode).toBe(400);
         expect(body).toEqual({ message: "User already exists" });
+      });
+    });
+  });
+
+  describe("cancelOAuthController", () => {
+    describe("when user is not authenticated", () => {
+      it("should return unauthorized message", async () => {
+        var { statusCode, body } = await supertest(app).delete(
+          "/api/v2/auth/cancel-oauth"
+        );
+
+        expect(statusCode).toBe(401);
+        expect(body).toEqual({ message: "Unauthorized" });
+      });
+    });
+
+    describe("when user is authenticated", () => {
+      var accessToken: string;
+      var userId: string;
+
+      beforeAll(async function createUser() {
+        var { body } = await supertest(app).post("/api/v2/auth/signup").send({
+          username: user.username,
+          email: user.email,
+          password: user.password,
+        });
+
+        accessToken = body.accessToken;
+        userId = body.user._id;
+      });
+
+      it("should cancel oauth signup", async () => {
+        var { statusCode, body } = await supertest(app)
+          .delete("/api/v2/auth/cancel-oauth")
+          .set("Authorization", `Bearer ${accessToken}`);
+
+        expect(statusCode).toBe(200);
+        expect(body).toMatchObject({
+          user: { _id: userId, username: user.username, email: user.email },
+        });
       });
     });
   });
