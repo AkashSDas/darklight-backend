@@ -8,18 +8,16 @@ import * as z from "../_schema/course.schema";
 import { CourseStage, generateContentBlock, removeLessonVideo, updateContentBlock, updateCourseCoverImage, uploadLessonVideo } from "../_utils/course.util";
 import { UserRole } from "../_utils/user.util";
 
-// TODO: update lastEditedOn
-
 // ==================================
 // COURSE CONTROLLERS
 // ==================================
 
 /**
- * Create a brand new course
- *
+ * Create a new course with the requesting user as an instructor
  * @route POST /api/course
+ * @remark Whether user has instuctor's role is checked here
  *
- * @remark Middlewares used:
+ * Middlewares used:
  * - verifyAuth
  */
 export async function createCourseController(req: Request, res: Response) {
@@ -30,14 +28,15 @@ export async function createCourseController(req: Request, res: Response) {
 
   var course = new Course();
   course.instructors.push(user._id);
-  await course.save();
-
-  return res.status(201).json({ course });
+  course = await course.save();
+  return res.status(201).json(course);
 }
 
+// TODO: fix setting update in the db
 /**
  * Update course settings
- *
+ * @route PUT /api/course/:courseId/settings
+ * @remark Verification of course ownership is done by the query for getting the course
  * @remark Settings that are updated are:
  * - emoji
  * - title
@@ -48,18 +47,11 @@ export async function createCourseController(req: Request, res: Response) {
  * - tags
  * - faqs
  *
- * @route PUT /api/course/:courseId/settings
- *
- * @remark Middlewares used:
+ * Middlewares used:
  * - verifyAuth
- *
- * @remark Verification of course ownership is done by the query for getting
- * the course
- *
- * @remark This makes 1 request to the db
  */
-export async function updateSettingsController(
-  req: Request<z.Settings["params"], {}, z.Settings["body"]>,
+export async function updateCourseSettingsController(
+  req: Request<z.CourseSettings["params"], {}, z.CourseSettings["body"]>,
   res: Response
 ) {
   // This check whether the course exists and whether the user is an instructor
@@ -70,78 +62,69 @@ export async function updateSettingsController(
   );
 
   if (!course) return res.status(404).json({ message: "Course not found" });
-  return res.status(200).json({ course });
+  return res.status(200).json(course);
 }
 
 /**
  * Update course cover image
- *
  * @route PUT /api/course/:courseId/cover
+ * @remark Verification of course ownership is done by the query for getting the course
  *
- * @remark Middlewares used:
+ * Middlewares used:
  * - verifyAuth
- *
- * @remark Verification of course ownership is done by the query for getting
- * the course
  */
-export async function updateCoverImageController(
-  req: Request<z.UpdateCoverImage["params"]>,
+export async function updateCourseCoverController(
+  req: Request<z.UpdateCourseCover["params"]>,
   res: Response
 ) {
   if (!req.files?.coverImage) {
     return res.status(400).json({ message: "No cover image provided" });
   }
 
+  // Get course if it exists and user is its instructor
   var course = await Course.findOne({
     _id: req.params.courseId,
     instructors: req.user._id,
   });
   if (!course) return res.status(404).json({ message: "Course not found" });
 
-  var image = await updateCourseCoverImage(
-    req.files.coverImage as UploadedFile,
-    course
-  );
+  // Update course cover image
+  var coverImage = req.files.coverImage as UploadedFile;
+  var image = await updateCourseCoverImage(coverImage, course);
   course.coverImage = image;
   await course.save();
-
-  return res.status(200).json({ image });
+  return res.status(200).json(image);
 }
 
 /**
- * Get a course
- *
+ * Get course by id
  * @route GET /api/course/:courseId
- *
  * @remark Here "instructors" and "groups.lessons" are populated
  */
 export async function getCourseController(
   req: Request<z.GetCourse["params"]>,
   res: Response
 ) {
-  var course = await Course.findById(req.params.courseId)
-    .select("-__v")
-    .populate([
-      {
-        path: "instructors",
-        model: "-user",
-        select:
-          "-__v -oauthProviders -createdAt -updatedAt -verified -active -roles +profileImage",
-      },
-      {
-        path: "groups.lessons",
-        model: "-lesson",
-        select: "-__v -content -video -qna -attachements",
-      },
-    ]);
+  var course = await Course.findById(req.params.courseId).populate([
+    {
+      path: "instructors",
+      model: "-user",
+      select:
+        "-__v -oauthProviders -createdAt -updatedAt -verified -active -roles +profileImage",
+    },
+    {
+      path: "groups.lessons",
+      model: "-lesson",
+      select: "-__v -content -video -qna -attachements",
+    },
+  ]);
 
   if (!course) return res.status(404).json({ message: "Course not found" });
   return res.status(200).json({ course });
 }
 
 /**
- * Get courses paginated
- *
+ * Get published courses
  * @route GET /api/course
  */
 export async function getCoursesController(req: Request, res: Response) {

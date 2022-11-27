@@ -1,10 +1,11 @@
 import { Router } from "express";
+
 import * as ctrl from "../_controller/course.controller";
 import verifyAuth from "../_middlewares/auth.middleware";
+import { validateResource } from "../_middlewares/zod.middleware";
+import * as z from "../_schema/course.schema";
 import { handleMiddlewareError } from "../_utils/async.util";
 import { sendErrorResponse } from "../_utils/error.util";
-import * as z from "../_schema/course.schema";
-import { validateResource } from "../_middlewares/zod.middleware";
 
 export var router = Router();
 
@@ -22,18 +23,18 @@ router.post(
 // Update course settings
 router.put(
   "/:courseId/settings",
-  validateResource(z.settingsSchema),
+  validateResource(z.courseSettingsSchema),
   handleMiddlewareError(verifyAuth),
-  handleMiddlewareError(ctrl.updateSettingsController),
+  handleMiddlewareError(ctrl.updateCourseSettingsController),
   sendErrorResponse
 );
 
 // Update course cover image
 router.put(
   "/:courseId/cover",
-  validateResource(z.updateCoverImageSchema),
+  validateResource(z.updateCourseCoverSchema),
   handleMiddlewareError(verifyAuth),
-  handleMiddlewareError(ctrl.updateCoverImageController),
+  handleMiddlewareError(ctrl.updateCourseCoverController),
   sendErrorResponse
 );
 

@@ -18,7 +18,7 @@ function mongoIdSchema(path: string) {
 
 // COURSE
 
-export var settingsSchema = z.object({
+export var courseSettingsSchema = z.object({
   params: z.object({ courseId: mongoIdSchema("courseId") }),
   body: z.object({
     emoji: z.string().optional(),
@@ -39,7 +39,7 @@ export var settingsSchema = z.object({
   }),
 });
 
-export var updateCoverImageSchema = z.object({
+export var updateCourseCoverSchema = z.object({
   params: z.object({ courseId: mongoIdSchema("courseId") }),
 });
 
@@ -128,8 +128,8 @@ export var updateContentSchema = z.object({
 // TYPES
 // =========================
 
-export type Settings = z.infer<typeof settingsSchema>;
-export type UpdateCoverImage = z.infer<typeof updateCoverImageSchema>;
+export type CourseSettings = z.infer<typeof courseSettingsSchema>;
+export type UpdateCourseCover = z.infer<typeof updateCourseCoverSchema>;
 export type GetCourse = z.infer<typeof getCourseSchema>;
 
 export type CreateGroup = z.infer<typeof createGroupSchema>;
