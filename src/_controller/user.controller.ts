@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
+
+import User from "../_models/user.model";
 import { UserExists } from "../_schema/user.schema";
-import { userExistsService } from "../_services/user.service";
-import { BaseApiError } from "../_utils/error.util";
 import { UserRole } from "../_utils/user.util";
 
 // ==================================
@@ -10,30 +10,17 @@ import { UserRole } from "../_utils/user.util";
 
 /**
  * Check if the user exists OR not
- *
  * @route GET /api/v2/user/exists
- *
  * @remark Field to check are passed as query params
- * @remark Fields that can be used to check if the user exists are:
- * - email
- * - username
+ * @remark Fields that can be used to check if the user exists are: email, username
  */
 export async function userExistsController(
   req: Request<{}, {}, {}, UserExists["query"]>,
   res: Response
 ) {
   var { email, username } = req.query;
-  var exists = false;
-
-  if (email) {
-    exists = !((await userExistsService({ email })) == null);
-  } else if (username) {
-    exists = !((await userExistsService({ username })) == null);
-  } else {
-    throw new BaseApiError(400, "Invalid request");
-  }
-
-  return res.status(200).json({ exists });
+  var exists = await User.exists({ $or: [{ email }, { username }] });
+  return res.status(200).json({ exists: exists?._id ? true : false });
 }
 
 // ==================================
@@ -42,10 +29,9 @@ export async function userExistsController(
 
 /**
  * Get logged in user info
- *
  * @route GET /user/me
  *
- * Middlewares used:
+ * Middelewares used:
  * - verifyAuth
  */
 export async function getUserController(req: Request, res: Response) {
@@ -58,7 +44,6 @@ export async function getUserController(req: Request, res: Response) {
 
 /**
  * Add instructor role to the user
- *
  * @route PUT /user/instructor-signup
  *
  * Middlewares used:
@@ -66,14 +51,11 @@ export async function getUserController(req: Request, res: Response) {
  */
 export async function instructorSignupController(req: Request, res: Response) {
   var user = req.user;
-
   if ((user.roles as UserRole[]).includes(UserRole.TEACHER)) {
-    throw new BaseApiError(400, "Already a teacher");
+    return res.status(400).json({ message: "Already a teacher" });
   }
 
   (user.roles as UserRole[]).push(UserRole.TEACHER);
   await (user as any).save();
-  return res
-    .status(200)
-    .json({ message: "Successfully signed up as a teacher" });
+  return res.status(200).json({ message: "Signed up as a teacher" });
 }
