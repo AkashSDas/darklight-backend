@@ -115,7 +115,7 @@ export async function loginController(
 
 /**
  * Get a new access token using refresh token
- * @route POST /auth/access-token
+ * @route GET /auth/access-token
  * @remark throwning an error inside the callback of jwt.verify was not working
  * and there was a timeout error. So, I sent a response instead of throwing an error
  * and it working fine. Follow the test cases regarding this.
