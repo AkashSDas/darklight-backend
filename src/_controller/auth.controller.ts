@@ -17,7 +17,6 @@ import { EmailOptions, sendEmail, sendVerificationEmail } from "../_utils/mail.u
  * Signup a new user and send verification email
  * @route POST /auth/signup
  * @remark username, email, password are required
- * @remark Takes care of username and email uniqueness
  */
 export async function signupController(
   req: Request<{}, {}, z.Signup["body"]>,
@@ -63,7 +62,6 @@ export async function cancelOAuthController(req: Request, res: Response) {
  * Complete user OAuth signup process by saving compulsory fields
  * @route PUT /auth/complete-oauth
  * @remark User that logged in will be updated with compulsory fields
- * @remark Takes care of username and email uniqueness
  *
  * Middleware used are:
  * - verifyAuth
@@ -73,11 +71,12 @@ export async function completeOAuthController(
   res: Response
 ) {
   var { username, email } = req.body;
-  var user = User.findByIdAndUpdate(
+  var user = await User.findByIdAndUpdate(
     req.user._id,
     { username, email },
     { new: true }
   );
+
   if (!user) return res.status(404).json({ message: "User not found" });
   return res.status(200).json({ user });
 }

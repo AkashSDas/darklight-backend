@@ -48,6 +48,12 @@ describe("AuthController", () => {
     });
 
     describe.skip("when valid payload is provided", () => {
+      var userId: string;
+
+      afterAll(async function deleteUser() {
+        await User.findByIdAndDelete(userId);
+      });
+
       it("create an account, send verification mail and login the user", async () => {
         var { statusCode, body } = await supertest(app)
           .post("/api/v2/auth/signup")
@@ -69,6 +75,8 @@ describe("AuthController", () => {
           },
           accessToken: expect.any(String),
         });
+
+        userId = body.user._id;
       }, 20000);
     });
 
@@ -143,6 +151,53 @@ describe("AuthController", () => {
             _id: userId,
             username: userPayload.username,
             email: userPayload.email,
+          },
+        });
+
+        // Check if the user is deleted in the db
+        var user = await User.findById(userId);
+        expect(user).toBeNull();
+      });
+    });
+  });
+
+  describe("completeOAuthController", () => {
+    var accessToken: string;
+    var userId: string;
+
+    beforeAll(async function createUser() {
+      var user = await User.create({
+        username: userPayload.username,
+        email: userPayload.email,
+        password: userPayload.password,
+      });
+
+      accessToken = user.accessToken();
+      userId = user._id.toString();
+    });
+
+    afterAll(async function deleteUser() {
+      await User.findByIdAndDelete(userId);
+    });
+
+    describe("when user is completing oauth signup", () => {
+      it("should add compulsory fields to the user", async () => {
+        var { statusCode, body } = await supertest(app)
+          .put("/api/v2/auth/complete-oauth")
+          .send({
+            username: userPayload.username,
+            email: userPayload.email,
+          })
+          .set("Authorization", `Bearer ${accessToken}`);
+
+        expect(statusCode).toBe(200);
+        expect(body).toMatchObject({
+          user: {
+            _id: userId,
+            username: userPayload.username,
+            email: userPayload.email,
+            verified: false,
+            active: false,
           },
         });
       });

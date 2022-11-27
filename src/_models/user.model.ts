@@ -35,7 +35,9 @@ class OAuthProviderClass {
     if (this.isModified("email")) query.push({ email: this.email });
     if (this.isModified("username")) query.push({ username: this.username });
     let exists = await User.exists({ $or: query });
-    if (exists) return next(new Error("Duplicate"));
+    if (exists?._id && this._id != exists._id) {
+      return next(new Error("Duplicate"));
+    }
   }
 
   return next();
