@@ -1,7 +1,144 @@
-import { describe, it } from "@jest/globals";
+import { MongoMemoryServer } from "mongodb-memory-server";
+import mongoose from "mongoose";
+import supertest from "supertest";
 
-describe("TestController", () => {
-  it.skip("should return 200", async () => {});
+import { afterAll, beforeAll, describe, expect, it } from "@jest/globals";
+import { DocumentType } from "@typegoose/typegoose";
+
+import User, { UserClass } from "../../_models/user.model";
+import { app } from "../../api";
+import { userPayload } from "../payload";
+
+describe("AuthController", () => {
+  // ==========================
+  // Global setup and teardown
+  // ==========================
+
+  beforeAll(async function connectToMongoDB() {
+    var mongoServer = await MongoMemoryServer.create();
+    await mongoose.connect(mongoServer.getUri());
+  });
+
+  afterAll(async function disconnectFromMongoDB() {
+    await mongoose.disconnect();
+    await mongoose.connection.close();
+  });
+
+  // ==================================
+  // OTHER
+  // ==================================
+
+  describe("userExistsController", () => {
+    describe("when the user exists", () => {
+      var user: DocumentType<UserClass>;
+
+      beforeAll(async function createUser() {
+        user = await User.create({
+          username: userPayload.username,
+          email: userPayload.email,
+          password: userPayload.password,
+        });
+      });
+
+      afterAll(async function deleteUser() {
+        await User.findByIdAndDelete(user._id);
+      });
+
+      it("should return true", async () => {
+        var { statusCode, body } = await supertest(app).get(
+          `/api/v2/user/exists?email=${user.email}`
+        );
+
+        expect(statusCode).toBe(200);
+        expect(body).toEqual({ exists: true });
+      });
+    });
+
+    describe("when the user does not exist", () => {
+      it("should return false", async () => {
+        var { statusCode, body } = await supertest(app).get(
+          `/api/v2/user/exists?email=no@gmail.com`
+        );
+
+        expect(statusCode).toBe(200);
+        expect(body).toEqual({ exists: false });
+      });
+    });
+  });
+
+  // ==================================
+  // INFO
+  // ==================================
+
+  describe("getUserController", () => {
+    describe("when user is logged in", () => {
+      var accessToken: string;
+      var userId: string;
+
+      beforeAll(async function createUser() {
+        var user = await User.create({
+          username: userPayload.username,
+          email: userPayload.email,
+          password: userPayload.password,
+        });
+
+        accessToken = user.accessToken();
+        userId = user._id.toString();
+      });
+
+      afterAll(async function deleteUser() {
+        await User.findByIdAndDelete(userId);
+      });
+
+      it("should return user data", async () => {
+        var { statusCode, body } = await supertest(app)
+          .get(`/api/v2/user/me`)
+          .set("Authorization", `Bearer ${accessToken}`);
+
+        expect(statusCode).toBe(200);
+        expect(body).toMatchObject({
+          _id: userId,
+          username: userPayload.username,
+          email: userPayload.email,
+        });
+      });
+    });
+  });
+
+  // ==================================
+  // INSTRUCTOR
+  // ==================================
+
+  describe("instructorSignupController", () => {
+    describe("when authenticated user request for instructor role", () => {
+      var accessToken: string;
+      var userId: string;
+
+      beforeAll(async function createUser() {
+        var user = await User.create({
+          username: userPayload.username,
+          email: userPayload.email,
+          password: userPayload.password,
+        });
+
+        accessToken = user.accessToken();
+        userId = user._id.toString();
+      });
+
+      afterAll(async function deleteUser() {
+        await User.findByIdAndDelete(userId);
+      });
+
+      it("should add instructor role to the user", async () => {
+        var { statusCode, body } = await supertest(app)
+          .put(`/api/v2/user/instructor-signup`)
+          .set("Authorization", `Bearer ${accessToken}`);
+
+        expect(statusCode).toBe(200);
+        expect(body).toEqual({ message: "Signed up as a teacher" });
+      });
+    });
+  });
 });
 
 // import {

@@ -142,6 +142,10 @@ describe("AuthController", () => {
         userId = user._id.toString();
       });
 
+      afterAll(async function deleteUser() {
+        await User.findByIdAndDelete(userId);
+      });
+
       it("should cancel oauth signup", async () => {
         var { statusCode, body } = await supertest(app)
           .delete("/api/v2/auth/cancel-oauth")

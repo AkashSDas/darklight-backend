@@ -1,4 +1,5 @@
 import { Router } from "express";
+
 import * as ctrl from "../_controller/user.controller";
 import verifyAuth from "../_middlewares/auth.middleware";
 import { validateResource } from "../_middlewares/zod.middleware";
@@ -36,7 +37,7 @@ router.get(
 // INSTRUCTOR ROUTES
 // ==================================
 
-router.post(
+router.put(
   "/instructor-signup",
   handleMiddlewareError(verifyAuth),
   handleMiddlewareError(ctrl.instructorSignupController),
