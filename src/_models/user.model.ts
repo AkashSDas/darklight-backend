@@ -1,16 +1,11 @@
-import {
-  getModelForClass,
-  modelOptions,
-  post,
-  pre,
-  prop,
-  Severity,
-} from "@typegoose/typegoose";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import jwt from "jsonwebtoken";
 import { SchemaTypes, Types } from "mongoose";
 import isEmail from "validator/lib/isEmail";
+
+import { getModelForClass, modelOptions, post, pre, prop, Severity } from "@typegoose/typegoose";
+
 import { BaseApiError } from "../_utils/error.util";
 import { OAuthProvider, UserRole } from "../_utils/user.util";
 import { ImageClass } from "./image.model";
@@ -28,16 +23,33 @@ class OAuthProviderClass {
  * @remark since fields like email/username could be null, the unique flag
  * is not set on them
  */
-@pre<UserClass>("save", async function encryptPassword(next) {
+@pre<UserClass>("save", async function preMongooseSave(next) {
   // If password is modified then hash it
-  if (!this.isModified("password")) return next();
-  this.password = await bcrypt.hash(this.password, 12);
+  if (this.isModified("password")) {
+    this.password = await bcrypt.hash(this.password, 12);
+  }
+
+  // Validate email and username uniqueness
+  if (this.isModified("email") || this.isModified("username")) {
+    let query = [];
+    if (this.isModified("email")) query.push({ email: this.email });
+    if (this.isModified("username")) query.push({ username: this.username });
+    let exists = await User.exists({ $or: query });
+    if (exists) return next(new Error("Duplicate"));
+  }
+
+  return next();
 })
 @post<UserClass>("save", function handleDuplicateError(err, user, next) {
   // Handle error due to violation of unique fields
-  if (err.name == "MongoServerError" && err.code == 11000) {
-    next(new BaseApiError(400, "Username OR email is already used"));
-  } else next();
+  if (err instanceof Error && err.message == "Duplicate") {
+    return next(new BaseApiError(400, "User already exists"));
+  }
+  if (err.name == "MongoError" && err.code == 11000) {
+    return next(new BaseApiError(400, "Duplicate fields"));
+  }
+
+  return next();
 })
 @modelOptions({
   schemaOptions: {

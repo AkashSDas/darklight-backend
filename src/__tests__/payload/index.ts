@@ -1,4 +1,4 @@
-export var user = {
+export var userPayload = {
   fullName: "William Freeman",
   username: "william_freeman",
   email: "william@gmail.com",

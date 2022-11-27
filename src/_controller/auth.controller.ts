@@ -24,12 +24,6 @@ export async function signupController(
   res: Response
 ) {
   var { username, email, password } = req.body;
-
-  {
-    let exists = await User.exists({ $or: [{ username }, { email }] });
-    if (exists) return res.status(400).json({ message: "User already exists" });
-  }
-
   var user = await User.create({ username, email, password });
   var success = await sendVerificationEmail(user);
   var message = success
@@ -66,11 +60,12 @@ export async function cancelOAuthController(req: Request, res: Response) {
 }
 
 /**
- * Save the necessary info of the user and complete OAuth signup
+ * Complete user OAuth signup process by saving compulsory fields
+ * @route PUT /auth/complete-oauth
+ * @remark User that logged in will be updated with compulsory fields
+ * @remark Takes care of username and email uniqueness
  *
- * @route PUT /api/auth/complete-oauth
- *
- * Middlewares used
+ * Middleware used are:
  * - verifyAuth
  */
 export async function completeOAuthController(
@@ -78,8 +73,13 @@ export async function completeOAuthController(
   res: Response
 ) {
   var { username, email } = req.body;
-  await service.updateUserService({ _id: req.user._id }, { username, email });
-  return res.status(200).json({ message: "Signup is completed" });
+  var user = User.findByIdAndUpdate(
+    req.user._id,
+    { username, email },
+    { new: true }
+  );
+  if (!user) return res.status(404).json({ message: "User not found" });
+  return res.status(200).json({ user });
 }
 
 // ==================================
