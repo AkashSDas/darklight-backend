@@ -9,7 +9,7 @@ import User, { UserClass } from "../../_models/user.model";
 import { app } from "../../api";
 import { userPayload } from "../payload";
 
-describe("AuthController", () => {
+describe("UserController", () => {
   // ==========================
   // Global setup and teardown
   // ==========================
