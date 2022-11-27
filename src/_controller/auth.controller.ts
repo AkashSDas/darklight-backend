@@ -4,14 +4,12 @@ import jwt from "jsonwebtoken";
 
 import User from "../_models/user.model";
 import * as z from "../_schema/auth.schema";
-import * as service from "../_services/user.service";
 import { loginCookieConfig } from "../_utils/auth.util";
-import { BaseApiError } from "../_utils/error.util";
 import { EmailOptions, sendEmail, sendVerificationEmail } from "../_utils/mail.util";
 
-// ==========================
-// Signup
-// ==========================
+// ==================================
+// SIGNUP CONTROLLERS
+// ==================================
 
 /**
  * Signup a new user and send verification email
@@ -81,9 +79,9 @@ export async function completeOAuthController(
   return res.status(200).json({ user });
 }
 
-// ==========================
-// Login
-// ==========================
+// ==================================
+// LOGIN CONTROLLERS
+// ==================================
 
 /**
  * Login user with email and password
@@ -115,44 +113,38 @@ export async function loginController(
   }
 }
 
-// TODO: send descriptive msgs like token expired and so
 /**
- * Get a new access token using the refresh token
- *
- * @route GET /api/auth/access-token
- *
+ * Get a new access token using refresh token
+ * @route POST /auth/access-token
  * @remark throwning an error inside the callback of jwt.verify was not working
  * and there was a timeout error. So, I sent a response instead of throwing an error
  * and it working fine. Follow the test cases regarding this.
  */
 export async function accessTokenController(req: Request, res: Response) {
   var refreshToken = req.cookies?.refreshToken;
-  if (!refreshToken) throw new BaseApiError(401, "Unauthorized");
+  if (!refreshToken) res.status(400).json({ message: "Unauthorized" });
+  else {
+    try {
+      jwt.verify(
+        refreshToken,
+        process.env.REFRESH_TOKEN_SECRET,
+        async function getNewAccessToken(
+          err: jwt.VerifyErrors,
+          decoded: string | jwt.JwtPayload
+        ) {
+          if (err instanceof jwt.TokenExpiredError) {
+            return res.status(401).json({ message: "Token has expired" });
+          }
 
-  try {
-    // Verify the refresh token and generate a new access token
-    jwt.verify(
-      refreshToken,
-      process.env.REFRESH_TOKEN_SECRET,
-      async function getNewAccessToken(
-        error: jwt.VerifyErrors,
-        decoded: string | jwt.JwtPayload
-      ) {
-        if (error) {
-          return res.status(401).json({ message: "Invalid refresh token" });
+          var user = await User.findById((decoded as any)._id);
+          if (!user) return res.status(404).json({ message: "User not found" });
+          var accessToken = user.accessToken();
+          return res.status(200).json({ user, accessToken });
         }
-
-        var user = await service.getUserService({ _id: (decoded as any)._id });
-        if (!user) {
-          return res.status(404).json({ message: "User not found" });
-        }
-
-        var accessToken = user.accessToken();
-        return res.status(200).json({ user, accessToken });
-      }
-    );
-  } catch (error) {
-    throw new BaseApiError(401, "Invalid refresh token");
+      );
+    } catch (error) {
+      res.status(400).json({ message: "Invalid token" });
+    }
   }
 }
 
@@ -161,71 +153,45 @@ export async function accessTokenController(req: Request, res: Response) {
 // ==================================
 
 /**
- * Get email verification mail on the registered email
- *
- * @route POST /api/auth/verify-email
+ * Send verification email to user email
+ * @route POST /auth/verify-email
  */
 export async function verifyEmailController(
   req: Request<{}, {}, z.VerifyEmail["body"]>,
   res: Response
 ) {
-  // Check if the user exists
   var { email } = req.body;
-  var user = await service.getUserService({ email });
-  if (!user) throw new BaseApiError(404, "User not found");
+  var user = await User.findOne({ email });
+  if (!user) return res.status(404).json({ message: "User not found" });
+  if (user.verified)
+    return res.status(400).json({ message: "Already verified" });
 
-  // Check if the user has already verified the email
-  if (user.verified) {
-    throw new BaseApiError(400, "Email is already verified");
-  }
-
-  // Generate a verification token and send it to the user
-  var token = user.generateVerificationToken();
-  await user.save({ validateModifiedOnly: true });
-
-  // Send verification email
-  var url = `${process.env.BASE_URL}/api/v2/auth/confirm-email/${token}`;
-  var opts: EmailOptions = {
-    to: user.email,
-    subject: "Verify your email",
-    text: `Please click on the link to confirm your email: ${url}`,
-    html: `Please click on the link to confirm your email: 🔗 <a href="${url}">Link</a>`,
-  };
-
-  try {
-    await sendEmail(opts);
-    return res.status(200).json({ message: "Verification email sent", token });
-  } catch (error) {
-    // Reset the token and tokenExpiresAt
-    user.verificationToken = undefined;
-    user.verificationTokenExpiresAt = undefined;
-    await user.save({ validateModifiedOnly: true });
-    return res.status(500).json({ message: "Failed to send email" });
-  }
+  var success = await sendVerificationEmail(user);
+  var message = success ? "Verification email sent" : "Failed to send email";
+  return res.status(success ? 200 : 500).json({ message });
 }
 
 /**
- * Verify user's email and active their account
- *
- * @route PUT /api/auth/confirm-email/:token
+ * Verify user email
+ * @route PUT /auth/confirm-email/:token
+ * @remark token is sent in email
+ * @remark after successful verification, user will be redirected to `FRONTEND_BASE_URL`
  */
-export async function confrimEmailController(
+export async function confirmEmailController(
   req: Request<z.ConfirmEmail["params"]>,
   res: Response
 ) {
-  // Verify the token
   var { token } = req.params;
   var encryptedToken = crypto.createHash("sha256").update(token).digest("hex");
-  var user = await service.getUserService({
+  var user = await User.findOne({
     verificationToken: encryptedToken,
     verificationTokenExpiresAt: { $gt: Date.now() },
   });
-
-  if (!user) throw new BaseApiError(400, "Invalid or expired token");
+  if (!user) return res.status(404).json({ message: "User not found" });
 
   // Update the user's verified and active status
-  user.verified = true;
   user.active = true;
+  user.verified = true;
   user.verificationToken = undefined;
   user.verificationTokenExpiresAt = undefined;
   await user.save({ validateModifiedOnly: true });
@@ -238,24 +204,20 @@ export async function confrimEmailController(
 // ==================================
 
 /**
- * Send email with password reset link with contains the token
- *
- * @route POST /api/auth/forgot-password
+ * Send password reset link to user's registered email
+ * @route POST /auth/forgot-password
  */
 export async function forgotPasswordController(
   req: Request<{}, {}, z.ForgotPassword["body"]>,
   res: Response
 ) {
-  // Check if the user exists
   var { email } = req.body;
-  var user = await service.getUserService({ email });
-  if (!user) throw new BaseApiError(404, "User not found");
+  var user = await User.findOne({ email });
+  if (!user) return res.status(404).json({ message: "User not found" });
 
-  // Generate a reset token and send it to the user
   var token = user.generatePasswordResetToken();
   await user.save({ validateModifiedOnly: true });
 
-  // Send password reset email
   var url = `${process.env.BASE_URL}/api/v2/auth/reset-password/${token}`;
   var opts: EmailOptions = {
     to: user.email,
@@ -278,26 +240,25 @@ export async function forgotPasswordController(
 
 /**
  * Reset user's password
- *
- * @route PUT /api/auth/password-reset/:token
+ * @route PUT /auth/password-reset/:token
  */
 export async function passwordResetController(
   req: Request<z.PasswordReset["params"], {}, z.PasswordReset["body"]>,
   res: Response
 ) {
-  // Verify the token
   var { token } = req.params;
   var encryptedToken = crypto.createHash("sha256").update(token).digest("hex");
-  var user = await service.getUserService({
+  var user = await User.findOne({
     passwordResetToken: encryptedToken,
     passwordResetTokenExpiresAt: { $gt: Date.now() },
   });
 
-  if (!user) throw new BaseApiError(400, "Invalid or expired token");
+  if (!user) {
+    return res.status(400).json({ message: "Invalid or expired token" });
+  }
 
   // Update the user's password
-  var { password } = req.body;
-  user.password = password;
+  user.password = req.body?.password;
   user.passwordResetToken = undefined;
   user.passwordResetTokenExpiresAt = undefined;
   await user.save({ validateModifiedOnly: true });
@@ -311,8 +272,7 @@ export async function passwordResetController(
 
 /**
  * Logout user with email/password login OR social login
- *
- * @route GET /api/auth/logout
+ * @route GET /auth/logout
  */
 export async function logoutController(req: Request, res: Response) {
   if (req.cookies?.refreshToken) {
@@ -326,5 +286,5 @@ export async function logoutController(req: Request, res: Response) {
     req.logOut(function successfulOAuthLogout() {});
   }
 
-  return res.status(200).json({ message: "Logged out successfully" });
+  return res.status(200).json({ message: "Logged out" });
 }

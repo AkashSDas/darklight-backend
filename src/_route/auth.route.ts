@@ -178,7 +178,7 @@ router
   .put(
     "/confirm-email/:token",
     validateResource(z.confirmEmailSchema),
-    handleMiddlewareError(ctrl.confrimEmailController),
+    handleMiddlewareError(ctrl.confirmEmailController),
     sendErrorResponse
   );
 
