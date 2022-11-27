@@ -1,7 +1,6 @@
 import { Types } from "mongoose";
 import { z } from "zod";
 
-// import { ContentType } from "../_models/content.model";
 import { CourseDifficulty, CourseStage } from "../_utils/course.util";
 
 function mongoIdSchema(path: string) {
@@ -123,20 +122,6 @@ export var updateContentSchema = z.object({
     lessonId: mongoIdSchema("lessonId"),
     contentId: z.string({ required_error: "Required" }),
   }),
-  // body: z.object({
-  //   id: z.string({ required_error: "Required" }),
-  //   type: z.nativeEnum(ContentType, {
-  //     required_error: "Required",
-  //     invalid_type_error: "Invalid",
-  //   }),
-  //   data: z.array(
-  //     z.object({
-  //       key: z.string({ required_error: "Required" }),
-  //       value: z.any({ required_error: "Required" }),
-  //     }),
-  //     { required_error: "Required" }
-  //   ),
-  // }),
 });
 
 // =========================

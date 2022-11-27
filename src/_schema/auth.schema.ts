@@ -3,10 +3,10 @@ import { z } from "zod";
 import { passwordRegex } from "../_utils/auth.util";
 
 // ==========================
-// Schemas
+// SCHEMAS
 // ==========================
 
-// Signup
+// SIGNUP
 
 export var signupSchema = z.object({
   body: z.object({
