@@ -1,22 +1,30 @@
 import { z } from "zod";
 
-// =========================
-// SCHEMAS
-// =========================
+import { passwordRegex } from "../_utils/auth.util";
 
-// SIGNUP
+// ==========================
+// Schemas
+// ==========================
+
+// Signup
 
 export var signupSchema = z.object({
   body: z.object({
     username: z
       .string({ required_error: "Required" })
       .min(3, "Too short")
-      .max(120, "Too long"),
+      .max(32, "Too long"),
     email: z.string({ required_error: "Required" }).email("Invalid"),
     password: z
       .string({ required_error: "Required" })
-      .min(6, "Too short")
-      .max(120, "Too long"),
+      .min(8, "Too short")
+      .max(64, "Too long")
+      .refine(
+        function checkPasswordStrength(pwd) {
+          return passwordRegex.test(pwd);
+        },
+        { message: "Weak", path: ["password"] }
+      ),
   }),
 });
 

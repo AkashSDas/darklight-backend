@@ -1,21 +1,23 @@
-import { Request, Response } from "express";
 import crypto from "crypto";
+import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
+
+import User from "../_models/user.model";
 import * as z from "../_schema/auth.schema";
 import * as service from "../_services/user.service";
 import { loginCookieConfig } from "../_utils/auth.util";
 import { BaseApiError } from "../_utils/error.util";
-import { EmailOptions, sendEmail } from "../_utils/mail.util";
+import { EmailOptions, sendEmail, sendVerificationEmail } from "../_utils/mail.util";
 
-// ==================================
-// SIGNUP CONTROLLERS
-// ==================================
+// ==========================
+// Signup
+// ==========================
 
 /**
- * Create a new user account and send a verification email
- *
- * @route POST /api/v2/auth/signup
- * @remark username, email, and password are used for this signup
+ * Signup a new user and send verification email
+ * @route POST /auth/signup
+ * @remark username, email, password are required
+ * @remark Takes care of username and email uniqueness
  */
 export async function signupController(
   req: Request<{}, {}, z.Signup["body"]>,
@@ -23,49 +25,24 @@ export async function signupController(
 ) {
   var { username, email, password } = req.body;
 
-  // Check if user already exists
-  var exists = await Promise.all([
-    service.userExistsService({ username }),
-    service.userExistsService({ email }),
-  ]);
-  if (exists[0] || exists[1]) {
-    throw new BaseApiError(400, "User already exists");
+  {
+    let exists = await User.exists({ $or: [{ username }, { email }] });
+    if (exists) return res.status(400).json({ message: "User already exists" });
   }
 
-  // Create new user
-  var user = await service.createUserService({ username, email, password });
+  var user = await User.create({ username, email, password });
+  var success = await sendVerificationEmail(user);
+  var message = success
+    ? "Account created, verification email sent"
+    : "Account created";
 
-  // Get verification token
-  var token = user.generateVerificationToken();
-  await user.save({ validateModifiedOnly: true });
-  user.password = undefined; // rm pwd hash from response
-
-  // Send verification email
-  var url = `${process.env.BASE_URL}/api/v2/auth/confirm-email/${token}`;
-  var opts: EmailOptions = {
-    to: user.email,
-    subject: "Verify your email",
-    text: `Please click on the link to confirm your email: ${url}`,
-    html: `Please click on the link to confirm your email: 🔗 <a href="${url}">Link</a>`,
-  };
-
-  try {
-    await sendEmail(opts);
-    var message = "Account is created. Email sent to verify your email";
-  } catch (error) {
-    // Resetting fields after failed email sending
-    user.verificationToken = undefined;
-    user.verificationTokenExpiresAt = undefined;
-    await user.save({ validateModifiedOnly: true });
-
-    var message = "Account is created";
-  } finally {
-    // Logging the user in
+  // Login user
+  {
     let accessToken = user.accessToken();
     let refreshToken = user.refreshToken();
     res.cookie("refreshToken", refreshToken, loginCookieConfig);
-
-    return res.status(201).json({ user, accessToken, message });
+    user.password = undefined; // remove password from response
+    return res.status(201).json({ message, accessToken, user });
   }
 }
 

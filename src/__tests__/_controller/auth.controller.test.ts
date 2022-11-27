@@ -1,21 +1,101 @@
-import {
-  describe,
-  it,
-  expect,
-  afterEach,
-  afterAll,
-  beforeAll,
-} from "@jest/globals";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose from "mongoose";
 import supertest from "supertest";
+
+import { afterAll, afterEach, beforeAll, describe, expect, it } from "@jest/globals";
+
+import { createUserService, deleteUserService, getUserService, getUserWithSelectService } from "../../_services/user.service";
 import { app } from "../../api";
-import {
-  createUserService,
-  getUserService,
-  getUserWithSelectService,
-  deleteUserService,
-} from "../../_services/user.service";
+import { user } from "../payload";
+
+describe("AuthController", () => {
+  // ==========================
+  // Global setup and teardown
+  // ==========================
+
+  beforeAll(async function connectToMongoDB() {
+    var mongoServer = await MongoMemoryServer.create();
+    await mongoose.connect(mongoServer.getUri());
+  });
+
+  afterAll(async function disconnectFromMongoDB() {
+    await mongoose.disconnect();
+    await mongoose.connection.close();
+  });
+
+  // ==========================
+  // Signup
+  // ==========================
+
+  describe("signupController", () => {
+    describe("when invalid payload is provided", () => {
+      it("should return invalid payload message", async () => {
+        var { statusCode, body } = await supertest(app).post(
+          "/api/v2/auth/signup"
+        );
+
+        expect(statusCode).toBe(400);
+        expect(body).toEqual({
+          message: "Missing OR invalid fields",
+          errors: [
+            { field: "username", msg: "Required" },
+            { field: "email", msg: "Required" },
+            { field: "password", msg: "Required" },
+          ],
+        });
+      });
+    });
+
+    describe.skip("when valid payload is provided", () => {
+      it("create an account, send verification mail and login the user", async () => {
+        var { statusCode, body } = await supertest(app)
+          .post("/api/v2/auth/signup")
+          .send({
+            username: user.username,
+            email: user.email,
+            password: user.password,
+          });
+
+        expect(statusCode).toBe(201);
+        expect(body).toMatchObject({
+          message: "Account created, verification email sent",
+          user: {
+            _id: expect.any(String),
+            username: user.username,
+            email: user.email,
+            verified: false,
+            active: false,
+          },
+          accessToken: expect.any(String),
+        });
+      }, 20000);
+    });
+
+    describe("when user already exists", () => {
+      beforeAll(async function createUser() {
+        await supertest(app).post("/api/v2/auth/signup").send({
+          username: user.username,
+          email: user.email,
+          password: user.password,
+        });
+      });
+
+      it("should return user already exists message", async () => {
+        // Creating user
+        var { statusCode, body } = await supertest(app)
+          .post("/api/v2/auth/signup")
+          .send({
+            username: user.username,
+            email: user.email,
+            password: user.password,
+          });
+
+        expect(statusCode).toBe(400);
+        expect(body).toEqual({ message: "User already exists" });
+      });
+    });
+  });
+});
 
 var userPayload = {
   username: "rock",
