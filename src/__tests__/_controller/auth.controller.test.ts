@@ -41,9 +41,9 @@ describe("AuthController", () => {
         expect(body).toEqual({
           message: "Missing OR invalid fields",
           errors: [
-            { field: "username", msg: "Required" },
-            { field: "email", msg: "Required" },
-            { field: "password", msg: "Required" },
+            { field: "username", message: "Required" },
+            { field: "email", message: "Required" },
+            { field: "password", message: "Required" },
           ],
         });
       });

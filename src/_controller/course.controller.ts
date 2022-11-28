@@ -69,6 +69,7 @@ export async function updateCourseSettingsController(
 /**
  * Update course cover image
  * @route PUT /api/course/:courseId/cover
+ * @remark Cover image file name is `coverImage`
  * @remark Verification of course ownership is done by the query for getting the course
  *
  * Middlewares used:
@@ -121,7 +122,7 @@ export async function getCourseController(
   ]);
 
   if (!course) return res.status(404).json({ message: "Course not found" });
-  return res.status(200).json({ course });
+  return res.status(200).json(course);
 }
 
 /**
