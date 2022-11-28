@@ -4,7 +4,7 @@ import { nanoid } from "nanoid";
 
 import { DocumentType } from "@typegoose/typegoose";
 
-import { ContentClass, ContentType } from "../_models/content.model";
+import { ContentType } from "../_models/content.model";
 import { CourseClass } from "../_models/course.model";
 import { LessonClass } from "../_models/lesson.model";
 import { COURSE_COVER_IMG_DIR, LESSON_CONTENT_IMAGE_DIR, LESSON_VIDEO_DIR } from "./cloudinary.util";
@@ -87,48 +87,34 @@ export async function uploadLessonVideo(
   };
 }
 
-/**
- * data - { type }
- */
 export async function updateContentBlock(
-  courseId: string,
-  lessonId: string,
-  content: ContentClass,
-  data: {
+  content: {
     id: string;
     type: ContentType;
-    data: { key: string; value: any }[] | string;
+    data: { key: string; value: any }[];
   },
-  files: FileArray
+  files: FileArray,
+  courseId: string,
+  lessonId: string
 ) {
-  if (content.type != data.type) throw new TypeError("Content type mismatch");
+  function filter(field: string) {
+    return content.data.find((d) => d.key == field)?.value ?? null;
+  }
 
   switch (content.type) {
-    case ContentType.PARAGRAPH:
-      if (typeof data.data == "string") return null;
-      return {
-        ...content,
-        data: [
-          {
-            key: "text",
-            value: data.data.find((d) => d.key == "text")?.value ?? "",
-          },
-        ],
-      };
-    case ContentType.IMAGE:
-      let caption =
-        (JSON.parse(data.data.toString()) as any).find(
-          (d) => d.key == "caption"
-        )?.value ?? null;
+    case ContentType.PARAGRAPH: {
+      let text = filter("text");
+      console.log(text);
+      return { ...content, data: [{ key: "text", value: text }] };
+    }
+    case ContentType.IMAGE: {
+      let id = filter("id");
+      let caption = filter("caption");
 
       let contentImage = files?.contentImage as UploadedFile;
       if (!contentImage) throw new Error("No image provided");
-
-      // Delete old image, if there
-      let id = content.data.find((d) => d.key == "id").value;
       if (id) await cloudinary.v2.uploader.destroy(id);
 
-      // Upload new image
       let result = await cloudinary.v2.uploader.upload(
         contentImage.tempFilePath,
         {
@@ -145,72 +131,9 @@ export async function updateContentBlock(
           { key: "caption", value: caption },
         ],
       };
-    case ContentType.H1:
-      if (typeof data.data == "string") return null;
-
-      return {
-        ...content,
-        data: [
-          {
-            key: "text",
-            value: data.data.find((d) => d.key == "text")?.value ?? "",
-          },
-        ],
-      };
-    case ContentType.H2:
-      if (typeof data.data == "string") return null;
-
-      return {
-        ...content,
-        data: [
-          {
-            key: "text",
-            value: data.data.find((d) => d.key == "text")?.value ?? "",
-          },
-        ],
-      };
-    case ContentType.H3:
-      if (typeof data.data == "string") return null;
-
-      return {
-        ...content,
-        data: [
-          {
-            key: "text",
-            value: data.data.find((d) => d.key == "text")?.value ?? "",
-          },
-        ],
-      };
-    case ContentType.QUOTE:
-      if (typeof data.data == "string") return null;
-
-      return {
-        ...content,
-        data: [
-          {
-            key: "text",
-            value: data.data.find((d) => d.key == "text")?.value ?? "",
-          },
-        ],
-      };
-    case ContentType.CODE:
-      if (typeof data.data == "string") return null;
-
-      return {
-        ...content,
-        data: [
-          {
-            key: "text",
-            value: data.data.find((d) => d.key == "text")?.value ?? "",
-          },
-          {
-            key: "caption",
-            value: data.data.find((d) => d.key == "caption")?.value ?? null,
-          },
-        ],
-      };
+    }
     default:
-      return content;
+      throw new Error("Invalid content type");
   }
 }
 

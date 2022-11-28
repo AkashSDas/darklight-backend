@@ -642,40 +642,78 @@ export async function createContentController(
   return res.status(200).json({ content, lesson });
 }
 
+/**
+ * Update content of a lesson
+ * @route PUT /api/course/:courseId/group/:groupId/lesson/:lessonId/content/:contentId
+ *
+ * @remark Body will be of shape
+ * - type of content
+ * - data of content
+ *
+ * Middlewares used:
+ * - verifyAuth
+ */
 export async function updateContentController(
-  // req: Request<z.UpdateContent["params"], {}, z.UpdateContent["body"]>,
   req: Request<z.UpdateContent["params"]>,
   res: Response
 ) {
-  var user = req.user;
+  if (!req.body.type)
+    return res.status(400).json({ message: "Content type not provided" });
+  if (!req.body.data)
+    return res.status(400).json({ message: "Content data not provided" });
+  if (!req.body.id)
+    return res.status(400).json({ message: "Content id not provided" });
 
-  var [course, lesson] = await Promise.all([
-    Course.findOne({ _id: req.params.courseId, instructors: user._id }),
-    Lesson.findOne({ _id: req.params.lessonId }),
-  ]);
+  var lesson = await Lesson.findOne({
+    _id: req.params.lessonId,
+    group: new mongoose.Types.ObjectId(req.params.groupId),
+    course: new mongoose.Types.ObjectId(req.params.courseId),
+    instructors: req.user._id,
+  });
 
-  if (!course || !lesson) {
-    return res.status(403).json({ message: "Forbidden" });
+  if (!lesson) return res.status(404).json({ message: "Lesson not found" });
+
+  // Check if the content types are same OR not
+  var content = lesson.content.find((c) => c.id == req.params.contentId);
+  if (!content) return res.status(404).json({ message: "Content not found" });
+  if (req.body.type != content.type) {
+    return res.status(400).json({ message: "Content type mismatch" });
   }
 
-  var idx = lesson.content.findIndex((c) => c.id == req.params.contentId);
-  var content = lesson.content[idx];
-  if (!content) {
-    return res.status(404).json({ message: "Content not found" });
-  }
-
-  var updatedcontent = await updateContentBlock(
-    course._id.toString(),
-    lesson._id.toString(),
-    content,
-    req.body as any,
-    req.files
+  // Update content
+  var bodyData = JSON.parse(req.body.data);
+  var updateContent = await updateContentBlock(
+    {
+      id: content.id,
+      type: content.type,
+      data: bodyData,
+    },
+    req.files,
+    lesson.course.toString(),
+    lesson._id.toString()
   );
 
-  var contentBlocks = lesson.content;
-  contentBlocks[idx] = updatedcontent;
-  lesson.content = contentBlocks;
-  await lesson.save();
+  // Update lesson and course lastEditedOn
+  var idx = lesson.content.findIndex((c) => c.id == req.params.contentId);
+  var contentToUpdate = lesson.content[idx];
+  contentToUpdate.data = updateContent.data;
+  lesson.lastEditedOn = new Date(Date.now());
+  lesson.content[idx] = contentToUpdate;
+  var courseQuery = Course.findOneAndUpdate(
+    {
+      _id: new mongoose.Types.ObjectId(req.params.courseId),
+      instructors: req.user._id,
+      "groups._id": new mongoose.Types.ObjectId(req.params.groupId),
+    },
+    { $set: { "groups.$[g].lastEditedOn": new Date(Date.now()) } },
+    {
+      new: true,
+      arrayFilters: [
+        { "g._id": new mongoose.Types.ObjectId(req.params.groupId) },
+      ],
+    }
+  );
 
-  return res.status(200).json({ content: updatedcontent });
+  var [lesson] = await Promise.all([lesson.save(), courseQuery]);
+  return res.status(200).json({ content: updateContent, lesson });
 }
