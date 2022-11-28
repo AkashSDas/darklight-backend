@@ -280,8 +280,7 @@ export async function reorderLessonsController(
 // ==================================
 
 /**
- * Create a new lesson
- *
+ * Create a new lesson and add it's `_id` to the group
  * @route POST /api/course/:courseId/group/:groupId/lesson
  *
  * @remark Saving the lesson in the course's respective group
@@ -289,42 +288,37 @@ export async function reorderLessonsController(
  * .map method OR course.groups[idx].lessons.push(lesson._id)
  * DOES NOT WORK
  *
- * @remark Middlewares used:
+ * Middlewares used:
  * - verifyAuth
  */
 export async function createLessonController(
   req: Request<z.CreateLesson["params"]>,
   res: Response
 ) {
-  var user = req.user;
+  // Check if the course with the instructor along with the group exists OR not
   var course = await Course.findOne({
     _id: req.params.courseId,
-    instructors: user._id,
+    instructors: req.user._id,
+    "groups._id": new mongoose.Types.ObjectId(req.params.groupId),
   });
 
-  if (!course) {
-    return res.status(403).json({ message: "Forbidden" });
-  }
+  if (!course) return res.status(404).json({ message: "Course not found" });
+
+  // Create a lesson and add it to the respective group
+  var lesson = new Lesson();
+  var groupdIdx = course.groups.findIndex((g) => g._id == req.params.groupId);
+  var group = course.groups[groupdIdx];
+  group.lessons.push(lesson._id);
+  group.lastEditedOn = new Date(Date.now());
+  course.groups[groupdIdx] = group;
+  course.lastEditedOn = new Date(Date.now());
 
   var session = await startSession();
   session.startTransaction();
 
   try {
-    var lesson = await Lesson.create({ session });
-
-    // Saving the lesson in the course's respective group
-    // this way works. Directly updating the group like
-    // using the .map method OR course.groups[idx].lessons.push(lesson._id)
-    // DOES NOT WORK
-    let idx = course.groups.findIndex((g) => {
-      if (g._id == req.params.groupId) return true;
-      return false;
-    });
-    let group = course.groups[idx];
-    group.lessons.push(lesson._id);
-    course.groups[idx] = group;
-
-    await course.save({ session });
+    lesson = await lesson.save({ session });
+    course = await course.save({ session });
     await session.commitTransaction();
   } catch (error) {
     await session.abortTransaction();
@@ -332,7 +326,7 @@ export async function createLessonController(
   }
 
   session.endSession();
-  return res.status(201).json({ lesson });
+  return res.status(201).json({ lesson, course });
 }
 
 /**
