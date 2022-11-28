@@ -22,7 +22,7 @@ import { UserRole } from "../_utils/user.util";
  */
 export async function createCourseController(req: Request, res: Response) {
   var user = req.user;
-  if (!(user.roles as UserRole[]).includes(UserRole.TEACHER)) {
+  if (!user.roles.includes(UserRole.TEACHER)) {
     return res.status(403).json({ message: "Forbidden" });
   }
 

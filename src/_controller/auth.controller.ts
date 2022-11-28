@@ -109,7 +109,7 @@ export async function loginController(
     let refreshToken = user.refreshToken();
     res.cookie("refreshToken", refreshToken, loginCookieConfig);
     user.password = undefined; // remove password from response
-    return res.status(200).json({ accessToken, user });
+    return res.status(200).json({ user, accessToken });
   }
 }
 
