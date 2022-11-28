@@ -124,6 +124,15 @@ router.delete(
   sendErrorResponse
 );
 
+// Move lesson to another group
+router.put(
+  "/:courseId/group/:groupId/lesson/:lessonId/move",
+  validateResource(z.moveLessonToAnotherGroupSchema),
+  handleMiddlewareError(verifyAuth),
+  handleMiddlewareError(ctrl.moveLessonToAnotherGroupController),
+  sendErrorResponse
+);
+
 // ==================================
 // CONTENT
 // ==================================

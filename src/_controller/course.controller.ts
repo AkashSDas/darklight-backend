@@ -3,7 +3,10 @@ import { Request, Response } from "express";
 import { UploadedFile } from "express-fileupload";
 import mongoose, { startSession } from "mongoose";
 
+import { DocumentType } from "@typegoose/typegoose";
+
 import { Course, Lesson } from "../_models";
+import { LessonClass } from "../_models/lesson.model";
 import * as z from "../_schema/course.schema";
 import { LESSON_VIDEO_DIR } from "../_utils/cloudinary.util";
 import { CourseStage, deleteContentBlock, generateContentBlock, updateContentBlock, updateCourseCoverImage } from "../_utils/course.util";
@@ -581,6 +584,95 @@ export async function removeLessonVideoController(
   }
 
   session.endSession();
+  return res.status(200).json({ lesson, course });
+}
+
+/**
+ * Move lesson from one group to another group in the same course
+ * @route PUT /api/course/:courseId/group/:groupId/lesson/:lessonId/move
+ * 
+ * Middlewares used:
+ * - verifyAuth
+ */
+export async function moveLessonToAnotherGroupController(
+  req: Request<
+    z.MoveLessonToAnotherGroup["params"],
+    {},
+    z.MoveLessonToAnotherGroup["body"]
+  >,
+  res: Response
+) {
+  var course = await Course.findOne({
+    _id: new mongoose.Types.ObjectId(req.params.courseId),
+    instructors: req.user._id,
+    "groups._id": {
+      $all: [
+        new mongoose.Types.ObjectId(req.params.groupId),
+        new mongoose.Types.ObjectId(req.body.newGroupId),
+      ],
+    },
+    "groups.lessons": new mongoose.Types.ObjectId(req.params.lessonId),
+  });
+
+  if (!course) return res.status(404).json({ message: "Course not found" });
+
+  {
+    let addToGroup = course.groups.findIndex(
+      (g) => g._id == req.body.newGroupId
+    );
+    let removeFromGroup = course.groups.findIndex(
+      (g) => g._id == req.params.groupId
+    );
+
+    let toGroupLessons = course.groups[addToGroup].lessons;
+    let fromGroupLessons = course.groups[removeFromGroup].lessons;
+
+    let lessonIndex = fromGroupLessons.findIndex(
+      (l) => l._id.toString() == req.params.lessonId
+    );
+
+    toGroupLessons.push(fromGroupLessons[lessonIndex]);
+    fromGroupLessons.splice(lessonIndex, 1);
+
+    course.groups[addToGroup].lessons = toGroupLessons;
+    course.groups[removeFromGroup].lessons = fromGroupLessons;
+  }
+
+  var session = await startSession();
+  session.startTransaction();
+
+  try {
+    let lessonQuery = Lesson.findOneAndUpdate(
+      {
+        _id: new mongoose.Types.ObjectId(req.params.lessonId),
+        group: new mongoose.Types.ObjectId(req.params.groupId),
+        course: new mongoose.Types.ObjectId(req.params.courseId),
+        instructors: req.user._id,
+      },
+      {
+        $set: {
+          group: new mongoose.Types.ObjectId(req.body.newGroupId),
+          lastEditedOn: new Date(Date.now()),
+        },
+      },
+      { session, new: true }
+    );
+    course.lastEditedOn = new Date(Date.now());
+
+    var lesson: DocumentType<LessonClass>;
+    [lesson, course] = await Promise.all([
+      lessonQuery,
+      course.save({ session }),
+    ]);
+
+    await session.commitTransaction();
+  } catch (error) {
+    await session.abortTransaction();
+    throw error;
+  }
+
+  session.endSession();
+
   return res.status(200).json({ lesson, course });
 }
 
