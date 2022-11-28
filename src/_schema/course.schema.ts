@@ -80,7 +80,7 @@ export var getCourseSchema = z.object({
 
 // GROUP
 
-export var createGroupSchema = z.object({
+export var addGroupSchema = z.object({
   params: z.object({ courseId: mongoIdSchema("courseId") }),
 });
 
@@ -163,7 +163,7 @@ export type CourseSettings = z.infer<typeof courseSettingsSchema>;
 export type UpdateCourseCover = z.infer<typeof updateCourseCoverSchema>;
 export type GetCourse = z.infer<typeof getCourseSchema>;
 
-export type CreateGroup = z.infer<typeof createGroupSchema>;
+export type AddGroup = z.infer<typeof addGroupSchema>;
 export type UpdateGroup = z.infer<typeof updateGroupSchema>;
 export type ReorderLessons = z.infer<typeof reorderLessonsSchema>;
 

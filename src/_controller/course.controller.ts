@@ -166,20 +166,18 @@ export async function getCoursesController(req: Request, res: Response) {
 // ==================================
 
 /**
- * Create a new group in a course
- *
+ * Add a new group in a course
  * @route POST /api/course/:courseId/group
  *
- * @remark Middlewares used:
+ * Middelewares used:
  * - verifyAuth
  */
-export async function createGroupController(
-  req: Request<z.CreateGroup["params"]>,
+export async function addGroupController(
+  req: Request<z.AddGroup["params"]>,
   res: Response
 ) {
-  var user = req.user;
   var course = await Course.findOneAndUpdate(
-    { _id: req.params.courseId, instructors: user._id },
+    { _id: req.params.courseId, instructors: req.user._id },
     {
       $push: {
         groups: {
@@ -189,7 +187,7 @@ export async function createGroupController(
         },
       },
     },
-    { new: true, fields: "-__v" }
+    { new: true }
   );
 
   if (!course) {

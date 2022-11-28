@@ -60,9 +60,9 @@ router.get(
 // Add group
 router.post(
   "/:courseId/group",
-  validateResource(z.createGroupSchema),
+  validateResource(z.addGroupSchema),
   handleMiddlewareError(verifyAuth),
-  handleMiddlewareError(ctrl.createGroupController),
+  handleMiddlewareError(ctrl.addGroupController),
   sendErrorResponse
 );
 
