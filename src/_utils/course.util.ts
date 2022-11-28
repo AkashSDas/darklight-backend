@@ -1,15 +1,13 @@
-import { DocumentType } from "@typegoose/typegoose";
 import cloudinary from "cloudinary";
 import { FileArray, UploadedFile } from "express-fileupload";
 import { nanoid } from "nanoid";
+
+import { DocumentType } from "@typegoose/typegoose";
+
 import { ContentClass, ContentType } from "../_models/content.model";
 import { CourseClass } from "../_models/course.model";
 import { LessonClass } from "../_models/lesson.model";
-import {
-  COURSE_COVER_IMG_DIR,
-  LESSON_CONTENT_IMAGE_DIR,
-  LESSON_VIDEO_DIR,
-} from "./cloudinary.util";
+import { COURSE_COVER_IMG_DIR, LESSON_CONTENT_IMAGE_DIR, LESSON_VIDEO_DIR } from "./cloudinary.util";
 
 export enum CourseStage {
   DRAFT = "draft",

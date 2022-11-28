@@ -525,28 +525,6 @@ export async function removeLessonVideoController(
   req: Request<z.UpdateLessonVideo["params"]>,
   res: Response
 ) {
-  // var course = await Course.findOneAndUpdate(
-  //   {
-  //     _id: new mongoose.Types.ObjectId(req.params.courseId),
-  //     instructors: req.user._id,
-  //     "groups._id": new mongoose.Types.ObjectId(req.params.groupId),
-  //   },
-  //   {
-  //     $set: {
-  //       "groups.$[g].lastEditedOn": new Date(Date.now()),
-  //       "groups.$[g].videoDuration": 0,
-  //     },
-  //   },
-  //   {
-  //     new: true,
-  //     arrayFilters: [
-  //       { "g._id": new mongoose.Types.ObjectId(req.params.groupId) },
-  //     ],
-  //     session,
-  //   }
-  // );
-  // return res.status(200).json(course);
-
   var lesson = await Lesson.findOne({
     _id: req.params.lessonId,
     group: new mongoose.Types.ObjectId(req.params.groupId),
@@ -612,34 +590,56 @@ export async function removeLessonVideoController(
 
 /**
  * Add content to a lesson
- *
  * @route POST /api/course/:courseId/group/:groupId/lesson/:lessonId/content
  *
- * @remark Middlewares used:
+ * Middlewares used:
  * - verifyAuth
  */
 export async function createContentController(
   req: Request<z.CreateContent["params"]>,
   res: Response
 ) {
-  var user = req.user;
-  var [course, lesson] = await Promise.all([
-    Course.findOne({ _id: req.params.courseId, instructors: user._id }),
-    Lesson.findOne({ _id: req.params.lessonId }),
-  ]);
+  // Get the lesson if it exists
+  var lesson = await Lesson.findOne({
+    _id: req.params.lessonId,
+    group: new mongoose.Types.ObjectId(req.params.groupId),
+    course: new mongoose.Types.ObjectId(req.params.courseId),
+    instructors: req.user._id,
+  });
+  if (!lesson) return res.status(404).json({ message: "Lesson not found" });
 
-  if (!course || !lesson) {
-    return res.status(403).json({ message: "Forbidden" });
-  }
-
+  // Create content
   var content = generateContentBlock(req.body.type);
   if (!content) {
     return res.status(400).json({ message: "Invalid content type" });
   }
-  lesson.content.push(content);
-  lesson.save();
 
-  return res.status(201).json({ content });
+  // Save content in the lesson and update lesson and course lastEditedOn
+  // Updating both of them concurrently. Also if the saving of lastEditedOn
+  // for course fail's its OK, therefore not using sessions
+  lesson.content.push(content);
+  lesson.lastEditedOn = new Date(Date.now());
+  var courseQuery = Course.findOneAndUpdate(
+    {
+      _id: new mongoose.Types.ObjectId(req.params.courseId),
+      instructors: req.user._id,
+      "groups._id": new mongoose.Types.ObjectId(req.params.groupId),
+    },
+    {
+      $set: {
+        "groups.$[g].lastEditedOn": new Date(Date.now()),
+      },
+    },
+    {
+      new: true,
+      arrayFilters: [
+        { "g._id": new mongoose.Types.ObjectId(req.params.groupId) },
+      ],
+    }
+  );
+
+  var [lesson] = await Promise.all([lesson.save(), courseQuery]);
+  return res.status(200).json({ content, lesson });
 }
 
 export async function updateContentController(
