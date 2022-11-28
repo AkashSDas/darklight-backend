@@ -1,7 +1,7 @@
 import MongoPaging from "mongo-cursor-pagination";
 import mongoose, { SchemaTypes, Types } from "mongoose";
 
-import { getModelForClass, plugin, prop, Ref, Severity } from "@typegoose/typegoose";
+import { plugin, prop, Ref } from "@typegoose/typegoose";
 
 import { CourseDifficulty, CourseStage } from "../_utils/course.util";
 import { ImageClass } from "./image.model";
@@ -83,15 +83,6 @@ export class CourseClass {
     return this._id.toHexString();
   }
 }
-
-export var Course = getModelForClass(CourseClass, {
-  schemaOptions: {
-    timestamps: true,
-    toJSON: { virtuals: true },
-    typeKey: "type",
-  },
-  options: { allowMixed: Severity.ALLOW, customName: "-course" },
-});
 
 export class GroupClass {
   @prop({

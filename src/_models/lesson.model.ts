@@ -1,11 +1,24 @@
-import { getModelForClass, prop, Severity } from "@typegoose/typegoose";
 import { SchemaTypes, Types } from "mongoose";
+
+import { prop, Ref } from "@typegoose/typegoose";
+
 import { AttachmentClass } from "./attachment.model";
 import { ContentClass } from "./content.model";
+import { CourseClass } from "./course.model";
 import { ImageClass } from "./image.model";
 import { QnaClass } from "./qna.model";
+import { UserClass } from "./user.model";
 
 export class LessonClass {
+  @prop({ ref: () => CourseClass, required: true })
+  course: Ref<CourseClass>;
+
+  @prop({ type: () => SchemaTypes.ObjectId, required: true })
+  group: Types.ObjectId;
+
+  @prop({ type: SchemaTypes.Array, ref: () => UserClass, required: true })
+  instructors: Ref<UserClass>[];
+
   @prop({ type: SchemaTypes.String, trim: true })
   emoji?: string;
 
@@ -46,12 +59,3 @@ export class LessonClass {
     return this._id.toHexString();
   }
 }
-
-export var Lesson = getModelForClass(LessonClass, {
-  schemaOptions: {
-    timestamps: true,
-    toJSON: { virtuals: true },
-    typeKey: "type",
-  },
-  options: { allowMixed: Severity.ALLOW, customName: "-lesson" },
-});

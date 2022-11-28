@@ -2,8 +2,7 @@ import { Request, Response } from "express";
 import { UploadedFile } from "express-fileupload";
 import mongoose, { startSession } from "mongoose";
 
-import { Course } from "../_models/course.model";
-import { Lesson } from "../_models/lesson.model";
+import { Course, Lesson } from "../_models";
 import * as z from "../_schema/course.schema";
 import { CourseStage, generateContentBlock, removeLessonVideo, updateContentBlock, updateCourseCoverImage, uploadLessonVideo } from "../_utils/course.util";
 import { UserRole } from "../_utils/user.util";
@@ -305,7 +304,11 @@ export async function createLessonController(
   if (!course) return res.status(404).json({ message: "Course not found" });
 
   // Create a lesson and add it to the respective group
-  var lesson = new Lesson();
+  var lesson = new Lesson({
+    instructors: [req.user._id],
+    group: new mongoose.Types.ObjectId(req.params.groupId),
+    course: course._id,
+  });
   var groupdIdx = course.groups.findIndex((g) => g._id == req.params.groupId);
   var group = course.groups[groupdIdx];
   group.lessons.push(lesson._id);
@@ -326,20 +329,25 @@ export async function createLessonController(
   }
 
   session.endSession();
-  return res.status(201).json({ lesson, course });
+  return res.status(201).json(lesson);
 }
 
 /**
- * Update a lesson settings
- *
+ * Update lesson settings
  * @route PUT /api/course/:courseId/group/:groupId/lesson/:lessonId/settings
- *
+ * @remark Mongoose omits fields that are not defined in the schema, so it's ok to pass req.body directly
  * @remark Fields that can be updated are:
  * - title
  * - emoji
  * - free
  *
- * @remark Middlewares used:
+ * @remark With the query for the course it is checked whether the lesson is part
+ * of the group which whether the part of the course of which the user is the owner
+ *
+ * @remark `$and` of query does not work in checking whether the course belongs to that
+ * group OR not. So therefore two queries are used for getting the lesson
+ *
+ * Middlewares used:
  * - verifyAuth
  */
 export async function updateLessonSettingsController(
@@ -350,34 +358,64 @@ export async function updateLessonSettingsController(
   >,
   res: Response
 ) {
-  var user = req.user;
-  var course = await Course.findOne({
-    _id: req.params.courseId,
-    instructors: user._id,
-  });
-
-  if (!course) {
-    return res.status(403).json({ message: "Forbidden" });
-  }
-
   var lesson = await Lesson.findOneAndUpdate(
-    { _id: req.params.lessonId },
+    {
+      _id: req.params.lessonId,
+      group: new mongoose.Types.ObjectId(req.params.groupId),
+      course: new mongoose.Types.ObjectId(req.params.courseId),
+      instructors: req.user._id,
+    },
     {
       $set: {
         emoji: req.body.emoji,
         title: req.body.title,
+        free: req.body.free,
         lastEditedOn: new Date(Date.now()),
       },
     },
-    { new: true, fields: "-__v" }
+    { new: true }
   );
 
-  if (!lesson) {
-    return res.status(403).json({ message: "Forbidden" });
-  }
-
-  return res.status(200).json({ message: "Lesson updated successfully" });
+  if (!lesson) return res.status(404).json({ message: "Lesson not found" });
+  return res.status(200).json(lesson);
 }
+
+// export async function updateLessonSettingsController(
+//   req: Request<
+//     z.UpdateLessonSettings["params"],
+//     {},
+//     z.UpdateLessonSettings["body"]
+//   >,
+//   res: Response
+// ) {
+//   var user = req.user;
+//   var course = await Course.findOne({
+//     _id: req.params.courseId,
+//     instructors: user._id,
+//   });
+
+//   if (!course) {
+//     return res.status(403).json({ message: "Forbidden" });
+//   }
+
+//   var lesson = await Lesson.findOneAndUpdate(
+//     { _id: req.params.lessonId },
+//     {
+//       $set: {
+//         emoji: req.body.emoji,
+//         title: req.body.title,
+//         lastEditedOn: new Date(Date.now()),
+//       },
+//     },
+//     { new: true, fields: "-__v" }
+//   );
+
+//   if (!lesson) {
+//     return res.status(403).json({ message: "Forbidden" });
+//   }
+
+//   return res.status(200).json({ message: "Lesson updated successfully" });
+// }
 
 /**
  * Upload a lesson video
