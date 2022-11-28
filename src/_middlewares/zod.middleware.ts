@@ -44,7 +44,7 @@ export function validateResource(schema: AnyZodObject) {
         return res.status(400).json({
           message: "Missing OR invalid fields",
           errors: error.errors.map(function parseError(err) {
-            return { field: err.path[1], msg: err.message };
+            return { field: err.path[1], message: err.message };
           }),
         });
       }

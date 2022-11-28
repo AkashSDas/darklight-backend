@@ -37,6 +37,7 @@ export async function createCourseController(req: Request, res: Response) {
  * Update course settings
  * @route PUT /api/course/:courseId/settings
  * @remark Verification of course ownership is done by the query for getting the course
+ * @remark Mongoose omits fields that are not defined in the schema, so it's ok to pass req.body directly
  * @remark Settings that are updated are:
  * - emoji
  * - title

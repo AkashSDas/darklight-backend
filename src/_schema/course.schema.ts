@@ -24,16 +24,47 @@ export var courseSettingsSchema = z.object({
     emoji: z.string().optional(),
     title: z.string().max(120, "Too long").optional(),
     description: z.string().max(120, "Too long").optional(),
-    stage: z.nativeEnum(CourseStage).optional(),
+    stage: z
+      .nativeEnum(CourseStage, {
+        errorMap: (issue, _ctx) => {
+          switch (issue.code) {
+            case "invalid_type":
+              return { message: "Invalid" };
+            case "invalid_enum_value":
+              return { message: "Invalid" };
+            default:
+              return { message: "Invalid" };
+          }
+        },
+      })
+      .optional(),
     price: z.number().min(0, "Too low").optional(),
-    difficulty: z.nativeEnum(CourseDifficulty).optional(),
-    tags: z.array(z.string().max(32, "Too long")).optional(),
+    difficulty: z
+      .nativeEnum(CourseDifficulty, {
+        errorMap: (issue, _ctx) => {
+          switch (issue.code) {
+            case "invalid_type":
+              return { message: "Invalid" };
+            case "invalid_enum_value":
+              return { message: "Invalid" };
+            default:
+              return { message: "Invalid" };
+          }
+        },
+      })
+      .optional(),
+    tags: z
+      .array(z.string().max(32, "Too long"), { invalid_type_error: "Invalid" })
+      .optional(),
     faqs: z
       .array(
         z.object({
-          question: z.string().max(120, "Too long"),
-          answer: z.string().max(120, "Too long"),
-        })
+          question: z
+            .string({ required_error: "Required" })
+            .max(120, "Too long"),
+          answer: z.string({ required_error: "Required" }).max(120, "Too long"),
+        }),
+        { invalid_type_error: "Invalid" }
       )
       .optional(),
   }),
