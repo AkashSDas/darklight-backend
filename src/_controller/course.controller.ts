@@ -1,10 +1,12 @@
+import cloudinary from "cloudinary";
 import { Request, Response } from "express";
 import { UploadedFile } from "express-fileupload";
 import mongoose, { startSession } from "mongoose";
 
 import { Course, Lesson } from "../_models";
 import * as z from "../_schema/course.schema";
-import { CourseStage, generateContentBlock, removeLessonVideo, updateContentBlock, updateCourseCoverImage, uploadLessonVideo } from "../_utils/course.util";
+import { LESSON_VIDEO_DIR } from "../_utils/cloudinary.util";
+import { CourseStage, generateContentBlock, removeLessonVideo, updateContentBlock, updateCourseCoverImage } from "../_utils/course.util";
 import { UserRole } from "../_utils/user.util";
 
 // ==================================
@@ -182,6 +184,8 @@ export async function addGroupController(
           _id: new mongoose.Types.ObjectId(),
           lessons: [],
           lastEditedOn: new Date(Date.now()),
+          videoDuration: 0,
+          contentDuration: 0,
         },
       },
     },
@@ -380,49 +384,13 @@ export async function updateLessonSettingsController(
   return res.status(200).json(lesson);
 }
 
-// export async function updateLessonSettingsController(
-//   req: Request<
-//     z.UpdateLessonSettings["params"],
-//     {},
-//     z.UpdateLessonSettings["body"]
-//   >,
-//   res: Response
-// ) {
-//   var user = req.user;
-//   var course = await Course.findOne({
-//     _id: req.params.courseId,
-//     instructors: user._id,
-//   });
-
-//   if (!course) {
-//     return res.status(403).json({ message: "Forbidden" });
-//   }
-
-//   var lesson = await Lesson.findOneAndUpdate(
-//     { _id: req.params.lessonId },
-//     {
-//       $set: {
-//         emoji: req.body.emoji,
-//         title: req.body.title,
-//         lastEditedOn: new Date(Date.now()),
-//       },
-//     },
-//     { new: true, fields: "-__v" }
-//   );
-
-//   if (!lesson) {
-//     return res.status(403).json({ message: "Forbidden" });
-//   }
-
-//   return res.status(200).json({ message: "Lesson updated successfully" });
-// }
-
 /**
- * Upload a lesson video
- *
+ * Upload a video for a lesson
  * @route POST /api/course/:courseId/group/:groupId/lesson/:lessonId/video
+ * @remark Cloudinary takes care of file type being video or not
+ * @remark File name is `lessonVideo`
  *
- * @remark Middlewares used:
+ * Middlewares used:
  * - verifyAuth
  */
 export async function updateLessonVideoController(
@@ -430,42 +398,55 @@ export async function updateLessonVideoController(
   res: Response
 ) {
   var file = req.files?.lessonVideo as UploadedFile;
-  if (!file) return res.status(400).json({ message: "No video file found" });
+  if (!file) return res.status(400).json({ message: "No file uploaded" });
 
-  var user = req.user;
-  var course = await Course.findOne({
-    _id: req.params.courseId,
-    instructors: user._id,
+  var lesson = await Lesson.findOne({
+    _id: req.params.lessonId,
+    group: new mongoose.Types.ObjectId(req.params.groupId),
+    course: new mongoose.Types.ObjectId(req.params.courseId),
+    instructors: req.user._id,
   });
+  if (!lesson) return res.status(404).json({ message: "Lesson not found" });
 
-  if (!course) {
-    return res.status(403).json({ message: "Forbidden" });
+  // Delete old video if it exists
+  if (lesson.video?.id) {
+    await cloudinary.v2.uploader.destroy(lesson.video.id, {
+      resource_type: "video",
+    });
   }
 
-  var lesson = await Lesson.findOne({ _id: req.params.lessonId });
-  if (!lesson) {
-    return res.status(403).json({ message: "Forbidden" });
-  }
-
-  var video = await uploadLessonVideo(file, lesson, course._id.toString());
-  lesson.video = { id: video.id, URL: video.URL };
+  // Upload new video
+  var video = await cloudinary.v2.uploader.upload(file.tempFilePath, {
+    folder: `${LESSON_VIDEO_DIR}/${lesson.course}`,
+    resource_type: "video",
+    filename_override: lesson._id.toString(),
+    image_metadata: true,
+  });
+  lesson.video = { id: video.public_id, URL: video.secure_url };
   lesson.videoDuration = video.duration;
-
-  // Updating video duration in the course
-  let idx = course.groups.findIndex((g) => {
-    if (g._id == req.params.groupId) return true;
-    return false;
-  });
-  let group = course.groups[idx];
-  group.videoDuration = group.videoDuration + video.duration;
-  course.groups[idx] = group;
+  lesson.lastEditedOn = new Date(Date.now());
 
   var session = await startSession();
   session.startTransaction();
 
   try {
-    await lesson.save({ session });
-    await course.save({ session });
+    lesson = await lesson.save({ session });
+
+    var course = await Course.findOneAndUpdate(
+      {
+        _id: new mongoose.Types.ObjectId(req.params.courseId),
+        instructors: req.user._id,
+        "groups._id": new mongoose.Types.ObjectId(req.params.groupId),
+      },
+      {
+        $set: {
+          "groups.$[].lastEditedOn": new Date(Date.now()),
+        },
+        $inc: { "groups.$[].videoDuration": video.duration },
+      },
+      { new: true, session }
+    );
+
     await session.commitTransaction();
   } catch (error) {
     await session.abortTransaction();
@@ -473,7 +454,7 @@ export async function updateLessonVideoController(
   }
 
   session.endSession();
-  return res.status(200).json({ message: "Video uploaded successfully" });
+  return res.status(200).json({ videoURL: video.secure_url, lesson, course });
 }
 
 /**
