@@ -87,6 +87,25 @@ export async function uploadLessonVideo(
   };
 }
 
+export async function deleteContentBlock(content: {
+  id: string;
+  type: ContentType;
+  data: { key: string; value: any }[];
+}) {
+  function filter(field: string) {
+    return content.data.find((d) => d.key == field)?.value ?? null;
+  }
+
+  switch (content.type) {
+    case ContentType.IMAGE: {
+      let id = filter("id");
+      if (id) await cloudinary.v2.uploader.destroy(id);
+    }
+    default:
+      break;
+  }
+}
+
 export async function updateContentBlock(
   content: {
     id: string;
@@ -104,7 +123,6 @@ export async function updateContentBlock(
   switch (content.type) {
     case ContentType.PARAGRAPH: {
       let text = filter("text");
-      console.log(text);
       return { ...content, data: [{ key: "text", value: text }] };
     }
     case ContentType.IMAGE: {

@@ -6,7 +6,7 @@ import mongoose, { startSession } from "mongoose";
 import { Course, Lesson } from "../_models";
 import * as z from "../_schema/course.schema";
 import { LESSON_VIDEO_DIR } from "../_utils/cloudinary.util";
-import { CourseStage, generateContentBlock, updateContentBlock, updateCourseCoverImage } from "../_utils/course.util";
+import { CourseStage, deleteContentBlock, generateContentBlock, updateContentBlock, updateCourseCoverImage } from "../_utils/course.util";
 import { UserRole } from "../_utils/user.util";
 
 // ==================================
@@ -625,21 +625,77 @@ export async function createContentController(
       instructors: req.user._id,
       "groups._id": new mongoose.Types.ObjectId(req.params.groupId),
     },
-    {
-      $set: {
-        "groups.$[g].lastEditedOn": new Date(Date.now()),
-      },
-    },
-    {
-      new: true,
-      arrayFilters: [
-        { "g._id": new mongoose.Types.ObjectId(req.params.groupId) },
-      ],
-    }
+    { $set: { lastEditedOn: new Date(Date.now()) } },
+    { new: true }
   );
 
   var [lesson] = await Promise.all([lesson.save(), courseQuery]);
   return res.status(200).json({ content, lesson });
+}
+
+/**
+ * Delete content of a lesson
+ * @route DELETE /api/course/:courseId/group/:groupId/lesson/:lessonId/content/:contentId
+ *
+ * @remark Body will be of shape
+ * - type of content
+ * - data of content
+ *
+ * Middlewares used:
+ * - verifyAuth
+ */
+export async function deleteContentController(
+  req: Request<z.UpdateContent["params"]>,
+  res: Response
+) {
+  if (!req.body.type)
+    return res.status(400).json({ message: "Content type not provided" });
+  if (!req.body.data)
+    return res.status(400).json({ message: "Content data not provided" });
+  if (!req.body.id)
+    return res.status(400).json({ message: "Content id not provided" });
+
+  var lesson = await Lesson.findOne({
+    _id: req.params.lessonId,
+    group: new mongoose.Types.ObjectId(req.params.groupId),
+    course: new mongoose.Types.ObjectId(req.params.courseId),
+    instructors: req.user._id,
+  });
+
+  if (!lesson) return res.status(404).json({ message: "Lesson not found" });
+
+  // Check if the content types are same OR not
+  var content = lesson.content.find((c) => c.id == req.params.contentId);
+  if (!content) return res.status(404).json({ message: "Content not found" });
+  if (req.body.type != content.type) {
+    return res.status(400).json({ message: "Content type mismatch" });
+  }
+
+  // Delete content
+  await deleteContentBlock({
+    id: content.id,
+    type: content.type,
+    data: JSON.parse(req.body.data),
+  });
+  var contentIndex = lesson.content.findIndex(
+    (c) => c.id == req.params.contentId
+  );
+  lesson.content.splice(contentIndex, 1);
+
+  // Save lesson and update course lastEditedOn
+  lesson.lastEditedOn = new Date(Date.now());
+  var courseQuery = Course.findOneAndUpdate(
+    {
+      _id: new mongoose.Types.ObjectId(req.params.courseId),
+      instructors: req.user._id,
+      "groups._id": new mongoose.Types.ObjectId(req.params.groupId),
+    },
+    { $set: { lastEditedOn: new Date(Date.now()) } },
+    { new: true }
+  );
+
+  var [lesson] = await Promise.all([lesson.save(), courseQuery]);
+  return res.status(200).json(lesson);
 }
 
 /**
@@ -705,13 +761,8 @@ export async function updateContentController(
       instructors: req.user._id,
       "groups._id": new mongoose.Types.ObjectId(req.params.groupId),
     },
-    { $set: { "groups.$[g].lastEditedOn": new Date(Date.now()) } },
-    {
-      new: true,
-      arrayFilters: [
-        { "g._id": new mongoose.Types.ObjectId(req.params.groupId) },
-      ],
-    }
+    { $set: { lastEditedOn: new Date(Date.now()) } },
+    { new: true }
   );
 
   var [lesson] = await Promise.all([lesson.save(), courseQuery]);

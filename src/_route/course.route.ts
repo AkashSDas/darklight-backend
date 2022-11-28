@@ -145,3 +145,12 @@ router.put(
   handleMiddlewareError(ctrl.updateContentController),
   sendErrorResponse
 );
+
+// Delete content
+router.delete(
+  "/:courseId/group/:groupId/lesson/:lessonId/content/:contentId",
+  validateResource(z.updateContentSchema),
+  handleMiddlewareError(verifyAuth),
+  handleMiddlewareError(ctrl.deleteContentController),
+  sendErrorResponse
+);
