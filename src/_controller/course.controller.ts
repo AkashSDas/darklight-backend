@@ -32,7 +32,6 @@ export async function createCourseController(req: Request, res: Response) {
   return res.status(201).json(course);
 }
 
-// TODO: fix setting update in the db
 /**
  * Update course settings
  * @route PUT /api/course/:courseId/settings
@@ -200,28 +199,27 @@ export async function addGroupController(
 
 /**
  * Update a group in a course
- *
  * @route PUT /api/course/:courseId/group/:groupId
- *
+ * @remark all the fields that this route updates are required even if they are not updated
+ * @remark Mongoose omits fields that are not defined in the schema, so it's ok to pass req.body directly
  * @remark Fields that can be updated are:
  * - title
  * - description
  * - emoji
  * - lastEditedOn
  *
- * @remark Middlewares used:
+ * Middlewares used:
  * - verifyAuth
  */
 export async function updateGroupController(
   req: Request<z.UpdateGroup["params"], {}, z.UpdateGroup["body"]>,
   res: Response
 ) {
-  var user = req.user;
   var course = await Course.findOneAndUpdate(
     {
       _id: req.params.courseId,
+      instructors: req.user._id,
       "groups._id": new mongoose.Types.ObjectId(req.params.groupId),
-      instructors: user._id,
     },
     {
       $set: {
@@ -231,15 +229,14 @@ export async function updateGroupController(
         "groups.$.lastEditedOn": new Date(Date.now()),
       },
     },
-    { new: true, fields: "-__v" }
+    { new: true }
   );
 
-  if (!course) {
-    return res.status(403).json({ message: "Forbidden" });
-  }
-
-  var group = course.groups.find((group) => group._id == req.params.groupId);
-  return res.status(200).json({ group });
+  if (!course) return res.status(403).json({ message: "Forbidden" });
+  var group = course.groups.find(
+    (group) => group._id.toString() == req.params.groupId
+  );
+  return res.status(200).json(group);
 }
 
 /**
