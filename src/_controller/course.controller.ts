@@ -241,37 +241,38 @@ export async function updateGroupController(
 
 /**
  * Reorder lessons in a group
- *
  * @route PUT /api/course/:courseId/group/:groupId/reorder
- *
  * @remark Lessons are directly updated without checking if they are
  * part of the group OR not. Also it is not checked if the original lessons
  * are part of the group or not. This is done to reduce the number of requests
  *
- * @remark Middlewares used:
+ * Middlewares used:
  * - verifyAuth
  */
 export async function reorderLessonsController(
   req: Request<z.ReorderLessons["params"], {}, z.ReorderLessons["body"]>,
   res: Response
 ) {
-  var user = req.user;
   var course = await Course.findOneAndUpdate(
     {
       _id: req.params.courseId,
+      instructors: req.user._id,
       "groups._id": new mongoose.Types.ObjectId(req.params.groupId),
-      instructors: user._id,
     },
-    { $set: { "groups.$.lessons": req.body.lessons } },
-    { new: true, fields: "-__v" }
+    {
+      $set: {
+        "groups.$.lessons": req.body.lessons,
+        "groups.$.lastEditedOn": new Date(Date.now()),
+      },
+    },
+    { new: true }
   );
 
-  if (!course) {
-    return res.status(403).json({ message: "Forbidden" });
-  }
-
-  var group = course.groups.find((group) => group._id == req.params.groupId);
-  return res.status(200).json({ group });
+  if (!course) return res.status(403).json({ message: "Forbidden" });
+  var group = course.groups.find(
+    (group) => group._id.toString() == req.params.groupId
+  );
+  return res.status(200).json(group);
 }
 
 // ==================================
