@@ -146,6 +146,15 @@ router.post(
   sendErrorResponse
 );
 
+// Reorder content
+router.put(
+  "/:courseId/group/:groupId/lesson/:lessonId/content/reorder",
+  validateResource(z.reorderContentSchema),
+  handleMiddlewareError(verifyAuth),
+  handleMiddlewareError(ctrl.reorderContentController),
+  sendErrorResponse
+);
+
 // Update content
 router.put(
   "/:courseId/group/:groupId/lesson/:lessonId/content/:contentId",

@@ -590,7 +590,7 @@ export async function removeLessonVideoController(
 /**
  * Move lesson from one group to another group in the same course
  * @route PUT /api/course/:courseId/group/:groupId/lesson/:lessonId/move
- * 
+ *
  * Middlewares used:
  * - verifyAuth
  */
@@ -859,4 +859,60 @@ export async function updateContentController(
 
   var [lesson] = await Promise.all([lesson.save(), courseQuery]);
   return res.status(200).json({ content: updateContent, lesson });
+}
+
+/**
+ * Reorder content of a lesson
+ * @route PUT /api/course/:courseId/group/:groupId/lesson/:lessonId/content/reorder
+ *
+ * Middlewares used:
+ * - verifyAuth
+ */
+export async function reorderContentController(
+  req: Request<z.ReorderContent["params"], {}, z.ReorderContent["body"]>,
+  res: Response
+) {
+  var lesson = await Lesson.findOne({
+    _id: req.params.lessonId,
+    group: new mongoose.Types.ObjectId(req.params.groupId),
+    course: new mongoose.Types.ObjectId(req.params.courseId),
+    instructors: req.user._id,
+  });
+
+  if (!lesson) return res.status(404).json({ message: "Lesson not found" });
+
+  // Check if all the content in the lesson are included in the request
+  {
+    let oldOrderIds = lesson.content.map((c) => c.id);
+    let newOrderIdsSet = new Set(req.body.order);
+    for (let id of oldOrderIds) {
+      if (!newOrderIdsSet.has(id)) {
+        return res.status(400).json({ message: "Content order mismatch" });
+      }
+    }
+  }
+
+  // Update content order
+  {
+    let content = [];
+    for (let i = 0; i < lesson.content.length; i++) {
+      let block = lesson.content.find((c) => c.id == req.body.order[i]);
+      content.push(block);
+    }
+    lesson.content = content;
+  }
+
+  lesson.lastEditedOn = new Date(Date.now());
+  var courseQuery = Course.findOneAndUpdate(
+    {
+      _id: new mongoose.Types.ObjectId(req.params.courseId),
+      instructors: req.user._id,
+      "groups._id": new mongoose.Types.ObjectId(req.params.groupId),
+    },
+    { $set: { lastEditedOn: new Date(Date.now()) } },
+    { new: true }
+  );
+
+  var [lesson] = await Promise.all([lesson.save(), courseQuery]);
+  return res.status(200).json(lesson);
 }
