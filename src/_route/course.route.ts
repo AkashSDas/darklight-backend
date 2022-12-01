@@ -57,6 +57,15 @@ router.get(
   sendErrorResponse
 );
 
+// Delete course
+router.delete(
+  "/:courseId",
+  validateResource(z.deleteCourseSchema),
+  handleMiddlewareError(verifyAuth),
+  handleMiddlewareError(ctrl.deleteCourseController),
+  sendErrorResponse
+);
+
 // ==================================
 // GROUP
 // ==================================

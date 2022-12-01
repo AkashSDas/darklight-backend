@@ -1,9 +1,11 @@
+import cloudinary from "cloudinary";
 import { Request, Response } from "express";
 import { UploadedFile } from "express-fileupload";
+import { startSession } from "mongoose";
 
-import { Course } from "../_models";
+import { Course, Lesson } from "../_models";
 import * as z from "../_schema/course.schema";
-import { CourseStage, updateCourseCoverImage } from "../_utils/course.util";
+import { CourseStage, deleteContentBlock, updateCourseCoverImage } from "../_utils/course.util";
 import { UserRole } from "../_utils/user.util";
 
 // ==================================
@@ -158,3 +160,59 @@ export async function getCoursesController(req: Request, res: Response) {
   });
 }
 
+export async function deleteCourseController(req: Request, res: Response) {
+  var course = await Course.findOne({
+    _id: req.params.courseId,
+    instructors: req.user._id,
+  });
+  if (!course) return res.status(404).json({ message: "Course not found" });
+  var lessons = await Lesson.find({ course: course._id });
+
+  // Delete all lessons's assets
+  {
+    let promises = [];
+    for (let i = 0; i < lessons.length; i++) {
+      let lesson = lessons[i];
+
+      // Delete video if it exists
+      if (lesson.video?.id) {
+        promises.push(cloudinary.v2.uploader.destroy(lesson.video.id, {
+          resource_type: "video",
+        }))
+      }
+
+      // Delete contents
+      for (let i = 0; i < lesson.content.length; i++) {
+        let content = lesson.content[i]
+        promises.push(deleteContentBlock({ id: content.id, type: content.type, data: content.data, }))
+      }
+
+      // Delete attachments
+      for (let i = 0; i < lesson.attachments.length; i++) {
+        let attachment = lesson.attachments[i]
+        promises.push(cloudinary.v2.uploader.destroy(attachment.id, {
+          resource_type: "raw",
+        }))
+      }
+    }
+
+    await Promise.all(promises)
+
+  }
+
+  var session = await startSession();
+  session.startTransaction();
+
+  try {
+    let lessonQuery = Lesson.deleteMany({ _id: { $in: lessons } });
+    let courseQuery = Course.deleteOne({ _id: course._id });
+    await Promise.all([lessonQuery, courseQuery]);
+    await session.commitTransaction();
+  } catch (error) {
+    await session.abortTransaction();
+    throw error;
+  }
+
+  session.endSession();
+  return res.status(200).json(course);
+}

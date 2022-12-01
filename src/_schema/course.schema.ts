@@ -78,6 +78,10 @@ export var getCourseSchema = z.object({
   params: z.object({ courseId: mongoIdSchema("courseId") }),
 });
 
+export var deleteCourseSchema = z.object({
+  params: z.object({ courseId: mongoIdSchema("courseId") }),
+});
+
 // GROUP
 
 export var addGroupSchema = z.object({
@@ -221,6 +225,7 @@ export var removeAttachmentSchema = z.object({
 export type CourseSettings = z.infer<typeof courseSettingsSchema>;
 export type UpdateCourseCover = z.infer<typeof updateCourseCoverSchema>;
 export type GetCourse = z.infer<typeof getCourseSchema>;
+export type DeleteCourse = z.infer<typeof deleteCourseSchema>;
 
 export type AddGroup = z.infer<typeof addGroupSchema>;
 export type UpdateGroup = z.infer<typeof updateGroupSchema>;
