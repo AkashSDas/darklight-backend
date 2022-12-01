@@ -1,23 +1,23 @@
+// OAuth Passport Strategies. Should come after the config() call.
+import "./passport/google-signup.strategy";
+import "./passport/google-login.strategy";
+import "./passport/facebook-signup.strategy";
+import "./passport/facebook-login.strategy";
+import "./passport/twitter-signup.strategy";
+import "./passport/twitter-login.strategy";
+
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import { config } from "dotenv";
 import express from "express";
+import fileUpload from "express-fileupload";
 import expressSession from "express-session";
 import morgan from "morgan";
 import passport from "passport";
 import swaggerUI from "swagger-ui-express";
 import YAML from "yamljs";
-import fileUpload from "express-fileupload";
 
 if (process.env.NODE_ENV != "production") config();
-
-// OAuth Passport Strategies. Should come after the config() call.
-import "./_passport/google-signup.strategy";
-import "./_passport/google-login.strategy";
-import "./_passport/facebook-signup.strategy";
-import "./_passport/facebook-login.strategy";
-import "./_passport/twitter-signup.strategy";
-import "./_passport/twitter-login.strategy";
 
 /** Express app */
 export var app = express();

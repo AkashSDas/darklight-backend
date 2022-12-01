@@ -1,6 +1,6 @@
 import { describe, expect, it, jest } from "@jest/globals";
 
-import { BaseApiError } from "../../_utils/error.util";
+import { BaseApiError } from "../../utils/error.util";
 
 describe.skip("[utils] error", () => {
   describe("[BaseApiError]", () => {

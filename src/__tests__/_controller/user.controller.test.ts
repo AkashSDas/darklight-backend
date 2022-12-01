@@ -5,8 +5,8 @@ import supertest from "supertest";
 import { afterAll, beforeAll, describe, expect, it } from "@jest/globals";
 import { DocumentType } from "@typegoose/typegoose";
 
-import User, { UserClass } from "../../_models/user.model";
 import { app } from "../../api";
+import User, { UserClass } from "../../models/user.model";
 import { userPayload } from "../payload";
 
 describe("UserController", () => {

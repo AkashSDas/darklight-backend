@@ -27,8 +27,8 @@
 
 import { DocumentType } from "@typegoose/typegoose";
 
-import { CourseClass } from "../../src/_models/course.model";
-import { UserClass } from "../../src/_models/user.model";
+import { CourseClass } from "../../src/models/course.model";
+import { UserClass } from "../../src/models/user.model";
 
 declare module "express-serve-static-core" {
   interface Request {

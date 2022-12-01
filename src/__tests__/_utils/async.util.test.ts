@@ -1,6 +1,6 @@
 import { describe, expect, it, jest } from "@jest/globals";
 
-import { handleAsync, handleMiddlewareError } from "../../_utils/async.util";
+import { handleAsync, handleMiddlewareError } from "../../utils/async.util";
 
 describe.skip("[utils] async", () => {
   describe("[handleAsync]", () => {
