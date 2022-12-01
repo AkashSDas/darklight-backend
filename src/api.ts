@@ -1,11 +1,3 @@
-// OAuth Passport Strategies. Should come after the config() call.
-import "./passport/google-signup.strategy";
-import "./passport/google-login.strategy";
-import "./passport/facebook-signup.strategy";
-import "./passport/facebook-login.strategy";
-import "./passport/twitter-signup.strategy";
-import "./passport/twitter-login.strategy";
-
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import { config } from "dotenv";
@@ -18,6 +10,14 @@ import swaggerUI from "swagger-ui-express";
 import YAML from "yamljs";
 
 if (process.env.NODE_ENV != "production") config();
+
+// OAuth Passport Strategies. Should come after the config() call.
+import "./passport/google-signup.strategy";
+import "./passport/google-login.strategy";
+import "./passport/facebook-signup.strategy";
+import "./passport/facebook-login.strategy";
+import "./passport/twitter-signup.strategy";
+import "./passport/twitter-login.strategy";
 
 /** Express app */
 export var app = express();
@@ -54,10 +54,10 @@ app.get("/api/test", function testRoute(req, res) {
 });
 
 // Version 2
-app.use("/api/v2/test", require("./_route/test.route").router);
-app.use("/api/v2/user", require("./_route/user.route").router);
-app.use("/api/v2/auth", require("./_route/auth.route").router);
-app.use("/api/v2/course", require("./_route/course.route").router);
+app.use("/api/v2/test", require("./route/test.route").router);
+app.use("/api/v2/user", require("./route/user.route").router);
+app.use("/api/v2/auth", require("./route/auth.route").router);
+app.use("/api/v2/course", require("./route/course.route").router);
 
 app.all("*", function handleRemainingRoute(req, res) {
   return res.status(404).json({
