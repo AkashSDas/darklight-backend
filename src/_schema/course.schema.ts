@@ -106,6 +106,13 @@ export var reorderLessonsSchema = z.object({
   }),
 });
 
+export var deleteGroupSchema = z.object({
+  params: z.object({
+    courseId: mongoIdSchema("courseId"),
+    groupId: mongoIdSchema("groupId"),
+  }),
+});
+
 // LESSON
 
 export var createLessonSchema = z.object({
@@ -218,6 +225,7 @@ export type GetCourse = z.infer<typeof getCourseSchema>;
 export type AddGroup = z.infer<typeof addGroupSchema>;
 export type UpdateGroup = z.infer<typeof updateGroupSchema>;
 export type ReorderLessons = z.infer<typeof reorderLessonsSchema>;
+export type DeleteGroup = z.infer<typeof deleteGroupSchema>;
 
 export type CreateLesson = z.infer<typeof createLessonSchema>;
 export type UpdateLessonSettings = z.infer<typeof updateLessonSettingsSchema>;

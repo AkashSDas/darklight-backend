@@ -88,6 +88,15 @@ router.put(
   sendErrorResponse
 );
 
+// Delete group
+router.delete(
+  "/:courseId/group/:groupId",
+  validateResource(z.deleteGroupSchema),
+  handleMiddlewareError(verifyAuth),
+  handleMiddlewareError(groupCtrl.deleteGroupController),
+  sendErrorResponse
+);
+
 // ==================================
 // LESSON
 // ==================================
