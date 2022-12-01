@@ -175,6 +175,8 @@ export var reorderContentSchema = z.object({
   }),
 });
 
+// Attachment
+
 export var addAttachmentSchema = z.object({
   params: z.object({
     courseId: mongoIdSchema("courseId"),
@@ -183,6 +185,17 @@ export var addAttachmentSchema = z.object({
   }),
   body: z.object({
     description: z.string().max(120, "Too long").optional(),
+  })
+})
+
+export var removeAttachmentSchema = z.object({
+  params: z.object({
+    courseId: mongoIdSchema("courseId"),
+    groupId: mongoIdSchema("groupId"),
+    lessonId: mongoIdSchema("lessonId"),
+  }),
+  body: z.object({
+    attachmentId: z.string({ required_error: "Required" }),
   })
 })
 
@@ -210,3 +223,4 @@ export type UpdateContent = z.infer<typeof updateContentSchema>;
 export type ReorderContent = z.infer<typeof reorderContentSchema>;
 
 export type AddAttachment = z.infer<typeof addAttachmentSchema>;
+export type RemoveAttachment = z.infer<typeof removeAttachmentSchema>;

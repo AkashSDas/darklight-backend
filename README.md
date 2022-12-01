@@ -39,3 +39,7 @@ FROM_EMAIL=
 
 FRONTEND_BASE_URL=http://localhost:3000
 ```
+
+## Todo
+
+- Add checks for cloudinary id for the delete process

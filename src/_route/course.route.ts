@@ -1,6 +1,7 @@
 import { Router } from "express";
 
 import * as ctrl from "../_controller/course.controller";
+import * as attachmentCtrl from "../_controller/lesson-attachment.controller";
 import verifyAuth from "../_middlewares/auth.middleware";
 import { validateResource } from "../_middlewares/zod.middleware";
 import * as z from "../_schema/course.schema";
@@ -182,6 +183,15 @@ router.post(
   "/:courseId/group/:groupId/lesson/:lessonId/attachment",
   validateResource(z.addAttachmentSchema),
   handleMiddlewareError(verifyAuth),
-  handleMiddlewareError(ctrl.addAttachmentController),
+  handleMiddlewareError(attachmentCtrl.addAttachmentController),
+  sendErrorResponse
+);
+
+// Remove attachment
+router.delete(
+  "/:courseId/group/:groupId/lesson/:lessonId/attachment",
+  validateResource(z.removeAttachmentSchema),
+  handleMiddlewareError(verifyAuth),
+  handleMiddlewareError(attachmentCtrl.removeAttachmentController),
   sendErrorResponse
 );
