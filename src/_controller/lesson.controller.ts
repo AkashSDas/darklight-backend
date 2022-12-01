@@ -11,6 +11,7 @@ import { Course, Lesson } from "../_models";
 import { LessonClass } from "../_models/lesson.model";
 import * as z from "../_schema/course.schema";
 import { LESSON_VIDEO_DIR } from "../_utils/cloudinary.util";
+import { deleteContentBlock } from "../_utils/course.util";
 
 // ==================================
 // LESSON CONTROLLERS
@@ -407,3 +408,90 @@ export async function moveLessonToAnotherGroupController(
     return res.status(200).json({ lesson, course });
 }
 
+/**
+ * Delete lesson from a group
+ * @route DELETE /api/course/:courseId/group/:groupId/lesson/:lessonId
+ * @remark This deletes lesson doc, video, content, attachments
+ * 
+ * Middlewares used:
+ * - verifyAuth
+ */
+export async function deleteLessonController(req: Request, res: Response) {
+    var lesson = await Lesson.findOne({
+        _id: req.params.lessonId,
+        group: new mongoose.Types.ObjectId(req.params.groupId),
+        course: new mongoose.Types.ObjectId(req.params.courseId),
+        instructors: req.user._id,
+    });
+    if (!lesson) return res.status(404).json({ message: "Lesson not found" });
+
+    var promises = [];
+
+    // Delete video if it exists
+    if (lesson.video?.id) {
+        promises.push(cloudinary.v2.uploader.destroy(lesson.video.id, {
+            resource_type: "video",
+        }))
+    }
+
+    // Delete contents
+    for (let i = 0; i < lesson.content.length; i++) {
+        let content = lesson.content[i]
+        promises.push(deleteContentBlock({ id: content.id, type: content.type, data: content.data, }))
+    }
+
+    // Delete attachments
+    for (let i = 0; i < lesson.attachments.length; i++) {
+        let attachment = lesson.attachments[i]
+        promises.push(cloudinary.v2.uploader.destroy(attachment.id, {
+            resource_type: "raw",
+        }))
+    }
+
+    await Promise.all(promises)
+
+    var session = await startSession();
+    session.startTransaction();
+
+    try {
+        let lessonQuery = lesson.deleteOne({ session });
+        let courseQuery = Course.findOneAndUpdate(
+            {
+                _id: new mongoose.Types.ObjectId(req.params.courseId),
+                instructors: req.user._id,
+                "groups._id": new mongoose.Types.ObjectId(req.params.groupId),
+            },
+            {
+                $set: {
+                    "groups.$[g].lastEditedOn": new Date(Date.now()),
+                    lastEditedOn: new Date(Date.now()),
+                },
+                $inc: { "groups.$[g].videoDuration": -lesson.videoDuration },
+                $pull: {
+                    "groups.$[g].lessons": new mongoose.Types.ObjectId(
+                        req.params.lessonId
+                    ),
+                },
+            },
+            {
+                new: true,
+                arrayFilters: [
+                    { "g._id": new mongoose.Types.ObjectId(req.params.groupId) },
+                ],
+                session,
+
+            }
+
+        );
+
+        var [_, course] = await Promise.all([lessonQuery, courseQuery]);
+        await session.commitTransaction();
+    } catch (error) {
+        await session.abortTransaction();
+        throw error;
+    }
+
+    session.endSession();
+
+    return res.status(200).json({ lesson, course });
+}

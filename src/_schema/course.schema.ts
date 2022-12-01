@@ -145,6 +145,14 @@ export var moveLessonToAnotherGroupSchema = z.object({
   body: z.object({ newGroupId: mongoIdSchema("newGroupId") }),
 });
 
+export var deleteLessonSchema = z.object({
+  params: z.object({
+    courseId: mongoIdSchema("courseId"),
+    groupId: mongoIdSchema("groupId"),
+    lessonId: mongoIdSchema("lessonId"),
+  }),
+})
+
 // CONTENT
 
 export var createContentSchema = z.object({
@@ -217,6 +225,7 @@ export type UpdateLessonVideo = z.infer<typeof updateLessonVideoSchema>;
 export type MoveLessonToAnotherGroup = z.infer<
   typeof moveLessonToAnotherGroupSchema
 >;
+export type DeleteLesson = z.infer<typeof deleteLessonSchema>;
 
 export type CreateContent = z.infer<typeof createContentSchema>;
 export type UpdateContent = z.infer<typeof updateContentSchema>;

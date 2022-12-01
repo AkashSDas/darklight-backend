@@ -137,6 +137,15 @@ router.put(
   sendErrorResponse
 );
 
+// Delete lesson
+router.delete(
+  "/:courseId/group/:groupId/lesson/:lessonId",
+  validateResource(z.deleteLessonSchema),
+  handleMiddlewareError(verifyAuth),
+  handleMiddlewareError(lessonCtrl.deleteLessonController),
+  sendErrorResponse
+);
+
 // ==================================
 // CONTENT
 // ==================================
