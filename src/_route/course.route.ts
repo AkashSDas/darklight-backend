@@ -1,7 +1,10 @@
 import { Router } from "express";
 
 import * as ctrl from "../_controller/course.controller";
-import * as attachmentCtrl from "../_controller/lesson-attachment.controller";
+import * as groupCtrl from "../_controller/group.controller";
+import * as lessonAttachmentCtrl from "../_controller/lesson-attachment.controller";
+import * as lessonContentCtrl from "../_controller/lesson-content.controller";
+import * as lessonCtrl from "../_controller/lesson.controller";
 import verifyAuth from "../_middlewares/auth.middleware";
 import { validateResource } from "../_middlewares/zod.middleware";
 import * as z from "../_schema/course.schema";
@@ -63,7 +66,7 @@ router.post(
   "/:courseId/group",
   validateResource(z.addGroupSchema),
   handleMiddlewareError(verifyAuth),
-  handleMiddlewareError(ctrl.addGroupController),
+  handleMiddlewareError(groupCtrl.addGroupController),
   sendErrorResponse
 );
 
@@ -72,7 +75,7 @@ router.put(
   "/:courseId/group/:groupId",
   validateResource(z.updateGroupSchema),
   handleMiddlewareError(verifyAuth),
-  handleMiddlewareError(ctrl.updateGroupController),
+  handleMiddlewareError(groupCtrl.updateGroupController),
   sendErrorResponse
 );
 
@@ -81,7 +84,7 @@ router.put(
   "/:courseId/group/:groupId/reorder",
   validateResource(z.reorderLessonsSchema),
   handleMiddlewareError(verifyAuth),
-  handleMiddlewareError(ctrl.reorderLessonsController),
+  handleMiddlewareError(groupCtrl.reorderLessonsController),
   sendErrorResponse
 );
 
@@ -94,7 +97,7 @@ router.post(
   "/:courseId/group/:groupId/lesson",
   validateResource(z.createLessonSchema),
   handleMiddlewareError(verifyAuth),
-  handleMiddlewareError(ctrl.createLessonController),
+  handleMiddlewareError(lessonCtrl.createLessonController),
   sendErrorResponse
 );
 
@@ -103,7 +106,7 @@ router.put(
   "/:courseId/group/:groupId/lesson/:lessonId/settings",
   validateResource(z.updateLessonSettingsSchema),
   handleMiddlewareError(verifyAuth),
-  handleMiddlewareError(ctrl.updateLessonSettingsController),
+  handleMiddlewareError(lessonCtrl.updateLessonSettingsController),
   sendErrorResponse
 );
 
@@ -112,7 +115,7 @@ router.post(
   "/:courseId/group/:groupId/lesson/:lessonId/video",
   validateResource(z.updateLessonVideoSchema),
   handleMiddlewareError(verifyAuth),
-  handleMiddlewareError(ctrl.updateLessonVideoController),
+  handleMiddlewareError(lessonCtrl.updateLessonVideoController),
   sendErrorResponse
 );
 
@@ -121,7 +124,7 @@ router.delete(
   "/:courseId/group/:groupId/lesson/:lessonId/video",
   validateResource(z.updateLessonVideoSchema),
   handleMiddlewareError(verifyAuth),
-  handleMiddlewareError(ctrl.removeLessonVideoController),
+  handleMiddlewareError(lessonCtrl.removeLessonVideoController),
   sendErrorResponse
 );
 
@@ -130,7 +133,7 @@ router.put(
   "/:courseId/group/:groupId/lesson/:lessonId/move",
   validateResource(z.moveLessonToAnotherGroupSchema),
   handleMiddlewareError(verifyAuth),
-  handleMiddlewareError(ctrl.moveLessonToAnotherGroupController),
+  handleMiddlewareError(lessonCtrl.moveLessonToAnotherGroupController),
   sendErrorResponse
 );
 
@@ -143,7 +146,7 @@ router.post(
   "/:courseId/group/:groupId/lesson/:lessonId/content",
   validateResource(z.createContentSchema),
   handleMiddlewareError(verifyAuth),
-  handleMiddlewareError(ctrl.createContentController),
+  handleMiddlewareError(lessonContentCtrl.createContentController),
   sendErrorResponse
 );
 
@@ -152,7 +155,7 @@ router.put(
   "/:courseId/group/:groupId/lesson/:lessonId/content/reorder",
   validateResource(z.reorderContentSchema),
   handleMiddlewareError(verifyAuth),
-  handleMiddlewareError(ctrl.reorderContentController),
+  handleMiddlewareError(lessonContentCtrl.reorderContentController),
   sendErrorResponse
 );
 
@@ -161,7 +164,7 @@ router.put(
   "/:courseId/group/:groupId/lesson/:lessonId/content/:contentId",
   validateResource(z.updateContentSchema),
   handleMiddlewareError(verifyAuth),
-  handleMiddlewareError(ctrl.updateContentController),
+  handleMiddlewareError(lessonContentCtrl.updateContentController),
   sendErrorResponse
 );
 
@@ -170,7 +173,7 @@ router.delete(
   "/:courseId/group/:groupId/lesson/:lessonId/content/:contentId",
   validateResource(z.updateContentSchema),
   handleMiddlewareError(verifyAuth),
-  handleMiddlewareError(ctrl.deleteContentController),
+  handleMiddlewareError(lessonContentCtrl.deleteContentController),
   sendErrorResponse
 );
 
@@ -183,7 +186,7 @@ router.post(
   "/:courseId/group/:groupId/lesson/:lessonId/attachment",
   validateResource(z.addAttachmentSchema),
   handleMiddlewareError(verifyAuth),
-  handleMiddlewareError(attachmentCtrl.addAttachmentController),
+  handleMiddlewareError(lessonAttachmentCtrl.addAttachmentController),
   sendErrorResponse
 );
 
@@ -192,6 +195,6 @@ router.delete(
   "/:courseId/group/:groupId/lesson/:lessonId/attachment",
   validateResource(z.removeAttachmentSchema),
   handleMiddlewareError(verifyAuth),
-  handleMiddlewareError(attachmentCtrl.removeAttachmentController),
+  handleMiddlewareError(lessonAttachmentCtrl.removeAttachmentController),
   sendErrorResponse
 );
