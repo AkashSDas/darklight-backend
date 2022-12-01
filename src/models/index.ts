@@ -13,7 +13,7 @@ export var Course = getModelForClass(CourseClass, {
     toJSON: { virtuals: true },
     typeKey: "type",
   },
-  options: { allowMixed: Severity.ALLOW, customName: "-course" },
+  options: { allowMixed: Severity.ALLOW, customName: "course" },
 });
 
 export var Lesson = getModelForClass(LessonClass, {
@@ -22,5 +22,5 @@ export var Lesson = getModelForClass(LessonClass, {
     toJSON: { virtuals: true },
     typeKey: "type",
   },
-  options: { allowMixed: Severity.ALLOW, customName: "-lesson" },
+  options: { allowMixed: Severity.ALLOW, customName: "lesson" },
 });
