@@ -14,7 +14,7 @@ class ProgressClass {
 }
 
 @plugin(MongoPaging.mongoosePlugin, { name: "paginateEnrolledCourse" })
-export class EnrolledCourse {
+export class EnrolledCourseClass {
     @prop({ ref: () => UserClass, required: true })
     user: Ref<UserClass>
 
@@ -23,9 +23,13 @@ export class EnrolledCourse {
 
     @prop({ type: SchemaTypes.Array, required: true })
     progress: ProgressClass[]
+
+
+    @prop({ type: SchemaTypes.Number, required: true, min: 0, default: 0 })
+    price: number
 }
 
-export var Course = getModelForClass(EnrolledCourse, {
+export var EnrolledCourse = getModelForClass(EnrolledCourseClass, {
     schemaOptions: {
         timestamps: true,
         toJSON: { virtuals: true },
