@@ -172,3 +172,16 @@ router.delete(
   handleMiddlewareError(ctrl.deleteContentController),
   sendErrorResponse
 );
+
+// ==================================
+// ATTACHMENT
+// ==================================
+
+// Add attachment
+router.post(
+  "/:courseId/group/:groupId/lesson/:lessonId/attachment",
+  validateResource(z.addAttachmentSchema),
+  handleMiddlewareError(verifyAuth),
+  handleMiddlewareError(ctrl.addAttachmentController),
+  sendErrorResponse
+);

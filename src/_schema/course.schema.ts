@@ -175,6 +175,17 @@ export var reorderContentSchema = z.object({
   }),
 });
 
+export var addAttachmentSchema = z.object({
+  params: z.object({
+    courseId: mongoIdSchema("courseId"),
+    groupId: mongoIdSchema("groupId"),
+    lessonId: mongoIdSchema("lessonId"),
+  }),
+  body: z.object({
+    description: z.string().max(120, "Too long").optional(),
+  })
+})
+
 // =========================
 // TYPES
 // =========================
@@ -197,3 +208,5 @@ export type MoveLessonToAnotherGroup = z.infer<
 export type CreateContent = z.infer<typeof createContentSchema>;
 export type UpdateContent = z.infer<typeof updateContentSchema>;
 export type ReorderContent = z.infer<typeof reorderContentSchema>;
+
+export type AddAttachment = z.infer<typeof addAttachmentSchema>;

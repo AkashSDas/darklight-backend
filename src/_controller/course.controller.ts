@@ -8,7 +8,7 @@ import { DocumentType } from "@typegoose/typegoose";
 import { Course, Lesson } from "../_models";
 import { LessonClass } from "../_models/lesson.model";
 import * as z from "../_schema/course.schema";
-import { LESSON_VIDEO_DIR } from "../_utils/cloudinary.util";
+import { LESSON_ATTACHMENT, LESSON_VIDEO_DIR } from "../_utils/cloudinary.util";
 import { CourseStage, deleteContentBlock, generateContentBlock, updateContentBlock, updateCourseCoverImage } from "../_utils/course.util";
 import { UserRole } from "../_utils/user.util";
 
@@ -516,7 +516,7 @@ export async function updateLessonVideoController(
   session.endSession();
   return res.status(200).json({ videoURL: video.secure_url, lesson, course });
 }
-// videoURL: video.secure_url
+
 /**
  * Remove lesson video
  * @route DELETE /api/course/:courseId/group/:groupId/lesson/:lessonId/video
@@ -915,4 +915,61 @@ export async function reorderContentController(
 
   var [lesson] = await Promise.all([lesson.save(), courseQuery]);
   return res.status(200).json(lesson);
+}
+
+// ==================================
+// ATTACHEMENT CONTROLLERS
+// ==================================
+
+// TODO: This should not save images OR videos, only documents
+/**
+ * Add an attachment to a lesson
+ * @route POST /api/course/:courseId/group/:groupId/lesson/:lessonId/attachment
+ * @remark attachment files will in `req.files.attachment`
+ * @remark This will upload only one attachemnt at a time
+ *
+ * Middlewares used:
+ * - verifyAuth
+ */
+export async function addAttachmentController(req: Request, res: Response) {
+  var file = req.files?.attachment as UploadedFile;
+  if (!file) {
+    return res.status(400).json({ message: "Attachment not provided" });
+  }
+
+  var lesson = await Lesson.findOne({
+    _id: req.params.lessonId,
+    group: new mongoose.Types.ObjectId(req.params.groupId),
+    course: new mongoose.Types.ObjectId(req.params.courseId),
+    instructors: req.user._id,
+  });
+  if (!lesson) return res.status(404).json({ message: "Lesson not found" });
+
+  var attachment = await cloudinary.v2.uploader.upload(file.tempFilePath, {
+    folder: `${LESSON_ATTACHMENT}/${lesson.course}`,
+    resource_type: "raw",
+    image_metadata: true,
+  });
+
+  lesson.attachments.push({
+    id: attachment.public_id,
+    URL: attachment.secure_url,
+    name: file.name,
+    fileType: attachment.resource_type as any,
+    description: req.body.description
+  });
+
+  lesson.lastEditedOn = new Date(Date.now());
+  var courseQuery = Course.findOneAndUpdate(
+    {
+      _id: new mongoose.Types.ObjectId(req.params.courseId),
+      instructors: req.user._id,
+      "groups._id": new mongoose.Types.ObjectId(req.params.groupId),
+    },
+    { $set: { lastEditedOn: new Date(Date.now()) } },
+    { new: true }
+  );
+
+  var [lesson] = await Promise.all([lesson.save(), courseQuery]);
+  return res.status(200).json({ attachment: lesson.attachments[lesson.attachments.length - 1] });
 }
