@@ -218,7 +218,7 @@ export async function forgotPasswordController(
   var token = user.generatePasswordResetToken();
   await user.save({ validateModifiedOnly: true });
 
-  var url = `${process.env.BASE_URL}/api/v2/auth/reset-password/${token}`;
+  var url = `${process.env.FRONTEND_BASE_URL}/auth/password-reset/${token}`;
   var opts: EmailOptions = {
     to: user.email,
     subject: "Reset your password",
