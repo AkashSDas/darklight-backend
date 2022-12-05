@@ -52,7 +52,7 @@ export async function cancelOAuthController(req: Request, res: Response) {
   var user = await User.findByIdAndDelete(req.user._id);
   if (!user) return res.status(404).json({ message: "User not found" });
 
-  if (req.logOut) req.logOut(function () { });
+  if (req.logOut) req.logOut(function () {});
   return res.status(200).json({ user });
 }
 
@@ -122,6 +122,7 @@ export async function loginController(
  */
 export async function accessTokenController(req: Request, res: Response) {
   var refreshToken = req.cookies?.refreshToken;
+  console.log(req.cookies);
   if (!refreshToken) res.status(400).json({ message: "Unauthorized" });
   else {
     try {
@@ -283,7 +284,7 @@ export async function logoutController(req: Request, res: Response) {
       // secure: process.env.NODE_ENV == "production",
     });
   } else if (req.logOut) {
-    req.logOut(function successfulOAuthLogout() { });
+    req.logOut(function successfulOAuthLogout() {});
   }
 
   return res.status(200).json({ message: "Logged out" });
