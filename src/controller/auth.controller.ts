@@ -122,7 +122,6 @@ export async function loginController(
  */
 export async function accessTokenController(req: Request, res: Response) {
   var refreshToken = req.cookies?.refreshToken;
-  console.log(req.cookies);
   if (!refreshToken) res.status(400).json({ message: "Unauthorized" });
   else {
     try {
