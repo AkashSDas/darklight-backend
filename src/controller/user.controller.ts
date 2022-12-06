@@ -1,5 +1,6 @@
 import * as cloudinary from "cloudinary";
 import { Request, Response } from "express";
+import { UploadedFile } from "express-fileupload";
 
 import User from "../models/user.model";
 import { UpdateDetails, UserExists } from "../schema/user.schema";
@@ -108,7 +109,7 @@ export async function updateProfileImageController(
   res: Response
 ) {
   var user = req.user;
-  var image = req.body.profileImage;
+  var image = req.files.profileImage;
   if (!image) return res.status(400).json({ message: "No image provided" });
 
   // Check if the image already exists
@@ -116,9 +117,10 @@ export async function updateProfileImageController(
     await cloudinary.v2.uploader.destroy(user.profileImage.id);
   }
 
-  var result = await cloudinary.v2.uploader.upload(image, {
-    folder: USER_PROFILE,
-  });
+  var result = await cloudinary.v2.uploader.upload(
+    (image as UploadedFile).tempFilePath,
+    { folder: USER_PROFILE }
+  );
   user.profileImage = { id: result.public_id, URL: result.secure_url };
   await user.save();
   return res.status(200).json({ message: "Profile image updated" });
