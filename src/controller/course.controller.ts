@@ -176,28 +176,37 @@ export async function deleteCourseController(req: Request, res: Response) {
 
       // Delete video if it exists
       if (lesson.video?.id) {
-        promises.push(cloudinary.v2.uploader.destroy(lesson.video.id, {
-          resource_type: "video",
-        }))
+        promises.push(
+          cloudinary.v2.uploader.destroy(lesson.video.id, {
+            resource_type: "video",
+          })
+        );
       }
 
       // Delete contents
       for (let i = 0; i < lesson.content.length; i++) {
-        let content = lesson.content[i]
-        promises.push(deleteContentBlock({ id: content.id, type: content.type, data: content.data, }))
+        let content = lesson.content[i];
+        promises.push(
+          deleteContentBlock({
+            id: content.id,
+            type: content.type,
+            data: content.data,
+          })
+        );
       }
 
       // Delete attachments
       for (let i = 0; i < lesson.attachments.length; i++) {
-        let attachment = lesson.attachments[i]
-        promises.push(cloudinary.v2.uploader.destroy(attachment.id, {
-          resource_type: "raw",
-        }))
+        let attachment = lesson.attachments[i];
+        promises.push(
+          cloudinary.v2.uploader.destroy(attachment.id, {
+            resource_type: "raw",
+          })
+        );
       }
     }
 
-    await Promise.all(promises)
-
+    await Promise.all(promises);
   }
 
   var session = await startSession();
@@ -214,5 +223,33 @@ export async function deleteCourseController(req: Request, res: Response) {
   }
 
   session.endSession();
+  return res.status(200).json(course);
+}
+
+/**
+ * Get editable course by id
+ * @route GET /api/course/:courseId/editable
+ * @remark Here "instructors" and "groups.lessons" are populated
+ *
+ * Middlewares used:
+ * - verifyAuth
+ */
+export async function getEditableCourseController(
+  req: Request<z.GetCourse["params"]>,
+  res: Response
+) {
+  var course = await Course.findOne({
+    _id: req.params.courseId,
+    instructors: req.user._id,
+  }).populate([
+    { path: "instructors", model: "user" },
+    {
+      path: "groups.lessons",
+      model: "lesson",
+      select: "-__v -content -video -qna -attachements",
+    },
+  ]);
+
+  if (!course) return res.status(404).json({ message: "Course not found" });
   return res.status(200).json(course);
 }

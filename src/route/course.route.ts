@@ -50,6 +50,15 @@ router.get(
   sendErrorResponse
 );
 
+// Get editable course
+router.get(
+  "/:courseId/editable",
+  validateResource(z.getCourseSchema),
+  handleMiddlewareError(verifyAuth),
+  handleMiddlewareError(ctrl.getEditableCourseController),
+  sendErrorResponse
+);
+
 // Get all courses
 router.get(
   "",
