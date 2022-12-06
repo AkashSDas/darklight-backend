@@ -33,6 +33,14 @@ router.get(
   sendErrorResponse
 );
 
+// Update details
+router.put(
+  "/details",
+  handleMiddlewareError(verifyAuth),
+  handleMiddlewareError(ctrl.updateDetailsController),
+  sendErrorResponse
+);
+
 // ==================================
 // INSTRUCTOR ROUTES
 // ==================================

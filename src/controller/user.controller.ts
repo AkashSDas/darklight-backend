@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 
 import User from "../models/user.model";
-import { UserExists } from "../schema/user.schema";
+import { UpdateDetails, UserExists } from "../schema/user.schema";
 import { UserRole } from "../utils/user.util";
 
 // ==================================
@@ -58,4 +58,38 @@ export async function instructorSignupController(req: Request, res: Response) {
   (user.roles as UserRole[]).push(UserRole.TEACHER);
   await (user as any).save();
   return res.status(200).json({ message: "Signed up as a teacher" });
+}
+
+/**
+ * Update user details
+ * @route PUT /user/details
+ *
+ * Middlewares used:
+ * - verifyAuth
+ */
+export async function updateDetailsController(
+  req: Request<{}, {}, UpdateDetails["body"]>,
+  res: Response
+) {
+  var user = req.user;
+
+  if (req.user.email != req.body.email) {
+    var emailExists = await User.exists({ email: req.body.email });
+    if (emailExists) {
+      return res.status(400).json({ message: "Email already exists" });
+    }
+  }
+
+  if (req.user.username != req.body.username) {
+    var usernameExists = await User.exists({ username: req.body.username });
+    if (usernameExists) {
+      return res.status(400).json({ message: "Username already exists" });
+    }
+  }
+
+  user.fullName = req.body.fullName;
+  user.username = req.body.username;
+  user.email = req.body.email;
+  await user.save();
+  return res.status(200).json({ message: "Details updated" });
 }
