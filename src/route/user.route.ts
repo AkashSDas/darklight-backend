@@ -3,7 +3,7 @@ import { Router } from "express";
 import * as ctrl from "../controller/user.controller";
 import verifyAuth from "../middlewares/auth.middleware";
 import { validateResource } from "../middlewares/zod.middleware";
-import { userExistsSchema } from "../schema/user.schema";
+import { updateDetailsSchema, userExistsSchema } from "../schema/user.schema";
 import { handleMiddlewareError } from "../utils/async.util";
 import { sendErrorResponse } from "../utils/error.util";
 
@@ -36,8 +36,17 @@ router.get(
 // Update details
 router.put(
   "/details",
+  validateResource(updateDetailsSchema),
   handleMiddlewareError(verifyAuth),
   handleMiddlewareError(ctrl.updateDetailsController),
+  sendErrorResponse
+);
+
+// Update profile image
+router.put(
+  "/profile-image",
+  handleMiddlewareError(verifyAuth),
+  handleMiddlewareError(ctrl.updateProfileImageController),
   sendErrorResponse
 );
 

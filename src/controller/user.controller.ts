@@ -1,7 +1,9 @@
+import * as cloudinary from "cloudinary";
 import { Request, Response } from "express";
 
 import User from "../models/user.model";
 import { UpdateDetails, UserExists } from "../schema/user.schema";
+import { USER_PROFILE } from "../utils/cloudinary.util";
 import { UserRole } from "../utils/user.util";
 
 // ==================================
@@ -92,4 +94,32 @@ export async function updateDetailsController(
   user.email = req.body.email;
   await user.save();
   return res.status(200).json({ message: "Details updated" });
+}
+
+/**
+ * Update user profile image
+ * @route PUT /user/profile-image
+ *
+ * Middlewares used:
+ * - verifyAuth
+ */
+export async function updateProfileImageController(
+  req: Request,
+  res: Response
+) {
+  var user = req.user;
+  var image = req.body.profileImage;
+  if (!image) return res.status(400).json({ message: "No image provided" });
+
+  // Check if the image already exists
+  if (user.profileImage?.id) {
+    await cloudinary.v2.uploader.destroy(user.profileImage.id);
+  }
+
+  var result = await cloudinary.v2.uploader.upload(image, {
+    folder: USER_PROFILE,
+  });
+  user.profileImage = { id: result.public_id, URL: result.secure_url };
+  await user.save();
+  return res.status(200).json({ message: "Profile image updated" });
 }
