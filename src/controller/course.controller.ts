@@ -230,18 +230,12 @@ export async function deleteCourseController(req: Request, res: Response) {
  * Get editable course by id
  * @route GET /api/course/:courseId/editable
  * @remark Here "instructors" and "groups.lessons" are populated
- *
- * Middlewares used:
- * - verifyAuth
  */
 export async function getEditableCourseController(
   req: Request<z.GetCourse["params"]>,
   res: Response
 ) {
-  var course = await Course.findOne({
-    _id: req.params.courseId,
-    instructors: req.user._id,
-  }).populate([
+  var course = await Course.findOne({ _id: req.params.courseId }).populate([
     { path: "instructors", model: "user" },
     {
       path: "groups.lessons",

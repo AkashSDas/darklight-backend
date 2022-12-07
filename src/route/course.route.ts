@@ -54,7 +54,6 @@ router.get(
 router.get(
   "/:courseId/editable",
   validateResource(z.getCourseSchema),
-  handleMiddlewareError(verifyAuth),
   handleMiddlewareError(ctrl.getEditableCourseController),
   sendErrorResponse
 );
