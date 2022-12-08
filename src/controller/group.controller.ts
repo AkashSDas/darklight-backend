@@ -18,31 +18,31 @@ import { deleteContentBlock } from "../utils/course.util";
  * - verifyAuth
  */
 export async function addGroupController(
-    req: Request<z.AddGroup["params"]>,
-    res: Response
+  req: Request<z.AddGroup["params"]>,
+  res: Response
 ) {
-    var course = await Course.findOneAndUpdate(
-        { _id: req.params.courseId, instructors: req.user._id },
-        {
-            $push: {
-                groups: {
-                    _id: new mongoose.Types.ObjectId(),
-                    lessons: [],
-                    lastEditedOn: new Date(Date.now()),
-                    videoDuration: 0,
-                    contentDuration: 0,
-                },
-            },
+  var course = await Course.findOneAndUpdate(
+    { _id: req.params.courseId, instructors: req.user._id },
+    {
+      $push: {
+        groups: {
+          _id: new mongoose.Types.ObjectId(),
+          lessons: [],
+          lastEditedOn: new Date(Date.now()),
+          videoDuration: 0,
+          contentDuration: 0,
         },
-        { new: true }
-    );
+      },
+    },
+    { new: true }
+  );
 
-    if (!course) {
-        return res.status(403).json({ message: "Forbidden" });
-    }
+  if (!course) {
+    return res.status(403).json({ message: "Forbidden" });
+  }
 
-    var group = course.groups[course.groups.length - 1];
-    return res.status(201).json({ group });
+  var group = course.groups[course.groups.length - 1];
+  return res.status(201).json({ group });
 }
 
 /**
@@ -60,31 +60,38 @@ export async function addGroupController(
  * - verifyAuth
  */
 export async function updateGroupController(
-    req: Request<z.UpdateGroup["params"], {}, z.UpdateGroup["body"]>,
-    res: Response
+  req: Request<z.UpdateGroup["params"], {}, z.UpdateGroup["body"]>,
+  res: Response
 ) {
-    var course = await Course.findOneAndUpdate(
-        {
-            _id: req.params.courseId,
-            instructors: req.user._id,
-            "groups._id": new mongoose.Types.ObjectId(req.params.groupId),
-        },
-        {
-            $set: {
-                "groups.$.emoji": req.body.emoji,
-                "groups.$.title": req.body.title,
-                "groups.$.description": req.body.description,
-                "groups.$.lastEditedOn": new Date(Date.now()),
-            },
-        },
-        { new: true }
-    );
+  var course = await Course.findOneAndUpdate(
+    {
+      _id: req.params.courseId,
+      instructors: req.user._id,
+      "groups._id": new mongoose.Types.ObjectId(req.params.groupId),
+    },
+    {
+      $set: {
+        "groups.$[g].emoji": req.body.emoji,
+        "groups.$[g].title": req.body.title,
+        "groups.$[g].description": req.body.description,
+        "groups.$[g].lastEditedOn": new Date(Date.now()),
+      },
+    },
+    {
+      new: true,
+      arrayFilters: [
+        { "g._id": new mongoose.Types.ObjectId(req.params.groupId) },
+      ],
+    }
+  );
 
-    if (!course) return res.status(403).json({ message: "Forbidden" });
-    var group = course.groups.find(
-        (group) => group._id.toString() == req.params.groupId
-    );
-    return res.status(200).json(group);
+  console.log(course);
+
+  if (!course) return res.status(403).json({ message: "Forbidden" });
+  var group = course.groups.find(
+    (group) => group._id.toString() == req.params.groupId
+  );
+  return res.status(200).json(group);
 }
 
 /**
@@ -98,93 +105,103 @@ export async function updateGroupController(
  * - verifyAuth
  */
 export async function reorderLessonsController(
-    req: Request<z.ReorderLessons["params"], {}, z.ReorderLessons["body"]>,
-    res: Response
+  req: Request<z.ReorderLessons["params"], {}, z.ReorderLessons["body"]>,
+  res: Response
 ) {
-    var course = await Course.findOneAndUpdate(
-        {
-            _id: req.params.courseId,
-            instructors: req.user._id,
-            "groups._id": new mongoose.Types.ObjectId(req.params.groupId),
-        },
-        {
-            $set: {
-                "groups.$.lessons": req.body.lessons,
-                "groups.$.lastEditedOn": new Date(Date.now()),
-            },
-        },
-        { new: true }
-    );
+  var course = await Course.findOneAndUpdate(
+    {
+      _id: req.params.courseId,
+      instructors: req.user._id,
+      "groups._id": new mongoose.Types.ObjectId(req.params.groupId),
+    },
+    {
+      $set: {
+        "groups.$.lessons": req.body.lessons,
+        "groups.$.lastEditedOn": new Date(Date.now()),
+      },
+    },
+    { new: true }
+  );
 
-    if (!course) return res.status(403).json({ message: "Forbidden" });
-    var group = course.groups.find(
-        (group) => group._id.toString() == req.params.groupId
-    );
-    return res.status(200).json(group);
+  if (!course) return res.status(403).json({ message: "Forbidden" });
+  var group = course.groups.find(
+    (group) => group._id.toString() == req.params.groupId
+  );
+  return res.status(200).json(group);
 }
-
 
 export async function deleteGroupController(req: Request, res: Response) {
-    var course = await Course.findOne({
-        _id: req.params.courseId, instructors: req.user._id,
-    })
-    if (!course) return res.status(404).json({ message: "Course not found" })
-    var group = course.groups.find(group => group._id.toString() == req.params.groupId)
-    if (!group) return res.status(404).json({ message: "Group not found" })
+  var course = await Course.findOne({
+    _id: req.params.courseId,
+    instructors: req.user._id,
+  });
+  if (!course) return res.status(404).json({ message: "Course not found" });
+  var group = course.groups.find(
+    (group) => group._id.toString() == req.params.groupId
+  );
+  if (!group) return res.status(404).json({ message: "Group not found" });
 
-    // Remove group from course
-    var index = course.groups.indexOf(group)
-    course.groups.splice(index, 1)
-    course.lastEditedOn = new Date(Date.now())
+  // Remove group from course
+  var index = course.groups.indexOf(group);
+  course.groups.splice(index, 1);
+  course.lastEditedOn = new Date(Date.now());
 
-    // Delete all lessons in the group
-    {
-        let lessonIds = group.lessons.map(lesson => lesson._id)
-        var lessons = await Lesson.find({ _id: { $in: lessonIds } })
-        let promises = [];
-        for (let i = 0; i < lessons.length; i++) {
-            let lesson = lessons[i];
+  // Delete all lessons in the group
+  {
+    let lessonIds = group.lessons.map((lesson) => lesson._id);
+    var lessons = await Lesson.find({ _id: { $in: lessonIds } });
+    let promises = [];
+    for (let i = 0; i < lessons.length; i++) {
+      let lesson = lessons[i];
 
-            // Delete video if it exists
-            if (lesson.video?.id) {
-                promises.push(cloudinary.v2.uploader.destroy(lesson.video.id, {
-                    resource_type: "video",
-                }))
-            }
+      // Delete video if it exists
+      if (lesson.video?.id) {
+        promises.push(
+          cloudinary.v2.uploader.destroy(lesson.video.id, {
+            resource_type: "video",
+          })
+        );
+      }
 
-            // Delete contents
-            for (let i = 0; i < lesson.content.length; i++) {
-                let content = lesson.content[i]
-                promises.push(deleteContentBlock({ id: content.id, type: content.type, data: content.data, }))
-            }
+      // Delete contents
+      for (let i = 0; i < lesson.content.length; i++) {
+        let content = lesson.content[i];
+        promises.push(
+          deleteContentBlock({
+            id: content.id,
+            type: content.type,
+            data: content.data,
+          })
+        );
+      }
 
-            // Delete attachments
-            for (let i = 0; i < lesson.attachments.length; i++) {
-                let attachment = lesson.attachments[i]
-                promises.push(cloudinary.v2.uploader.destroy(attachment.id, {
-                    resource_type: "raw",
-                }))
-            }
-        }
-
-        await Promise.all(promises)
+      // Delete attachments
+      for (let i = 0; i < lesson.attachments.length; i++) {
+        let attachment = lesson.attachments[i];
+        promises.push(
+          cloudinary.v2.uploader.destroy(attachment.id, {
+            resource_type: "raw",
+          })
+        );
+      }
     }
 
-    var session = await startSession();
-    session.startTransaction();
+    await Promise.all(promises);
+  }
 
+  var session = await startSession();
+  session.startTransaction();
 
-    try {
-        let lessonQuery = Lesson.deleteMany({ _id: { $in: lessons } });
-        await Promise.all([lessonQuery, course.save({ session })]);
-        await session.commitTransaction();
-    } catch (error) {
-        await session.abortTransaction();
-        throw error;
-    }
+  try {
+    let lessonQuery = Lesson.deleteMany({ _id: { $in: lessons } });
+    await Promise.all([lessonQuery, course.save({ session })]);
+    await session.commitTransaction();
+  } catch (error) {
+    await session.abortTransaction();
+    throw error;
+  }
 
-    session.endSession();
+  session.endSession();
 
-    return res.status(200).json({ message: "Group deleted" });
+  return res.status(200).json({ message: "Group deleted" });
 }
-
