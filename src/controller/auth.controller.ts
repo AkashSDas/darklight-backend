@@ -134,6 +134,10 @@ export async function accessTokenController(req: Request, res: Response) {
         ) {
           if (err instanceof jwt.TokenExpiredError) {
             return res.status(401).json({ message: "Token has expired" });
+          } else if (err instanceof jwt.JsonWebTokenError) {
+            return res.status(401).json({ message: "Invalid token" });
+          } else if (err) {
+            return res.status(401).json({ message: "Unauthorized" });
           }
 
           var user = await User.findById((decoded as any)._id);
