@@ -16,7 +16,9 @@ async function verify(
   next: any
 ) {
   var { email, id, name, picture } = profile._json;
-  var user = await getUserService({ email: email });
+  var user = await getUserService({
+    oauthProviders: { $elemMatch: { id, provider: OAuthProvider.FACEBOOK } },
+  });
   if (user) return next(null, user); // login the user
 
   // Signup the user
