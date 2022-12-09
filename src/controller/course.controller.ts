@@ -247,3 +247,24 @@ export async function getEditableCourseController(
   if (!course) return res.status(404).json({ message: "Course not found" });
   return res.status(200).json(course);
 }
+
+// TODO: add validations
+/**
+ * Reorder groups
+ * @route POST /api/course/:courseId/reorder
+ *
+ * Middlewares used
+ * - verify auth
+ */
+export async function reorderGroupsController(req: Request, res: Response) {
+  var course = await Course.findOne({
+    _id: req.params.courseId,
+    instructors: req.user._id,
+  });
+  if (!course) return res.status(404).json({ message: "Course not found" });
+
+  var { groups } = req.body;
+  course.groups = groups;
+  await course.save();
+  return res.status(200).json({ course });
+}

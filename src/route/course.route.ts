@@ -42,6 +42,14 @@ router.put(
   sendErrorResponse
 );
 
+// Reorder groups
+router.put(
+  "/:courseId/reorder",
+  handleMiddlewareError(verifyAuth),
+  handleMiddlewareError(ctrl.reorderGroupsController),
+  sendErrorResponse
+);
+
 // Get a course
 router.get(
   "/:courseId",
