@@ -126,6 +126,14 @@ router.delete(
 // LESSON
 // ==================================
 
+// Get lesson
+router.get(
+  "/:courseId/group/:groupId/lesson/:lessonId",
+  handleMiddlewareError(verifyAuth),
+  handleMiddlewareError(lessonCtrl.getLessonController),
+  sendErrorResponse
+);
+
 // Add lesson
 router.post(
   "/:courseId/group/:groupId/lesson",
