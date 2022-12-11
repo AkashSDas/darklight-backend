@@ -84,9 +84,9 @@ router.delete(
 
 // Publish course
 router.put(
-  "/:courseId/publish",
+  "/:courseId/status",
   handleMiddlewareError(verifyAuth),
-  handleMiddlewareError(ctrl.publishCourseController),
+  handleMiddlewareError(ctrl.updateCourseStatusController),
   sendErrorResponse
 );
 

@@ -270,21 +270,24 @@ export async function reorderGroupsController(req: Request, res: Response) {
 }
 
 // TODO: add more checks for publishing course
+// TODO: add zod validation
 /**
  * Publish course
- * @route POST /api/course/:courseId/publish
+ * @route PUT /api/course/:courseId/status
  *
  * Middlewares used
  * - verify auth
  */
-export async function publishCourseController(req: Request, res: Response) {
-  var course = await Course.findOne({
-    _id: req.params.courseId,
-    instructors: req.user._id,
-  });
-  if (!course) return res.status(404).json({ message: "Course not found" });
+export async function updateCourseStatusController(
+  req: Request,
+  res: Response
+) {
+  var course = await Course.findOneAndUpdate(
+    { _id: req.params.courseId, instructors: req.user._id },
+    { $set: { stage: req.body.stage } },
+    { new: true }
+  );
 
-  course.stage = CourseStage.PUBLISHED;
-  await course.save();
+  if (!course) return res.status(404).json({ message: "Course not found" });
   return res.status(200).json({ course });
 }
