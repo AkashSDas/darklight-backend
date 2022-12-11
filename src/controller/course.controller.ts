@@ -268,3 +268,23 @@ export async function reorderGroupsController(req: Request, res: Response) {
   await course.save();
   return res.status(200).json({ course });
 }
+
+// TODO: add more checks for publishing course
+/**
+ * Publish course
+ * @route POST /api/course/:courseId/publish
+ *
+ * Middlewares used
+ * - verify auth
+ */
+export async function publishCourseController(req: Request, res: Response) {
+  var course = await Course.findOne({
+    _id: req.params.courseId,
+    instructors: req.user._id,
+  });
+  if (!course) return res.status(404).json({ message: "Course not found" });
+
+  course.stage = CourseStage.PUBLISHED;
+  await course.save();
+  return res.status(200).json({ course });
+}

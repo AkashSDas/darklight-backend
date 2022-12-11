@@ -82,6 +82,14 @@ router.delete(
   sendErrorResponse
 );
 
+// Publish course
+router.put(
+  "/:courseId/publish",
+  handleMiddlewareError(verifyAuth),
+  handleMiddlewareError(ctrl.publishCourseController),
+  sendErrorResponse
+);
+
 // ==================================
 // GROUP
 // ==================================
