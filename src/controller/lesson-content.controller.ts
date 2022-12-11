@@ -138,8 +138,6 @@ export async function updateContentController(
     return res.status(400).json({ message: "Content type not provided" });
   if (!req.body.data)
     return res.status(400).json({ message: "Content data not provided" });
-  if (!req.body.id)
-    return res.status(400).json({ message: "Content id not provided" });
 
   var lesson = await Lesson.findOne({
     _id: req.params.lessonId,
@@ -158,7 +156,8 @@ export async function updateContentController(
   }
 
   // Update content
-  var bodyData = JSON.parse(req.body.data);
+  if (req.body.type == "image") var bodyData = JSON.parse(req.body.data);
+  else var bodyData = req.body.data;
   var updateContent = await updateContentBlock(
     {
       id: content.id,
