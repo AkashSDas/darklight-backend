@@ -109,13 +109,13 @@ export async function getCourseController(
   var course = await Course.findById(req.params.courseId).populate([
     {
       path: "instructors",
-      model: "-user",
+      model: "user",
       select:
         "-__v -oauthProviders -createdAt -updatedAt -verified -active -roles +profileImage",
     },
     {
       path: "groups.lessons",
-      model: "-lesson",
+      model: "lesson",
       select: "-__v -content -video -qna -attachements",
     },
   ]);
