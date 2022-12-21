@@ -35,7 +35,7 @@ class OAuthProviderClass {
     if (this.isModified("email")) query.push({ email: this.email });
     if (this.isModified("username")) query.push({ username: this.username });
     let exists = await User.exists({ $or: query });
-    if (exists?._id && this._id != exists._id) {
+    if (exists?._id && !exists._id.equals(this._id)) {
       return next(new Error("Duplicate"));
     }
   }
@@ -58,6 +58,7 @@ class OAuthProviderClass {
   async function preFindOneAndUpdateHook(next) {
     var user = this.getQuery();
     var update = this.getUpdate() as any;
+    console.log(user, update);
 
     // If password is modified then hash it
     if (update.password) {
@@ -70,7 +71,8 @@ class OAuthProviderClass {
       if (update.email) query.push({ email: update.email });
       if (update.username) query.push({ username: update.username });
       let exists = await User.exists({ $or: query });
-      if (exists?._id && user._id != exists._id) {
+
+      if (exists?._id && !exists._id.equals(user._id)) {
         return next(new Error("Duplicate"));
       }
     }
