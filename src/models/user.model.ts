@@ -53,6 +53,45 @@ class OAuthProviderClass {
 
   return next();
 })
+@pre<UserClass>(
+  "findOneAndUpdate",
+  async function preFindOneAndUpdateHook(next) {
+    var user = this.getQuery();
+    var update = this.getUpdate() as any;
+
+    // If password is modified then hash it
+    if (update.password) {
+      update.password = await bcrypt.hash(update.password, 12);
+    }
+
+    // Validate email and username uniqueness
+    if (update.email || update.username) {
+      let query = [];
+      if (update.email) query.push({ email: update.email });
+      if (update.username) query.push({ username: update.username });
+      let exists = await User.exists({ $or: query });
+      if (exists?._id && user._id != exists._id) {
+        return next(new Error("Duplicate"));
+      }
+    }
+
+    return next();
+  }
+)
+@post<UserClass>(
+  "findOneAndUpdate",
+  function handleDuplicateError(err, user, next) {
+    // Handle error due to violation of unique fields
+    if (err instanceof Error && err.message == "Duplicate") {
+      return next(new BaseApiError(400, "User already exists"));
+    }
+    if (err.name == "MongoError" && err.code == 11000) {
+      return next(new BaseApiError(400, "Duplicate fields"));
+    }
+
+    return next();
+  }
+)
 @modelOptions({
   schemaOptions: {
     timestamps: true,
