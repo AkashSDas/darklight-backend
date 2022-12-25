@@ -87,7 +87,7 @@ export async function updateGroupController(
 
   console.log(course);
 
-  if (!course) return res.status(403).json({ message: "Forbidden" });
+  if (!course) return res.status(404).json({ message: "Course not found" });
   var group = course.groups.find(
     (group) => group._id.toString() == req.params.groupId
   );
