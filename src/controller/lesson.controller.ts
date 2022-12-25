@@ -44,10 +44,11 @@ export async function createLessonController(
   res: Response
 ) {
   // Check if the course with the instructor along with the group exists OR not
+  console.log(req.params.groupId, req.params.courseId, req.user._id);
   var course = await Course.findOne({
-    _id: req.params.courseId,
+    _id: new mongoose.Types.ObjectId(req.params.courseId),
     instructors: req.user._id,
-    "groups._id": req.params.groupId, // Don't wrap with mongoose.Types.ObjectId since it's a string of _id
+    "groups._id": new mongoose.Types.ObjectId(req.params.groupId),
   });
 
   if (!course) return res.status(404).json({ message: "Course not found" });
