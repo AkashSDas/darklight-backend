@@ -57,7 +57,18 @@ export async function updateCourseSettingsController(
   // This check whether the course exists and whether the user is an instructor
   var course = await Course.findOneAndUpdate(
     { _id: req.params.courseId, instructors: req.user._id },
-    { $set: { ...req.body } },
+    {
+      $set: {
+        emoji: req.body.emoji,
+        title: req.body.title,
+        description: req.body.description,
+        stage: req.body.stage,
+        price: req.body.price,
+        difficulty: req.body.difficulty,
+        tags: req.body.tags,
+        faqs: req.body.faqs,
+      },
+    },
     { new: true, fields: "-__v" }
   );
 
