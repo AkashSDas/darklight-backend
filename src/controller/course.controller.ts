@@ -311,7 +311,7 @@ export async function getInstructorCoursesController(
   req: Request,
   res: Response
 ) {
-  const LIMIT = 2;
+  const LIMIT = 10;
   var next = req.query.next as string;
   var result = await (Course as any).paginateCourse({
     query: { instructors: req.user._id },
