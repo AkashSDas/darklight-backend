@@ -152,13 +152,13 @@ export async function getCoursesController(req: Request, res: Response) {
   var populatedCourses = await Course.populate(result.results, [
     {
       path: "instructors",
-      model: "-user",
+      model: "user",
       select:
         "-__v -oauthProviders -createdAt -updatedAt -verified -active -roles +profileImage",
     },
     {
       path: "groups.lessons",
-      model: "-lesson",
+      model: "lesson",
       select: "-__v -content -video -qna -attachements",
     },
   ]);
@@ -301,4 +301,43 @@ export async function updateCourseStatusController(
 
   if (!course) return res.status(404).json({ message: "Course not found" });
   return res.status(200).json({ course });
+}
+
+/**
+ * Get courses authored by the user
+ * @route GET /api/:userId/authored-courses
+ */
+export async function getInstructorCoursesController(
+  req: Request,
+  res: Response
+) {
+  const LIMIT = 2;
+  var next = req.query.next as string;
+  var result = await (Course as any).paginateCourse({
+    query: { stage: CourseStage.PUBLISHED, instructors: req.user._id },
+    limit: LIMIT,
+    paginatedField: "updatedAt",
+    next,
+  });
+
+  var populatedCourses = await Course.populate(result.results, [
+    {
+      path: "instructors",
+      model: "user",
+      select:
+        "-__v -oauthProviders -createdAt -updatedAt -verified -active -roles +profileImage",
+    },
+    {
+      path: "groups.lessons",
+      model: "lesson",
+      select: "-__v -content -video -qna -attachements",
+    },
+  ]);
+
+  return res.status(200).json({
+    courses: populatedCourses,
+    hasPrevious: result.hasPrevious,
+    hasNext: result.hasNext,
+    next: result.next,
+  });
 }

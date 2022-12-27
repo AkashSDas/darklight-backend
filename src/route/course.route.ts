@@ -90,6 +90,14 @@ router.put(
   sendErrorResponse
 );
 
+// Get all courses authored by the user
+router.get(
+  "/:userId/authored-courses",
+  handleMiddlewareError(verifyAuth),
+  handleMiddlewareError(ctrl.getInstructorCoursesController),
+  sendErrorResponse
+);
+
 // ==================================
 // GROUP
 // ==================================
