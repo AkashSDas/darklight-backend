@@ -96,7 +96,7 @@ export async function deleteContentController(
   await deleteContentBlock({
     id: content.id,
     type: content.type,
-    data: JSON.parse(req.body.data),
+    data: req.body.data,
   });
   var contentIndex = lesson.content.findIndex(
     (c) => c.id == req.params.contentId
