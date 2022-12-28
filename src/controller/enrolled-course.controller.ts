@@ -73,7 +73,13 @@ export async function getEnrolledCourseController(req: Request, res: Response) {
   var enrolledCourse = await EnrolledCourse.findOne({
     course: req.params.courseId,
     user: req.user._id,
-  }).populate([{ path: "course", model: "course" }]);
+  }).populate([
+    {
+      path: "course",
+      model: "course",
+      populate: { path: "groups.lessons", model: "lesson" },
+    },
+  ]);
 
   if (!enrolledCourse) return res.status(404).send("Course not found");
   return res.status(200).json({ course: enrolledCourse });
