@@ -61,3 +61,20 @@ export async function buyCourseController(req: Request, res: Response) {
     enrolledCourse,
   });
 }
+
+/**
+ * Get all enrolled course
+ * @route GET /api/enrolled/:courseId
+ *
+ * Middlewares used
+ * - verify auth
+ */
+export async function getEnrolledCourseController(req: Request, res: Response) {
+  var enrolledCourse = await EnrolledCourse.findOne({
+    course: req.params.courseId,
+    user: req.user._id,
+  }).populate([{ path: "course", model: "course" }]);
+
+  if (!enrolledCourse) return res.status(404).send("Course not found");
+  return res.status(200).json({ course: enrolledCourse });
+}
