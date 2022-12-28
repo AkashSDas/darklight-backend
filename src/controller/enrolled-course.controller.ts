@@ -7,7 +7,7 @@ import { EnrolledCourse } from "../models/enrolled-course.model";
 // TODO: Add payment gateway
 /**
  * Buy a course
- * @route POST /api/enrolled-course/buy/:courseId
+ * @route POST /api/enrolled/buy/:courseId
  *
  * Middlewares used
  * - verify auth
