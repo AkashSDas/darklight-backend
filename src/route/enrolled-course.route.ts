@@ -1,6 +1,6 @@
 import { Router } from "express";
 
-import { buyCourseController, getEnrolledCourseController } from "../controller/enrolled-course.controller";
+import { buyCourseController, getEnrolledCourseController, getEnrolledCoursesController } from "../controller/enrolled-course.controller";
 import verifyAuth from "../middlewares/auth.middleware";
 import { validateResource } from "../middlewares/zod.middleware";
 import { buyCourseSchema } from "../schema/enrolled-course.schema";
@@ -23,5 +23,13 @@ router.get(
   "/:courseId",
   handleMiddlewareError(verifyAuth),
   handleMiddlewareError(getEnrolledCourseController),
+  sendErrorResponse
+);
+
+// Get all enrolled courses
+router.get(
+  "/",
+  handleMiddlewareError(verifyAuth),
+  handleMiddlewareError(getEnrolledCoursesController),
   sendErrorResponse
 );

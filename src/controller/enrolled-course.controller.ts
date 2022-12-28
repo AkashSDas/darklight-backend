@@ -84,3 +84,40 @@ export async function getEnrolledCourseController(req: Request, res: Response) {
   if (!enrolledCourse) return res.status(404).send("Course not found");
   return res.status(200).json({ course: enrolledCourse });
 }
+
+/**
+ * Get all enrolled courses
+ * @route GET /api/enrolled
+ *
+ * Middlewares used
+ * - verify auth
+ */
+export async function getEnrolledCoursesController(
+  req: Request,
+  res: Response
+) {
+  const LIMIT = 1;
+  var next = req.query.next as string;
+
+  var result = await (EnrolledCourse as any).paginateEnrolledCourse({
+    query: { user: req.user._id },
+    limit: LIMIT,
+    paginatedField: "updatedAt",
+    next,
+  });
+
+  var populatedEnrolledCourses = await EnrolledCourse.populate(result.results, [
+    {
+      path: "course",
+      model: "course",
+      populate: { path: "groups.lessons", model: "lesson" },
+    },
+  ]);
+
+  return res.status(200).json({
+    courses: populatedEnrolledCourses,
+    hasPrevious: result.hasPrevious,
+    hasNext: result.hasNext,
+    next: result.next,
+  });
+}
