@@ -36,7 +36,7 @@ router.get(
 
 // Toggle lesson completion
 router.put(
-  "/done/:courseId/lesson/:lessonId",
+  "/done/:enrolledCourseId/course/:courseId/lesson/:lessonId",
   handleMiddlewareError(verifyAuth),
   handleMiddlewareError(toggleLessonCompletionController),
   sendErrorResponse

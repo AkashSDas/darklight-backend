@@ -145,9 +145,11 @@ export async function toggleLessonCompletionController(
     )
   ) {
     // Remove it
-    course.doneLessons.filter(
-      (id) => id != new Types.ObjectId(req.params.lessonId as string)
+    let modifiedDoneLessons = course.doneLessons.filter(
+      (id) => id != (req.params.lessonId as any)
     );
+
+    course.doneLessons = modifiedDoneLessons;
   } else {
     // Add it
     course.doneLessons.push(new Types.ObjectId(req.params.lessonId as string));
