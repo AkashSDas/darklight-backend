@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { startSession } from "mongoose";
+import { startSession, Types } from "mongoose";
 
 import { Course } from "../models";
 import { EnrolledCourse } from "../models/enrolled-course.model";
@@ -120,4 +120,39 @@ export async function getEnrolledCoursesController(
     hasNext: result.hasNext,
     next: result.next,
   });
+}
+
+/**
+ * Toggle lesson done status
+ * @route PUT /api/enrolled/done/:courseId/lesson/:lessonId
+ */
+export async function toggleLessonCompletionController(
+  req: Request,
+  res: Response
+) {
+  var course = await EnrolledCourse.findOne({
+    course: req.params.courseId,
+    uesr: req.user._id,
+  });
+
+  if (!course) {
+    return res.status(404).json({ message: "You're not enrolled in" });
+  }
+
+  if (
+    course.doneLessons.includes(
+      new Types.ObjectId(req.params.lessonId as string)
+    )
+  ) {
+    // Remove it
+    course.doneLessons.filter(
+      (id) => id != new Types.ObjectId(req.params.lessonId as string)
+    );
+  } else {
+    // Add it
+    course.doneLessons.push(new Types.ObjectId(req.params.lessonId as string));
+  }
+
+  await course.save();
+  return res.status(200).json({ message: "Done" });
 }

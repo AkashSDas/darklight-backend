@@ -1,6 +1,6 @@
 import { Router } from "express";
 
-import { buyCourseController, getEnrolledCourseController, getEnrolledCoursesController } from "../controller/enrolled-course.controller";
+import { buyCourseController, getEnrolledCourseController, getEnrolledCoursesController, toggleLessonCompletionController } from "../controller/enrolled-course.controller";
 import verifyAuth from "../middlewares/auth.middleware";
 import { validateResource } from "../middlewares/zod.middleware";
 import { buyCourseSchema } from "../schema/enrolled-course.schema";
@@ -31,5 +31,13 @@ router.get(
   "/",
   handleMiddlewareError(verifyAuth),
   handleMiddlewareError(getEnrolledCoursesController),
+  sendErrorResponse
+);
+
+// Toggle lesson completion
+router.put(
+  "/done/:courseId/lesson/:lessonId",
+  handleMiddlewareError(verifyAuth),
+  handleMiddlewareError(toggleLessonCompletionController),
   sendErrorResponse
 );
