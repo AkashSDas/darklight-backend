@@ -4,10 +4,11 @@ import jwt from "jsonwebtoken";
 import { SchemaTypes, Types } from "mongoose";
 import isEmail from "validator/lib/isEmail";
 
-import { getModelForClass, modelOptions, post, pre, prop, Severity } from "@typegoose/typegoose";
+import { getModelForClass, modelOptions, post, pre, prop, Ref, Severity } from "@typegoose/typegoose";
 
 import { BaseApiError } from "../utils/error.util";
 import { OAuthProvider, UserRole } from "../utils/user.util";
+import { EnrolledCourseClass } from "./enrolled-course.model";
 import { ImageClass } from "./image.model";
 
 class OAuthProviderClass {
@@ -159,6 +160,9 @@ export class UserClass {
 
   @prop({ type: () => SchemaTypes.Array, required: true, default: [] })
   oauthProviders: OAuthProviderClass[];
+
+  @prop({ type: SchemaTypes.Array, required: true, default: [] })
+  enrolledCourses: Ref<EnrolledCourseClass>[];
 
   // ============================
   // INSTANCE METHODS

@@ -36,6 +36,9 @@ export async function buyCourseController(req: Request, res: Response) {
   // Increment the number of enrolled students
   course.enrolled += 1;
 
+  // Add course enrolled to user
+  req.user.enrolledCourses.push(enrolledCourse._id);
+
   var session = await startSession();
   session.startTransaction();
 
@@ -43,6 +46,7 @@ export async function buyCourseController(req: Request, res: Response) {
     await Promise.all([
       course.save({ session }),
       enrolledCourse.save({ session }),
+      req.user.save({ session }),
     ]);
 
     await session.commitTransaction();
@@ -52,5 +56,8 @@ export async function buyCourseController(req: Request, res: Response) {
   }
 
   session.endSession();
-  return res.status(200).send("Enrolled");
+  return res.status(200).json({
+    message: "Course enrolled successfully",
+    enrolledCourse,
+  });
 }
