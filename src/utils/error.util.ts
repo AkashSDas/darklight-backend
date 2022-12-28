@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 
+import logger from "./logger.util";
 import { WENT_WRONG } from "./response.util";
 
 /**
@@ -46,5 +47,6 @@ export function sendErrorResponse(
     if (err instanceof BaseApiError) status = err.status;
   }
 
+  logger.error((err as any)?.message ?? err);
   return res.status(status).json({ message });
 }

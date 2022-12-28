@@ -140,7 +140,7 @@ export async function getCourseController(
  * @route GET /api/course
  */
 export async function getCoursesController(req: Request, res: Response) {
-  const LIMIT = 2;
+  const LIMIT = 1;
   var next = req.query.next as string;
   var result = await (Course as any).paginateCourse({
     query: { stage: CourseStage.PUBLISHED },
