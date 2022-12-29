@@ -202,6 +202,9 @@ export async function updateLessonVideoController(
   });
   if (!lesson) return res.status(404).json({ message: "Lesson not found" });
 
+  // Updating the delay for the request
+  req.socket.setTimeout(1000 * 60 * 10); // 10min
+
   // Delete old video if it exists
   if (lesson.video?.id) {
     await cloudinary.v2.uploader.destroy(lesson.video.id, {
