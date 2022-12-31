@@ -41,11 +41,10 @@ export async function createPaymentIntentController(
   req: Request,
   res: Response
 ) {
-  var { amountToCharge, paymentMethod } = req.body;
+  var { amountToCharge } = req.body;
   var paymentIntent = await createPaymentIntentAndCharge(
     req.user._id,
-    amountToCharge,
-    paymentMethod
+    amountToCharge
   );
 
   if (!paymentIntent) {

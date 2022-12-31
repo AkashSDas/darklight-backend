@@ -15,9 +15,7 @@ export async function getOrCreateCustomer(
   params?: Stripe.CustomerCreateParams
 ): Promise<Stripe.Customer | null> {
   {
-    let result = await handleAsync(
-      User.findById(userId).select("stripeCustomerId").exec()
-    );
+    let result = await handleAsync(User.findById(userId).exec());
 
     if (result.error || !result.data) return null;
     var user = result.data as DocumentType<UserClass>;
@@ -35,6 +33,8 @@ export async function getOrCreateCustomer(
 
   // If user does not have a stripe customer id, create one
   {
+    console.log(user);
+    return null;
     let result = await handleAsync(
       stripe.customers.create({
         email: user.email,

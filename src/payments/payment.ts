@@ -37,8 +37,7 @@ export async function createPaymentIntent(amount: number) {
  */
 export async function createPaymentIntentAndCharge(
   userId: Types.ObjectId,
-  amountToCharge: number,
-  paymentMethod: string
+  amountToCharge: number
 ): Promise<Stripe.PaymentIntent | null> {
   var customer = await getOrCreateCustomer(userId);
   if (!customer) return null;
@@ -48,13 +47,13 @@ export async function createPaymentIntentAndCharge(
       amount: amountToCharge,
       currency: "inr",
       customer: customer.id,
-      payment_method: paymentMethod,
       off_session: true,
       confirm: true,
       receipt_email: customer.email,
     })
   );
 
+  console.log(result);
   if (result.error) return null;
   return result.data as Stripe.PaymentIntent;
 }
