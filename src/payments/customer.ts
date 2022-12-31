@@ -67,3 +67,17 @@ export async function listPaymentMethod(userId: Types.ObjectId) {
     type: "card",
   });
 }
+
+/**
+ * Creates a SetupIntent used to save a credit card for latest user
+ *
+ * Process of saving a credit card on a customer account is very similar
+ * to how the payment intent api works, instead of payment intent you
+ * create a setup intent and only parameter it requires is the customer id
+ */
+export async function createSetupIntent(userId: Types.ObjectId) {
+  var customer = await getOrCreateCustomer(userId);
+  return stripe.setupIntents.create({
+    customer: customer.id,
+  });
+}
