@@ -33,8 +33,6 @@ export async function getOrCreateCustomer(
 
   // If user does not have a stripe customer id, create one
   {
-    console.log(user);
-    return null;
     let result = await handleAsync(
       stripe.customers.create({
         email: user.email,
