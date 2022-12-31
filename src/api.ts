@@ -59,6 +59,7 @@ app.use("/api/v2/user", require("./route/user.route").router);
 app.use("/api/v2/auth", require("./route/auth.route").router);
 app.use("/api/v2/course", require("./route/course.route").router);
 app.use("/api/v2/enrolled", require("./route/enrolled-course.route").router);
+app.use("/api/v2/payment", require("./route/payment.route").router);
 
 app.all("*", function handleRemainingRoute(req, res) {
   return res.status(404).json({

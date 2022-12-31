@@ -54,3 +54,16 @@ export async function getOrCreateCustomer(
     return customer;
   }
 }
+
+/**
+ * Returns all the payment sources associated to the user
+ */
+export async function listPaymentMethod(userId: Types.ObjectId) {
+  var result = await handleAsync(getOrCreateCustomer(userId));
+  if (result.error || !result.data) return null;
+  var customer = result.data as Stripe.Customer;
+  return await stripe.paymentMethods.list({
+    customer: customer.id,
+    type: "card",
+  });
+}
