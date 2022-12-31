@@ -5,6 +5,11 @@ import User, { UserClass } from "../models/user.model";
 import { DocumentType } from "@typegoose/typegoose";
 import { stripe } from "..";
 
+/**
+ * Get or create customer
+ *
+ * @param userId - User's mongoId
+ */
 export async function getOrCreateCustomer(
   userId: Types.ObjectId,
   params?: Stripe.CustomerCreateParams
