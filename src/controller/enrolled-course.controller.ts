@@ -26,11 +26,13 @@ export async function buyCourseController(req: Request, res: Response) {
     if (enrolledCourse) return res.status(400).send("Already enrolled");
   }
 
+  var amountToCharge = Math.min(Math.max(course.price, 50), 99999999);
+
   // Create a new enrolled course
   var enrolledCourse = new EnrolledCourse({
     course: course._id,
     user: req.user._id,
-    pricePayed: course.price, // course current price
+    pricePayed: amountToCharge, // course current price
   });
 
   // Increment the number of enrolled students
@@ -60,7 +62,7 @@ export async function buyCourseController(req: Request, res: Response) {
   // After the course is assigned to the user, we can charge the user
   var paymentIntent = await createPaymentIntentAndCharge(
     req.user._id,
-    course.price,
+    amountToCharge,
     req.body.paymentMethod
   );
 
