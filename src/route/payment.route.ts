@@ -1,5 +1,6 @@
 import { Router } from "express";
 import {
+  createPaymentIntentController,
   getUserPaymentCardsController,
   saveCardForUserController,
 } from "../controller/payment.controller";
@@ -22,5 +23,13 @@ router.post(
   "/save-card",
   handleMiddlewareError(verifyAuth),
   handleMiddlewareError(saveCardForUserController),
+  sendErrorResponse
+);
+
+// Create payment intent and charge the user
+router.post(
+  "/charge",
+  handleMiddlewareError(verifyAuth),
+  handleMiddlewareError(createPaymentIntentController),
   sendErrorResponse
 );

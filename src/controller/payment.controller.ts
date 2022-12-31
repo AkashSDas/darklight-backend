@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { createSetupIntent, listPaymentMethod } from "../payments/customer";
+import { createPaymentIntentAndCharge } from "../payments/payment";
 
 export async function getUserPaymentCardsController(
   req: Request,
@@ -33,5 +34,30 @@ export async function saveCardForUserController(req: Request, res: Response) {
     success: true,
     message: "Setup intent created",
     data: { setupIntent },
+  });
+}
+
+export async function createPaymentIntentController(
+  req: Request,
+  res: Response
+) {
+  var { amountToCharge, paymentMethod } = req.body;
+  var paymentIntent = await createPaymentIntentAndCharge(
+    req.user._id,
+    amountToCharge,
+    paymentMethod
+  );
+
+  if (!paymentIntent) {
+    return res.status(400).json({
+      success: false,
+      message: "Could not create payment intent",
+    });
+  }
+
+  return res.status(200).json({
+    success: true,
+    message: "Payment intent created",
+    data: { paymentIntent },
   });
 }
