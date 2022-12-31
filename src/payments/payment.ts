@@ -16,7 +16,7 @@ import { getOrCreateCustomer } from "./customer";
 export async function createPaymentIntentAndCharge(
   userId: Types.ObjectId,
   amountToCharge: number,
-  paymentMethod: Stripe.PaymentMethod
+  paymentMethod: string
 ): Promise<Stripe.PaymentIntent | null> {
   var customer = await getOrCreateCustomer(userId);
   if (!customer) return null;
@@ -26,9 +26,10 @@ export async function createPaymentIntentAndCharge(
       amount: amountToCharge,
       currency: "inr",
       customer: customer.id,
-      payment_method: paymentMethod.id,
+      payment_method: paymentMethod,
       off_session: true,
       confirm: true,
+      receipt_email: customer.email,
     })
   );
 
