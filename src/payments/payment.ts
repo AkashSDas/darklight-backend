@@ -5,6 +5,28 @@ import { handleAsync } from "../utils/async.util";
 import { getOrCreateCustomer } from "./customer";
 
 /**
+ * Create a Payment Intent with a specific amount
+ */
+export async function createPaymentIntent(amount: number) {
+  // In this implementation we don't have authenticated users or anything like that, this is
+  // just one off payment and it doesn't even require a user to be logged in to our app. However
+  // it is possible to passin in existing customer or an existing payment source to your payment
+  // intent
+
+  // The paymentIntent object return from stripe will have an id and a status. The status of
+  // the payment intent will change over the lifecycle of the payment, usually this is managed by
+  // Stripe directly but it's good to remember it.
+
+  const paymentIntent = await stripe.paymentIntents.create({
+    amount,
+    currency: "usd",
+    // receipt_email: 'james@gmail.com',
+  });
+
+  return paymentIntent;
+}
+
+/**
  * Create payment intent and charge
  *
  * @remarks
