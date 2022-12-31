@@ -2,9 +2,9 @@ import { Request, Response } from "express";
 import { startSession, Types } from "mongoose";
 
 import { Course } from "../models";
-import { EnrolledCourse } from "../models/enrolled-course.model";
+import { EnrolledCourse, PaymentStatus } from "../models/enrolled-course.model";
+import { createPaymentIntentAndCharge } from "../payments/payment";
 
-// TODO: Add payment gateway
 /**
  * Buy a course
  * @route POST /api/enrolled/buy/:courseId
@@ -56,7 +56,22 @@ export async function buyCourseController(req: Request, res: Response) {
   }
 
   session.endSession();
+
+  // After the course is assigned to the user, we can charge the user
+  var paymentIntent = await createPaymentIntentAndCharge(
+    req.user._id,
+    course.price,
+    req.body.paymentMethod
+  );
+
+  if (paymentIntent) {
+    enrolledCourse.paymentIntent = paymentIntent.id;
+    enrolledCourse.paymentStatus = PaymentStatus.SUCCESS;
+    await enrolledCourse.save();
+  }
+
   return res.status(200).json({
+    paymentStatus: enrolledCourse.paymentStatus,
     message: "Course enrolled successfully",
     enrolledCourse,
   });
