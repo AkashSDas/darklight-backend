@@ -172,7 +172,7 @@ export class UserClass {
   @prop({ type: SchemaTypes.Array, required: true, default: [] })
   enrolledCourses: Ref<EnrolledCourseClass>[];
 
-  @prop({ type: SchemaTypes.String, select: false })
+  @prop({ type: SchemaTypes.String })
   stripeCustomerId?: string;
 
   // ============================
