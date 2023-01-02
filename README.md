@@ -4,6 +4,8 @@ DarkLight is a web application where you can enroll in courses and learn from th
 
 This is the web backend for DarkLight. It is built using ExpressJS, MongoDB, Stripe, & Jest.
 
+![](docs/cover.jpg)
+
 ## Installation
 
 First, clone the repository and install the dependencies.
