@@ -1,45 +1,50 @@
-# darklight-back-end
+# darklight-backend
 
-## Environment variables
+DarkLight is a web application where you can enroll in courses and learn from them. If you are aspired to be a teacher, you can create your own courses and teach them to the world.
 
-```text
-COOKIE_SESSION_SECRET=cookie-secret
-REFRESH_TOKEN_SECRET=refresh-secret
-ACCESS_TOKEN_SECRET=access-secret
-REFRESH_TOKEN_EXPIRES_IN=1d
-ACCESS_TOKEN_EXPIRES_IN=30m
+This is the web backend for DarkLight. It is built using ExpressJS, MongoDB, Stripe, & Jest.
 
-FACEBOOK_OAUTH_CLIENT_ID=
-FACEBOOK_OAUTH_CLIENT_SECRET=
-FACEBOOK_OAUTH_CALLBACK_URL=http://localhost:5002/api/auth/signup/facebook/redirect
-FACEBOOK_OAUTH_CALLBACK_URL_FOR_LOGIN=http://localhost:5002/api/auth/login/facebook/redirect
+## Installation
 
-GOOGLE_OAUTH_CLIENT_ID=
-GOOGLE_OAUTH_CLIENT_SECRET=
-GOOGLE_OAUTH_CALLBACK_URL=http://localhost:5002/api/auth/signup/google/redirect
-GOOGLE_OAUTH_CALLBACK_URL_FOR_LOGIN=http://localhost:5002/api/auth/login/google/redirect
+First, clone the repository and install the dependencies.
 
-TWITTER_OAUTH_CLIENT_KEY=
-TWITTER_OAUTH_CLIENT_KEY_SECRET=
-TWITTER_OAUTH_CALLBACK_URL=http://localhost:5002/api/auth/signup/twitter/redirect
-TWITTER_OAUTH_CALLBACK_URL_FOR_LOGIN=http://localhost:5002/api/auth/login/twitter/redirect
-
-OAUTH_SIGNUP_SUCCESS_REDIRECT_URL=http://localhost:3000/auth/signup
-OAUTH_SIGNUP_FAILURE_REDIRECT_URL=http://localhost:3000/auth/signup
-OAUTH_LOGIN_SUCCESS_REDIRECT_URL=http://localhost:3000
-OAUTH_LOGIN_FAILURE_REDIRECT_URL=http://localhost:3000/auth/login
-
-MONGODB_CONNECT_URL=
-
-SMTP_HOST=
-SMTP_PORT=
-SMTP_USERNAME=
-SMTP_PASSWORD=
-FROM_EMAIL=
-
-FRONTEND_BASE_URL=http://localhost:3000
+```bash
+git clone https://github.com/AkashSDas/camps-for-champs-backend.git
+cd camps-for-champs-backend
+npm install
 ```
 
-## Todo
+Then polulate the .env file with the following variables. You can find the example of the .env file in the .env.example file.
 
-- Add checks for cloudinary id for the delete process
+## Environment Variables
+
+A sample .env file is provided in the repository. You can use it as a reference to create your own .env file.
+
+- Setup basic authentication
+- Setup OAuth ([Google](https://console.cloud.google.com/welcome), [Twitter](https://developer.twitter.com/en/portal/dashboard), [Facebook](https://developers.facebook.com/apps/))
+- Setup [Stripe](https://stripe.com/docs/development#api-keys) for payments
+- [Cloudinary](https://cloudinary.com/) for image uploads
+- [Mailtrap](https://mailtrap.io) for sending emails
+- [MongoDB](https://www.mongodb.com/) for database
+- There are some basic env like frontend url & so
+
+## Tech Stack
+
+- ExpressJS, Zod
+- MongoDB, Mongoose, Typegoose
+- Cloudinary & Express File Upload
+- JWT, Cookie Parser
+- CORS
+- PassportJS (Google, Twitter, Facebook)
+- Swagger
+- Jest, MongoDB Memory Server, Supertest
+
+## TODO
+
+- [ ] Add more tests and fix existing tests
+- [ ] Refactor code, responses
+- [ ] Add Postman collection
+
+## LICENSE
+
+[MIT](./LICENSE)
