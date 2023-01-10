@@ -18,7 +18,7 @@ export async function signup(
   res: Response
 ) {
   var { username, email, password } = req.body;
-  var user = await User.create({ username, email, password });
+  var user = await User.create({ username, email, passwordDigest: password });
   user.passwordDigest = undefined; // remove password from response
 
   // Login user
@@ -40,7 +40,6 @@ export async function login(
 ) {
   var { email, password } = req.body;
   var user = await User.findOne({ email }).select("+passwordDigest");
-  console.log(user);
   if (!user) return res.status(404).json({ message: "User doesn't exists" });
   if (!user.passwordDigest) {
     return res.status(400).json({ message: "Invalid login method" });
