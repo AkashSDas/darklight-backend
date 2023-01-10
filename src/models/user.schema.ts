@@ -15,9 +15,9 @@ import { OAuthProviderSchema } from "./oauth-provider.schema";
  * @remark Since fields like email/username could be null, the unique flag
  * is not set on them
  */
-@pre<UserSchema>("save", preMongooseSave.bind(this))
+@pre<UserSchema>("save", preMongooseSave)
 @post<UserSchema>("save", handleDuplicateError)
-@pre<UserSchema>("findOneAndUpdate", changeUserInfo.bind(this))
+@pre<UserSchema>("findOneAndUpdate", changeUserInfo)
 @post<UserSchema>("findOneAndUpdate", handleDuplicateError)
 @modelOptions({
   schemaOptions: { timestamps: true },
@@ -74,10 +74,9 @@ export class UserSchema {
   oauthProviders: OAuthProviderSchema[];
 
   @prop({
-    type: [String],
+    type: () => SchemaTypes.Array,
     required: true,
     default: [UserRole.BASE],
-    enum: UserRole,
   })
   roles: UserRole[];
 

@@ -26,7 +26,5 @@ export async function signup(
   var refreshToken = user.getRefreshToken();
   res.cookie("refreshToken", refreshToken, getLoginCookieConfig());
 
-  return res
-    .status(201)
-    .json({ message: "Account created successfully", accessToken, user });
+  return res.status(201).json({ user, accessToken });
 }
