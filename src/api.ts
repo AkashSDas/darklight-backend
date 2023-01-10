@@ -1,9 +1,12 @@
+import "./passport";
+
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import { config } from "dotenv";
 import express from "express";
 import expressSession from "express-session";
 import morgan from "morgan";
+import passport from "passport";
 
 // Load env vars
 if (process.env.NODE_ENV != "production") config();
@@ -28,6 +31,9 @@ app.use(
     saveUninitialized: true,
   })
 );
+
+app.use(passport.initialize());
+app.use(passport.session());
 
 // =====================================
 // Routes
