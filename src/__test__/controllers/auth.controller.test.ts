@@ -75,4 +75,55 @@ describe("auth controller", () => {
       });
     });
   });
+
+  // =====================================
+  // Login
+  // =====================================
+
+  describe("login", () => {
+    it("when user doesn't exists given a 404 response", async () => {
+      let response = await supertest(app)
+        .post("/api/v2/auth/login")
+        .send({ email: "james@gmail.com", password: "testingTEST@123" });
+
+      expect(response.status).toEqual(404);
+      expect(response.body).toMatchSnapshot();
+    });
+
+    describe("when user exists", () => {
+      beforeEach(async () => {
+        await User.create({
+          username: "james",
+          email: "james@gmail.com",
+          passwordDigest: "testingTEST@123",
+        });
+      });
+
+      // TODO: Fix this - { statusCode: 400, message: 'Wrong password', error: 'Bad Request' }
+      it("when user entered correct password then login the user", async () => {
+        let response = await supertest(app)
+          .post("/api/v2/auth/login")
+          .send({ email: "james@gmail.com", password: "testingTEST@123" });
+
+        expect(response.status).toEqual(200);
+
+        expect(response.body).toMatchSnapshot({
+          accessToken: expect.any(String),
+          user: {
+            ...response.body.user,
+            _id: expect.any(String),
+            userId: expect.any(String),
+            createdAt: expect.any(String),
+            updatedAt: expect.any(String),
+          },
+        });
+
+        expect(
+          response.headers["set-cookie"].find((cookie: string) =>
+            cookie.includes("refreshToken")
+          )
+        ).toBeDefined();
+      });
+    });
+  });
 });
