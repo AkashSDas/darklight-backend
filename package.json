@@ -1,0 +1,37 @@
+{
+  "name": "camps-for-champs",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node lib/index.js",
+    "dev": "concurrently \"tsc -w\" \"nodemon lib/index.js\"",
+    "test": "jest --watchAll --coverage",
+    "test:watch": "jest --watchAll"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AkashSDas/darklight-back-end.git"
+  },
+  "keywords": [],
+  "author": "AkashSDas",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/AkashSDas/darklight-back-end/issues"
+  },
+  "homepage": "https://github.com/AkashSDas/darklight-back-end#readme",
+  "dependencies": {
+    "@typegoose/typegoose": "^10.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "mongoose": "^6.8.3",
+    "morgan": "^1.10.0",
+    "winston": "^3.8.2",
+    "zod": "^3.20.2"
+  },
+  "devDependencies": {
+    "@types/morgan": "^1.9.4"
+  }
+}
