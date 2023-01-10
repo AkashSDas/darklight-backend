@@ -19,3 +19,15 @@ router.post(
   handleMiddlewareError(ctrl.signup),
   sendErrorResponse
 );
+
+// =====================================
+// Login
+// =====================================
+
+// Email/password login
+router.post(
+  "/login",
+  validateResource(z.login),
+  handleMiddlewareError(ctrl.login),
+  sendErrorResponse
+);
