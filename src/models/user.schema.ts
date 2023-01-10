@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
-import { SchemaTypes } from "mongoose";
+import jwt from "jsonwebtoken";
+import { SchemaTypes, Types } from "mongoose";
 import { generate } from "randomstring";
 import isEmail from "validator/lib/isEmail";
 
@@ -26,6 +27,8 @@ export class UserSchema {
   // =====================================
   // Fields
   // =====================================
+
+  _id!: Types.ObjectId;
 
   @prop({ type: String, trim: true, maxlength: 24, minlength: 4 })
   username?: string;
@@ -142,6 +145,22 @@ export class UserSchema {
     this.verificationTokenExpiresAt = new Date(Date.now() + 5 * 60 * 1000);
 
     return token;
+  }
+
+  /** Genereate access token for JWT authentication. Short duration */
+  getAccessToken(): string {
+    var payload = { _id: this._id, email: this.email };
+    return jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET, {
+      expiresIn: process.env.ACCESS_TOKEN_EXPIRES_IN,
+    });
+  }
+
+  /** Genereate refresh token for JWT authentication. Long duration */
+  getRefreshToken(): string {
+    var payload = { _id: this._id, email: this.email };
+    return jwt.sign(payload, process.env.REFRESH_TOKEN_SECRET, {
+      expiresIn: process.env.REFRESH_TOKEN_EXPIRES_IN,
+    });
   }
 }
 
