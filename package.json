@@ -32,6 +32,7 @@
     "zod": "^3.20.2"
   },
   "devDependencies": {
-    "@types/morgan": "^1.9.4"
+    "@types/morgan": "^1.9.4",
+    "typescript": "^4.9.4"
   }
 }
