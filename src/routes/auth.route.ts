@@ -31,3 +31,10 @@ router.post(
   handleMiddlewareError(ctrl.login),
   sendErrorResponse
 );
+
+// =====================================
+// Others
+// =====================================
+
+// Logout
+router.post("/logout", handleMiddlewareError(ctrl.logout), sendErrorResponse);

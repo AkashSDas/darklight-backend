@@ -29,6 +29,10 @@ export async function signup(
   return res.status(201).json({ user, accessToken });
 }
 
+// =====================================
+// Login
+// =====================================
+
 /**
  * Login user with email and password
  * @route POST /api/v2/auth/login
@@ -60,4 +64,22 @@ export async function login(
     res.cookie("refreshToken", refreshToken, getLoginCookieConfig());
     return res.status(200).json({ user, accessToken });
   }
+}
+
+// =====================================
+// Others
+// =====================================
+
+/**
+ * Logout user with email/password login OR social login
+ * @route GET /api/v2/auth/logout
+ */
+export async function logout(req: Request, res: Response) {
+  if (req.cookies?.refreshToken) {
+    res.clearCookie("refreshToken", getLoginCookieConfig());
+  } else if ((req as any).logOut) {
+    (req as any).logOut(function successfulOAuthLogout() {});
+  }
+
+  return res.status(200).json({ message: "Logged out" });
 }
