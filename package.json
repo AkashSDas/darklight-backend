@@ -23,16 +23,22 @@
   "homepage": "https://github.com/AkashSDas/darklight-back-end#readme",
   "dependencies": {
     "@typegoose/typegoose": "^10.0.0",
+    "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
     "mongoose": "^6.8.3",
     "morgan": "^1.10.0",
+    "randomstring": "^1.2.3",
+    "validator": "^13.7.0",
     "winston": "^3.8.2",
     "zod": "^3.20.2"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.2",
     "@types/morgan": "^1.9.4",
+    "@types/randomstring": "^1.1.8",
+    "@types/validator": "^13.7.10",
     "typescript": "^4.9.4"
   }
 }
