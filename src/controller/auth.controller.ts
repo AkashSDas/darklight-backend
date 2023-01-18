@@ -6,6 +6,7 @@ import User from "../models/user.schema";
 import * as z from "../schema/auth.schema";
 import { loginCookieConfig } from "../utils/auth.util";
 import { EmailOptions, sendEmail, sendVerificationEmail } from "../utils/mail.util";
+import * as _z from "../utils/zod";
 
 // =====================================
 // Signup
@@ -16,32 +17,20 @@ import { EmailOptions, sendEmail, sendVerificationEmail } from "../utils/mail.ut
  * @route POST /api/v2/auth/signup
  * @remark username, email, password are required
  */
-export async function signup() {}
-
-/**
- * Signup a new user and send verification email
- * @route POST /auth/signup
- * @remark username, email, password are required
- */
-export async function signupController(
-  req: Request<{}, {}, z.Signup["body"]>,
+export async function signup(
+  req: Request<{}, {}, _z.Signup["body"]>,
   res: Response
 ) {
   var { username, email, password } = req.body;
   var user = await User.create({ username, email, password });
-  var success = await sendVerificationEmail(user);
-  var message = success
-    ? "Account created, verification email sent"
-    : "Account created";
+  if (!user) return res.status(400).json({ message: "Account not created" });
 
-  // Login user
-  {
-    let accessToken = user.getAccessToken();
-    let refreshToken = user.getRefreshToken();
-    res.cookie("refreshToken", refreshToken, loginCookieConfig);
-    user.passwordDigest = undefined; // remove password from response
-    return res.status(201).json({ message, accessToken, user });
-  }
+  // Login the user
+  var accessToken = user.getAccessToken();
+  var refreshToken = user.getRefreshToken();
+  res.cookie("refreshToken", refreshToken, loginCookieConfig);
+  user.passwordDigest = undefined; // rm password from response
+  return res.status(201).json({ user, accessToken });
 }
 
 /**

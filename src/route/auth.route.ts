@@ -8,18 +8,19 @@ import { Strategies } from "../passport";
 import * as z from "../schema/auth.schema";
 import { handleMiddlewareError } from "../utils/async.util";
 import { sendErrorResponse } from "../utils/error";
+import * as _z from "../utils/zod";
 
 export var router = Router();
 
-// ==================================
-// SIGNUP ROUTES
-// ==================================
+// =====================================
+// Signup
+// =====================================
 
 // Email/password signup
 router.post(
   "/signup",
-  validateResource(z.signupSchema),
-  handleMiddlewareError(ctrl.signupController),
+  validateResource(_z.signup),
+  handleMiddlewareError(ctrl.signup),
   sendErrorResponse
 );
 
