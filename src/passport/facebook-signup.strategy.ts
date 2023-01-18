@@ -4,6 +4,7 @@ import { Profile, Strategy } from "passport-facebook";
 
 import { AvailableOauthProvider } from "../models/oauth-provider.schema";
 import { createUserService, getUserService } from "../services/user.service";
+import { getEnv } from "../utils/config";
 import { BaseApiError } from "../utils/error";
 import { Strategies } from "./";
 
@@ -45,9 +46,9 @@ async function verify(
 function facebookSignupStrategy() {
   return new Strategy(
     {
-      clientID: process.env.FACEBOOK_OAUTH_CLIENT_ID,
-      clientSecret: process.env.FACEBOOK_OAUTH_CLIENT_SECRET,
-      callbackURL: process.env.FACEBOOK_OAUTH_CALLBACK_URL,
+      clientID: getEnv().oauth.facebook.clientID,
+      clientSecret: getEnv().oauth.facebook.clientSecret,
+      callbackURL: getEnv().oauth.facebook.signupCallbackURL,
       profileFields: ["id", "first_name", "displayName", "photos", "email"],
       passReqToCallback: true,
     },

@@ -2,6 +2,7 @@ import passport from "passport";
 import { Profile, Strategy, VerifyCallback } from "passport-google-oauth20";
 
 import { getUserService } from "../services/user.service";
+import { getEnv } from "../utils/config";
 import { Strategies } from "./";
 
 async function verify(
@@ -26,9 +27,9 @@ async function verify(
 function googleLoginStrategy() {
   return new Strategy(
     {
-      clientID: process.env.GOOGLE_OAUTH_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_OAUTH_CLIENT_SECRET,
-      callbackURL: process.env.GOOGLE_OAUTH_CALLBACK_URL_FOR_LOGIN,
+      clientID: getEnv().oauth.google.clientID,
+      clientSecret: getEnv().oauth.google.clientSecret,
+      callbackURL: getEnv().oauth.google.loginCallbackURL,
     },
     verify
   );

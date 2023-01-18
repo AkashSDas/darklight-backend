@@ -7,6 +7,7 @@ import { validateResource } from "../middlewares/zod.middleware";
 import { Strategies } from "../passport";
 import * as z from "../schema/auth.schema";
 import { handleMiddlewareError } from "../utils/async.util";
+import { getEnv } from "../utils/config";
 import { sendErrorResponse } from "../utils/error";
 import * as _z from "../utils/zod";
 
@@ -54,8 +55,8 @@ router
     "/signup/google/redirect",
     passport.authenticate(Strategies.GoogleSignup, {
       failureMessage: "Cannot signup with Google, please try again",
-      successRedirect: process.env.OAUTH_SIGNUP_SUCCESS_REDIRECT_URL,
-      failureRedirect: process.env.OAUTH_SIGNUP_FAILURE_REDIRECT_URL,
+      successRedirect: getEnv().oauth.signupSuccessRedirectURL,
+      failureRedirect: getEnv().oauth.signupFailureRedirectURL,
     })
   );
 
@@ -70,8 +71,8 @@ router
     "/signup/facebook/redirect",
     passport.authenticate(Strategies.FacebookSignup, {
       failureMessage: "Cannot signup with Facebook, please try again",
-      successRedirect: process.env.OAUTH_SIGNUP_SUCCESS_REDIRECT_URL,
-      failureRedirect: process.env.OAUTH_SIGNUP_FAILURE_REDIRECT_URL,
+      successRedirect: getEnv().oauth.signupSuccessRedirectURL,
+      failureRedirect: getEnv().oauth.signupFailureRedirectURL,
     }),
     function signupWithFacebookRedirect() {}
   );
@@ -87,8 +88,8 @@ router
     "/signup/twitter/redirect",
     passport.authenticate(Strategies.TwitterSignup, {
       failureMessage: "Cannot signup up Twitter, please try again",
-      successRedirect: process.env.OAUTH_SIGNUP_SUCCESS_REDIRECT_URL,
-      failureRedirect: process.env.OAUTH_SIGNUP_FAILURE_REDIRECT_URL,
+      successRedirect: getEnv().oauth.signupSuccessRedirectURL,
+      failureRedirect: getEnv().oauth.signupFailureRedirectURL,
     }),
     function signupWithTwitterRedirect() {}
   );
@@ -125,8 +126,10 @@ router
     "/login/google/redirect",
     passport.authenticate(Strategies.GoogleLogin, {
       failureMessage: "Cannot login with Google, please try again",
-      successRedirect: process.env.OAUTH_LOGIN_SUCCESS_REDIRECT_URL,
-      failureRedirect: `${process.env.OAUTH_LOGIN_FAILURE_REDIRECT_URL}?info=signup-invalid`,
+      successRedirect: getEnv().oauth.loginSuccessRedirectURL,
+      failureRedirect: `${
+        getEnv().oauth.signupFailureRedirectURL
+      }?info=signup-invalid`,
     }),
     function loginWithGoogleRedirect() {}
   );
@@ -142,8 +145,10 @@ router
     "/login/facebook/redirect",
     passport.authenticate(Strategies.FacebookLogin, {
       failureMessage: "Cannot login with Facebook, Please try again",
-      successRedirect: process.env.OAUTH_LOGIN_SUCCESS_REDIRECT_URL,
-      failureRedirect: `${process.env.OAUTH_LOGIN_FAILURE_REDIRECT_URL}?info=signup-invalid`,
+      successRedirect: getEnv().oauth.loginSuccessRedirectURL,
+      failureRedirect: `${
+        getEnv().oauth.signupFailureRedirectURL
+      }?info=signup-invalid`,
     }),
     function loginWithFacebookRedirect() {}
   );
@@ -159,8 +164,10 @@ router
     "/login/twitter/redirect",
     passport.authenticate(Strategies.TwitterLogin, {
       failureMessage: "Cannot login with Twitter, please try again",
-      successRedirect: process.env.OAUTH_LOGIN_SUCCESS_REDIRECT_URL,
-      failureRedirect: `${process.env.OAUTH_LOGIN_FAILURE_REDIRECT_URL}?info=signup-invalid`,
+      successRedirect: getEnv().oauth.loginSuccessRedirectURL,
+      failureRedirect: `${
+        getEnv().oauth.signupFailureRedirectURL
+      }?info=signup-invalid`,
     }),
     function loginWithTwitterRedirect() {}
   );

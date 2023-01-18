@@ -8,8 +8,10 @@ import expressSession from "express-session";
 import morgan from "morgan";
 import passport from "passport";
 
+import { getEnv } from "./utils/config";
+
 // Load env vars
-if (process.env.NODE_ENV != "production") config();
+if (getEnv().env != "production") config();
 
 /** Express app */
 export var app = express();
@@ -19,14 +21,14 @@ export var app = express();
 // =====================================
 
 app.use(morgan("dev"));
-app.use(cors({ origin: process.env.FRONTEND_URL, credentials: true }));
+app.use(cors({ origin: getEnv().frontendURL, credentials: true }));
 app.use(express.json()); // for parsing incoming data
 app.use(express.urlencoded({ extended: true })); // parses incoming requests with urlencoded payloads
 
 app.use(cookieParser()); // Parse Cookie header and populate req.cookies with an object keyed by the cookie names
 app.use(
   expressSession({
-    secret: process.env.COOKIE_SESSION_SECRET,
+    secret: getEnv().cookieSessionSecret,
     resave: true,
     saveUninitialized: true,
   })

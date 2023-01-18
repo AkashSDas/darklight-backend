@@ -4,6 +4,7 @@ import { Profile, Strategy } from "passport-twitter";
 
 import { AvailableOauthProvider } from "../models/oauth-provider.schema";
 import { createUserService, getUserService } from "../services/user.service";
+import { getEnv } from "../utils/config";
 import { BaseApiError } from "../utils/error";
 import { Strategies } from "./";
 
@@ -46,9 +47,9 @@ async function verify(
 function twitterSignupStrategy() {
   return new Strategy(
     {
-      consumerKey: process.env.TWITTER_OAUTH_CLIENT_KEY,
-      consumerSecret: process.env.TWITTER_OAUTH_CLIENT_KEY_SECRET,
-      callbackURL: process.env.TWITTER_OAUTH_CALLBACK_URL,
+      consumerKey: getEnv().oauth.twitter.clientKey,
+      consumerSecret: getEnv().oauth.twitter.clientKeySecret,
+      callbackURL: getEnv().oauth.twitter.signupCallbackURL,
       passReqToCallback: true,
       includeEmail: true,
     },

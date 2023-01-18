@@ -3,6 +3,7 @@ import { createTransport } from "nodemailer";
 import { DocumentType } from "@typegoose/typegoose";
 
 import { UserSchema } from "../models/user.schema";
+import { getEnv } from "./config";
 
 export interface EmailOptions {
   to: string;
@@ -13,16 +14,16 @@ export interface EmailOptions {
 
 export async function sendEmail(opts: EmailOptions) {
   var transporter = createTransport({
-    host: process.env.SMTP_HOST,
-    port: Number(process.env.SMTP_PORT) || 0,
+    host: getEnv().smtp.host,
+    port: getEnv().smtp.port,
     auth: {
-      user: process.env.SMTP_USERNAME,
-      pass: process.env.SMTP_PASSWORD,
+      user: getEnv().smtp.username,
+      pass: getEnv().smtp.password,
     },
   });
 
   var msg = {
-    from: process.env.FROM_EMAIL,
+    from: getEnv().smtp.fromEmail,
     to: opts.to,
     subject: opts.subject,
     text: opts.text,
