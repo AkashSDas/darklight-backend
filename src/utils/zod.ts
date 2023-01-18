@@ -52,6 +52,16 @@ export var login = z.object({
   }),
 });
 
+export var verifyEmail = z.object({
+  body: z.object({
+    email: z.string({ required_error: "Required" }).email("Invalid"),
+  }),
+});
+
+export var confirmEmail = z.object({
+  params: z.object({ token: z.string() }),
+});
+
 // =====================================
 // Types
 // =====================================
@@ -59,3 +69,5 @@ export var login = z.object({
 export type Signup = z.infer<typeof signup>;
 export type CompleteOauth = z.infer<typeof completeOauthSchema>;
 export type Login = z.infer<typeof login>;
+export type VerifyEmail = z.infer<typeof verifyEmail>;
+export type ConfirmEmail = z.infer<typeof confirmEmail>;

@@ -37,7 +37,7 @@ export async function sendVerificationEmail(user: DocumentType<UserSchema>) {
   var token = user.generateVerificationToken();
   await user.save({ validateModifiedOnly: true }); // save token
 
-  var url = `${process.env.BASE_URL}/api/v2/auth/confirm-email/${token}`;
+  var url = `${getEnv().backendURL}/api/v2/auth/confirm-email/${token}`;
   var opts: EmailOptions = {
     to: user.email,
     subject: "Verify your email",

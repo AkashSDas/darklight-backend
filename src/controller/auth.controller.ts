@@ -5,6 +5,7 @@ import jwt from "jsonwebtoken";
 import User from "../models/user.schema";
 import * as z from "../schema/auth.schema";
 import { loginCookieConfig } from "../utils/auth.util";
+import { getEnv } from "../utils/config";
 import { EmailOptions, sendEmail, sendVerificationEmail } from "../utils/mail.util";
 import * as _z from "../utils/zod";
 
@@ -95,19 +96,20 @@ export async function login(
 
 /**
  * Get a new access token using refresh token
- * @route GET /auth/access-token
+ * @route GET /api/v2/auth/access-token
+ *
  * @remark throwning an error inside the callback of jwt.verify was not working
  * and there was a timeout error. So, I sent a response instead of throwing an error
  * and it working fine. Follow the test cases regarding this.
  */
-export async function accessTokenController(req: Request, res: Response) {
+export async function accessToken(req: Request, res: Response) {
   var refreshToken = req.cookies?.refreshToken;
-  if (!refreshToken) res.status(400).json({ message: "Unauthorized" });
+  if (!refreshToken) res.status(401).json({ message: "Unauthorized" });
   else {
     try {
       jwt.verify(
         refreshToken,
-        process.env.REFRESH_TOKEN_SECRET,
+        getEnv().refreshTokenSecret,
         async function getNewAccessToken(
           err: jwt.VerifyErrors,
           decoded: string | jwt.JwtPayload
@@ -132,23 +134,24 @@ export async function accessTokenController(req: Request, res: Response) {
   }
 }
 
-// ==================================
-// EMAIL VERIFICATION CONTROLLERS
-// ==================================
+// =====================================
+// Email verification
+// =====================================
 
 /**
  * Send verification email to user email
- * @route POST /auth/verify-email
+ * @route POST /api/v2/auth/verify-email
  */
-export async function verifyEmailController(
-  req: Request<{}, {}, z.VerifyEmail["body"]>,
+export async function verifyEmail(
+  req: Request<{}, {}, _z.VerifyEmail["body"]>,
   res: Response
 ) {
   var { email } = req.body;
   var user = await User.findOne({ email });
   if (!user) return res.status(404).json({ message: "User not found" });
-  if (user.verified)
+  if (user.verified) {
     return res.status(400).json({ message: "Already verified" });
+  }
 
   var success = await sendVerificationEmail(user);
   var message = success ? "Verification email sent" : "Failed to send email";
@@ -157,12 +160,12 @@ export async function verifyEmailController(
 
 /**
  * Verify user email
- * @route PUT /auth/confirm-email/:token
+ * @route PUT /api/v2auth/confirm-email/:token
  * @remark token is sent in email
- * @remark after successful verification, user will be redirected to `FRONTEND_BASE_URL`
+ * @remark after successful verification, user will be redirected to the frontend
  */
-export async function confirmEmailController(
-  req: Request<z.ConfirmEmail["params"]>,
+export async function confirmEmail(
+  req: Request<_z.ConfirmEmail["params"]>,
   res: Response
 ) {
   var { token } = req.params;
@@ -180,7 +183,7 @@ export async function confirmEmailController(
   user.verificationTokenExpiresAt = undefined;
   await user.save({ validateModifiedOnly: true });
 
-  return res.redirect(301, process.env.FRONTEND_BASE_URL);
+  return res.redirect(301, getEnv().frontendURL);
 }
 
 // ==================================

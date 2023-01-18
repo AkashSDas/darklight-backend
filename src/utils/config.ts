@@ -4,6 +4,7 @@ export function getEnv() {
     stripeSecretKey: process.env.STRIPE_SECRET_KEY,
     port: process.env.PORT || 8000,
     frontendURL: process.env.FRONTEND_URL,
+    backendURL: process.env.BACKEND_URL,
     env: process.env.NODE_ENV as "development" | "production" | "test",
     mongodbURL: process.env.MONGODB_CONNECT_URL,
     cookieSessionSecret: process.env.COOKIE_SESSION_SECRET,

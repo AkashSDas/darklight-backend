@@ -109,7 +109,7 @@ router.post(
 // Get new access token (email/password login)
 router.get(
   "/access-token",
-  handleMiddlewareError(ctrl.accessTokenController),
+  handleMiddlewareError(ctrl.accessToken),
   sendErrorResponse
 );
 
@@ -180,13 +180,13 @@ router
   .post(
     "/verify-email",
     validateResource(z.verifyEmailSchema),
-    handleMiddlewareError(ctrl.verifyEmailController),
+    handleMiddlewareError(ctrl.verifyEmail),
     sendErrorResponse
   )
   .put(
     "/confirm-email/:token",
     validateResource(z.confirmEmailSchema),
-    handleMiddlewareError(ctrl.confirmEmailController),
+    handleMiddlewareError(ctrl.confirmEmail),
     sendErrorResponse
   );
 
