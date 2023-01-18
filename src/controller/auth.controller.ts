@@ -34,34 +34,23 @@ export async function signup(
 }
 
 /**
- * Cancel OAuth signup process and delete the user
- * @route DELETE /auth/signup
- * @remark User that logged in will be deleted and OAuth session
- * will be logged out
- *
- * Middleware used are:
- * - verifyAuth
+ * Cancel oauth signup process and delete the user
+ * @route DELETE /api/v2/auth/cancel-oauth
+ * @remark Middlewares used are: verifyAuth
  */
-export async function cancelOAuthController(req: Request, res: Response) {
-  if (!req.user) return res.status(401).json({ message: "Unauthorized" });
-
+export async function cancelOauthSignup(req: Request, res: Response) {
   var user = await User.findByIdAndDelete(req.user._id);
-  if (!user) return res.status(404).json({ message: "User not found" });
-
   if (req.logOut) req.logOut(function () {});
   return res.status(200).json({ user });
 }
 
 /**
  * Complete user OAuth signup process by saving compulsory fields
- * @route PUT /auth/complete-oauth
- * @remark User that logged in will be updated with compulsory fields
- *
- * Middleware used are:
- * - verifyAuth
+ * @route PUT /api/v2/auth/complete-oauth
+ * @remark Middlewares used are: verifyAuth
  */
-export async function completeOAuthController(
-  req: Request<{}, {}, z.CompleteOAuth["body"]>,
+export async function completeOauthController(
+  req: Request<{}, {}, _z.CompleteOauth["body"]>,
   res: Response
 ) {
   var { username, email } = req.body;

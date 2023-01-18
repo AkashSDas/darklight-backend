@@ -28,16 +28,16 @@ router.post(
 router.delete(
   "/cancel-oauth",
   handleMiddlewareError(verifyAuth),
-  handleMiddlewareError(ctrl.cancelOAuthController),
+  handleMiddlewareError(ctrl.cancelOauthSignup),
   sendErrorResponse
 );
 
 // Complete OAuth signup (post oauth signup)
 router.put(
   "/complete-oauth",
-  validateResource(z.completeOAuthSchema),
+  validateResource(_z.completeOauthSchema),
   handleMiddlewareError(verifyAuth),
-  handleMiddlewareError(ctrl.completeOAuthController),
+  handleMiddlewareError(ctrl.completeOauthController),
   sendErrorResponse
 );
 
