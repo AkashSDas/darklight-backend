@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { authenticate } from "passport";
+import passport from "passport";
 
 import * as ctrl from "../controllers/auth.controller";
 import { validateResource } from "../middlewares/zod.middleware";
@@ -25,14 +25,14 @@ router.post(
 router
   .get(
     "/signup/google",
-    authenticate("google-signup", {
+    passport.authenticate("google-signup", {
       scope: ["profile", "email"],
     }),
     function signupWithGoogle() {}
   )
   .get(
     "/signup/google/redirect",
-    authenticate("google-signup", {
+    passport.authenticate("google-signup", {
       failureMessage: "Cannot signup with Google, please try again",
       successRedirect: process.env.OAUTH_SIGNUP_SUCCESS_REDIRECT_URL,
       failureRedirect: process.env.OAUTH_SIGNUP_FAILURE_REDIRECT_URL,

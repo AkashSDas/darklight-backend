@@ -99,7 +99,6 @@ describe("auth controller", () => {
         });
       });
 
-      // TODO: Fix this - { statusCode: 400, message: 'Wrong password', error: 'Bad Request' }
       it("when user entered correct password then login the user", async () => {
         let response = await supertest(app)
           .post("/api/v2/auth/login")
