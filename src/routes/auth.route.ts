@@ -36,7 +36,8 @@ router
       failureMessage: "Cannot signup with Google, please try again",
       successRedirect: process.env.OAUTH_SIGNUP_SUCCESS_REDIRECT_URL,
       failureRedirect: process.env.OAUTH_SIGNUP_FAILURE_REDIRECT_URL,
-    })
+    }),
+    function signupWithGoogleRedirect() {}
   );
 
 // =====================================
@@ -50,6 +51,25 @@ router.post(
   handleMiddlewareError(ctrl.login),
   sendErrorResponse
 );
+
+// Google OAuth login
+router
+  .get(
+    "/login/google",
+    passport.authenticate("google-login", {
+      scope: ["profile", "email"],
+    }),
+    function loginWithGoogle() {}
+  )
+  .get(
+    "/login/google/redirect",
+    passport.authenticate("google-login", {
+      failureMessage: "Cannot login with Google, please try again",
+      successRedirect: process.env.OAUTH_LOGIN_SUCCESS_REDIRECT_URL,
+      failureRedirect: process.env.OAUTH_LOGIN_FAILURE_REDIRECT_URL,
+    }),
+    function loginWithGoogleRedirect() {}
+  );
 
 // =====================================
 // Others
