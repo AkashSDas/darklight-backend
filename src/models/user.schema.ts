@@ -7,6 +7,7 @@ import isEmail from "validator/lib/isEmail";
 
 import { getModelForClass, modelOptions, post, pre, prop, Ref, Severity } from "@typegoose/typegoose";
 
+import { getEnv } from "../utils/config";
 import { BaseApiError } from "../utils/error";
 import { UserRole } from "../utils/user";
 import { EnrolledCourseClass } from "./enrolled-course.model";
@@ -154,16 +155,16 @@ export class UserSchema {
   /** Genereate access token for JWT authentication. Short duration */
   getAccessToken(): string {
     var payload = { _id: this._id, email: this.email };
-    return jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET, {
-      expiresIn: process.env.ACCESS_TOKEN_EXPIRES_IN,
+    return jwt.sign(payload, getEnv().accessTokenSecret, {
+      expiresIn: getEnv().accessTokenExpiresIn,
     });
   }
 
   /** Genereate refresh token for JWT authentication. Long duration */
   getRefreshToken(): string {
     var payload = { _id: this._id, email: this.email };
-    return jwt.sign(payload, process.env.REFRESH_TOKEN_SECRET, {
-      expiresIn: process.env.REFRESH_TOKEN_EXPIRES_IN,
+    return jwt.sign(payload, getEnv().refreshTokenSecret, {
+      expiresIn: getEnv().refreshTokenExpiresIn,
     });
   }
 }
