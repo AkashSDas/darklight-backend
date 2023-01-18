@@ -1,0 +1,104 @@
+openapi: 3.0.0
+info:
+  title: 🌗 DarkLight API
+  description: RESTful API back-end for the DarkLight project
+  version: 1.0.0
+
+servers:
+  - url: 'http://localhost:{port}/api'
+    description: Local server
+    variables:
+      port:
+        default: '5002'
+        enum:
+          - '5002'
+          - '8000'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        _id:
+          type: string
+          format: uuid
+        fullName:
+          type: string
+        username:
+          type: string
+        email:
+          type: string
+        isActive:
+          type: boolean
+        isEmailVerified:
+          type: boolean
+        roles:
+          type: array
+          items:
+            type: string
+            enum: ['student', 'instructor', 'admin']
+        oauthProviders:
+          type: array
+          items:
+            type: object
+            properties:
+              provider:
+                type: string
+                enum: ['google', 'facebook', 'twitter']
+              id:
+                type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    UserSignupBody:
+      type: object
+      properties:
+        fullName:
+          type: string
+        username:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+        confirmPassword:
+          type: string
+
+paths:
+  /auth/signup:
+    post:
+      tags:
+        - Auth
+      summary: Create a new user account using basic email/password authentication (along with other required fields). Here we also send email to the newly registered user's email address which will verify the user and make his account active.
+      requestBody:
+        description: User object that needs to be added to the system
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserSignupBody'
+      responses:
+        200:
+          description: Account created successfully and email for verifying and making account active has been sent to the user's email address.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    description: Message to be displayed to the user.
+                    example: Account created successfully. Please verify your email address to make your account active.
+                  user:
+                    $ref: '#/components/schemas/User'
