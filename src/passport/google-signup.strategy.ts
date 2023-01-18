@@ -2,9 +2,9 @@ import { Request } from "express";
 import passport from "passport";
 import { Profile, Strategy, VerifyCallback } from "passport-google-oauth20";
 
+import { AvailableOauthProvider } from "../models/oauth-provider.schema";
 import { createUserService, getUserService } from "../services/user.service";
 import { BaseApiError } from "../utils/error";
-import { OAuthProvider } from "../utils/user";
 import { Strategies } from "./";
 
 // TODO: test this function
@@ -16,7 +16,7 @@ async function verify(
   profile: Profile,
   next: VerifyCallback
 ) {
-  var { email, sub, email_verified, picture } = profile._json;
+  var { email, sub, email_verified } = profile._json;
   var user = await getUserService({ email: email });
 
   // Login the user if the user already has an account
@@ -32,12 +32,11 @@ async function verify(
         : false;
 
     let newUser = await createUserService({
-      fullName: profile.displayName,
       email: email,
       verified,
-      profileImage: { id: "google", URL: picture },
+      // profileImage: { id: "google", URL: picture },
       active: verified,
-      oauthProviders: [{ id: sub, provider: OAuthProvider.GOOGLE }],
+      oauthProviders: [{ sid: sub, provider: AvailableOauthProvider.GOOGLE }],
     });
     return next(null, newUser);
   } catch (error) {

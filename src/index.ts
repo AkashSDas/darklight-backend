@@ -15,7 +15,10 @@ export var stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: "2022-11-15",
 });
 
-var port = process.env.PORT || 5002;
-app.listen(port, function initApp() {
-  logger.info(`API is available on http://localhost:${port}/api`);
-});
+(function startApp() {
+  var port = process.env.PORT || 8000;
+
+  app.listen(port, function initApp() {
+    logger.info(`API is available on http://localhost:${port}/api/v2`);
+  });
+})();

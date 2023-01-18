@@ -1,0 +1,30 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`auth controller signup user already exists if user already then given an user exists error 1`] = `
+{
+  "message": "User already exists",
+}
+`;
+
+exports[`auth controller signup with valid data it shoud create new user 1`] = `
+{
+  "accessToken": Any<String>,
+  "user": {
+    "__v": 0,
+    "_id": Any<String>,
+    "active": false,
+    "banned": false,
+    "createdAt": Any<String>,
+    "email": "james@gmail.com",
+    "enrolledCourses": [],
+    "oauthProviders": [],
+    "roles": [
+      "base",
+    ],
+    "updatedAt": Any<String>,
+    "userId": Any<String>,
+    "username": "james",
+    "verified": false,
+  },
+}
+`;

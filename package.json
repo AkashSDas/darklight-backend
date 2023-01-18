@@ -10,7 +10,7 @@
     "build": "tsc",
     "start": "node lib/index.js",
     "dev": "concurrently \"tsc -w\" \"nodemon lib/index.js\"",
-    "test": "jest --watchAll --coverage",
+    "test": "jest --watchAll --detectOpenHandles",
     "test:watch": "jest --watchAll"
   },
   "dependencies": {

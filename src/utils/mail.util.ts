@@ -2,7 +2,7 @@ import { createTransport } from "nodemailer";
 
 import { DocumentType } from "@typegoose/typegoose";
 
-import { UserClass } from "../models/user.model";
+import { UserSchema } from "../models/user.schema";
 
 export interface EmailOptions {
   to: string;
@@ -32,7 +32,7 @@ export async function sendEmail(opts: EmailOptions) {
   return await transporter.sendMail(msg);
 }
 
-export async function sendVerificationEmail(user: DocumentType<UserClass>) {
+export async function sendVerificationEmail(user: DocumentType<UserSchema>) {
   var token = user.generateVerificationToken();
   await user.save({ validateModifiedOnly: true }); // save token
 

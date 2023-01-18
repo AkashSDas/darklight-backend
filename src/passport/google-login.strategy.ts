@@ -15,7 +15,7 @@ async function verify(
 
   // If the user doesn't exists OR the user exists but the signup process isn't
   // completed yet
-  if (!user || (user && !user.username) || !user.email || !user.fullName) {
+  if (!user || (user && !user.username) || !user.email) {
     return next(null, null);
   }
 

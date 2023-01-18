@@ -2,9 +2,9 @@ import { Request } from "express";
 import passport from "passport";
 import { Profile, Strategy } from "passport-facebook";
 
+import { AvailableOauthProvider } from "../models/oauth-provider.schema";
 import { createUserService, getUserService } from "../services/user.service";
 import { BaseApiError } from "../utils/error";
-import { OAuthProvider } from "../utils/user";
 import { Strategies } from "./";
 
 /** Check if the user exists OR not. If not, create a new user else login the user. */
@@ -15,21 +15,22 @@ async function verify(
   profile: Profile,
   next: any
 ) {
-  var { email, id, name, picture } = profile._json;
+  var { email, id } = profile._json;
   var user = await getUserService({
-    oauthProviders: { $elemMatch: { id, provider: OAuthProvider.FACEBOOK } },
+    oauthProviders: {
+      $elemMatch: { id, provider: AvailableOauthProvider.FACEBOOK },
+    },
   });
   if (user) return next(null, user); // login the user
 
   // Signup the user
   try {
     let newUser = await createUserService({
-      fullName: name,
       email: email ?? undefined,
       verified: email ? true : false,
-      profileImage: { id: "facebook", URL: picture.data.url },
+      // profileImage: { id: "facebook", URL: picture.data.url },
       active: email ? true : false,
-      oauthProviders: [{ id: id, provider: OAuthProvider.FACEBOOK }],
+      oauthProviders: [{ sid: id, provider: AvailableOauthProvider.FACEBOOK }],
     });
     return next(null, newUser);
   } catch (error) {

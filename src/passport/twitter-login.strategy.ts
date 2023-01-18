@@ -1,8 +1,8 @@
 import passport from "passport";
 import { Profile, Strategy } from "passport-twitter";
 
+import { AvailableOauthProvider } from "../models/oauth-provider.schema";
 import { getUserService } from "../services/user.service";
-import { OAuthProvider } from "../utils/user";
 import { Strategies } from "./";
 
 async function verify(
@@ -13,12 +13,14 @@ async function verify(
 ) {
   var { id } = profile._json;
   var user = await getUserService({
-    oauthProviders: { $elemMatch: { id: id, provider: OAuthProvider.TWITTER } },
+    oauthProviders: {
+      $elemMatch: { sid: id, provider: AvailableOauthProvider.TWITTER },
+    },
   });
 
   // If the user doesn't exists OR the user exists but the signup process isn't
   // completed yet
-  if (!user || (user && !user.username) || !user.email || !user.fullName) {
+  if (!user || (user && !user.username) || !user.email) {
     return next(null, null);
   }
 
