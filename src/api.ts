@@ -43,7 +43,7 @@ app.get("/api/v2/testing/test", function testController(_req, res) {
   res.status(200).json({ message: "Hello World!" });
 });
 
-app.use("/api/v2/auth", require("./route/auth.route").router);
+app.use("/api/v2/auth", require("./routes/auth.route").router);
 
 app.all("*", function handleUnknownRoutes(req, res) {
   return res.status(404).json({
