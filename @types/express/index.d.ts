@@ -25,6 +25,12 @@
  * - This code does give error at first while using `Express` types
  */
 
-// declare module "express-serve-static-core" {
-//   interface Request {}
-// }
+import { DocumentType } from "@typegoose/typegoose";
+
+import { UserSchema } from "../../src/models/user.schema";
+
+declare module "express-serve-static-core" {
+  interface Request {
+    user?: DocumentType<UserSchema>;
+  }
+}
