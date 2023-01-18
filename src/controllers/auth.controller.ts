@@ -2,6 +2,8 @@ import { Request, Response } from "express";
 
 import User from "../models/user.schema";
 import { getLoginCookieConfig } from "../utils/auth";
+import { BaseApiError } from "../utils/error";
+import logger from "../utils/logger";
 import * as z from "../utils/zod";
 
 // =====================================
@@ -27,6 +29,34 @@ export async function signup(
   res.cookie("refreshToken", refreshToken, getLoginCookieConfig());
 
   return res.status(201).json({ user, accessToken });
+}
+
+/**
+ * Complete OAuth signup
+ * @route POST /api/v2/auth/signup/complete
+ * @remark Middleware: verifyAuth
+ */
+export async function completeOauthSignup(
+  req: Request<{}, {}, z.CompleteOauth["body"]>,
+  res: Response
+) {
+  var { email, username } = req.body;
+
+  var user = await (async function updateUser() {
+    try {
+      return await User.findOneAndUpdate(
+        { _id: req.user._id },
+        { email, username },
+        { new: true }
+      );
+    } catch (error) {
+      if (error instanceof BaseApiError) throw error;
+      logger.error(error);
+      throw new BaseApiError(500, "Failed to update user");
+    }
+  })();
+
+  return res.status(200).json({ user });
 }
 
 // =====================================

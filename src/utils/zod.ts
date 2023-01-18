@@ -26,6 +26,16 @@ export var signup = z.object({
   }),
 });
 
+export var completeOauthSchema = z.object({
+  body: z.object({
+    username: z
+      .string({ required_error: "Required" })
+      .min(4, "Too short")
+      .max(24, "Too long"),
+    email: z.string({ required_error: "Required" }).email("Invalid"),
+  }),
+});
+
 export var login = z.object({
   body: z.object({
     email: z.string({ required_error: "Required" }).email("Invalid"),
@@ -47,4 +57,5 @@ export var login = z.object({
 // =====================================
 
 export type Signup = z.infer<typeof signup>;
+export type CompleteOauth = z.infer<typeof completeOauthSchema>;
 export type Login = z.infer<typeof login>;
