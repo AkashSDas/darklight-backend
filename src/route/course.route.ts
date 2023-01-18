@@ -9,7 +9,7 @@ import verifyAuth from "../middlewares/auth.middleware";
 import { validateResource } from "../middlewares/zod.middleware";
 import * as z from "../schema/course.schema";
 import { handleMiddlewareError } from "../utils/async.util";
-import { sendErrorResponse } from "../utils/error.util";
+import { sendErrorResponse } from "../utils/error";
 
 export var router = Router();
 

@@ -3,7 +3,7 @@ import passport from "passport";
 import { Profile, Strategy } from "passport-facebook";
 
 import { createUserService, getUserService } from "../services/user.service";
-import { BaseApiError } from "../utils/error.util";
+import { BaseApiError } from "../utils/error";
 import { OAuthProvider } from "../utils/user.util";
 import { Strategies } from "./";
 

@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 
 import { getUserService } from "../services/user.service";
-import { BaseApiError } from "../utils/error.util";
+import { BaseApiError } from "../utils/error";
 
 async function verifyJwt(req: Request, res: Response, next: NextFunction) {
   // Check if the bearer token is present in the request header

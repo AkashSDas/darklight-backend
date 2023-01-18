@@ -3,7 +3,7 @@ import passport from "passport";
 import { Profile, Strategy, VerifyCallback } from "passport-google-oauth20";
 
 import { createUserService, getUserService } from "../services/user.service";
-import { BaseApiError } from "../utils/error.util";
+import { BaseApiError } from "../utils/error";
 import { OAuthProvider } from "../utils/user.util";
 import { Strategies } from "./";
 
@@ -28,8 +28,8 @@ async function verify(
       typeof email_verified == "boolean"
         ? email_verified
         : email_verified == "true"
-          ? true
-          : false;
+        ? true
+        : false;
 
     let newUser = await createUserService({
       fullName: profile.displayName,

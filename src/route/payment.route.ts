@@ -1,4 +1,5 @@
 import { Router } from "express";
+
 import {
   createPaymentIntentController,
   getUserPaymentCardsController,
@@ -6,7 +7,7 @@ import {
 } from "../controller/payment.controller";
 import verifyAuth from "../middlewares/auth.middleware";
 import { handleMiddlewareError } from "../utils/async.util";
-import { sendErrorResponse } from "../utils/error.util";
+import { sendErrorResponse } from "../utils/error";
 
 export var router = Router();
 

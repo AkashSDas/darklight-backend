@@ -14,7 +14,7 @@ import {
   Severity,
 } from "@typegoose/typegoose";
 
-import { BaseApiError } from "../utils/error.util";
+import { BaseApiError } from "../utils/error";
 import { OAuthProvider, UserRole } from "../utils/user.util";
 import { EnrolledCourseClass } from "./enrolled-course.model";
 import { ImageClass } from "./image.model";

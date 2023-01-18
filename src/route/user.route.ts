@@ -5,7 +5,7 @@ import verifyAuth from "../middlewares/auth.middleware";
 import { validateResource } from "../middlewares/zod.middleware";
 import { updateDetailsSchema, userExistsSchema } from "../schema/user.schema";
 import { handleMiddlewareError } from "../utils/async.util";
-import { sendErrorResponse } from "../utils/error.util";
+import { sendErrorResponse } from "../utils/error";
 
 export var router = Router();
 

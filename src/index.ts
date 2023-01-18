@@ -4,7 +4,7 @@ import Stripe from "stripe";
 import { app } from "./api";
 import { connectToCloudinary } from "./utils/cloudinary.util";
 import { connectToDB } from "./utils/db.util";
-import logger from "./utils/logger.util";
+import logger from "./utils/logger";
 
 if (process.env.NODE_ENV != "production") config();
 

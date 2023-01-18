@@ -1,15 +1,10 @@
 import { createLogger, format, Logger, transports } from "winston";
 
-// Log format
+import { getEnv } from "./config";
+
 var baseFormat = format.printf(({ level, message, timestamp }) => {
   return `[${level}] ${timestamp} ${message}`;
 });
-
-if (process.env.NODE_ENV == "production") {
-  var logger = productionLogger();
-} else {
-  var logger = developmentLogger();
-}
 
 function developmentLogger(): Logger {
   return createLogger({
@@ -33,6 +28,12 @@ function productionLogger(): Logger {
       new transports.File({ filename: "./logs/error.log", level: "error" }),
     ],
   });
+}
+
+if (getEnv().env == "production") {
+  var logger = productionLogger();
+} else {
+  var logger = developmentLogger();
 }
 
 export default logger;
