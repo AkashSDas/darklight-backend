@@ -3,11 +3,10 @@ import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 
 import User from "../models/user.schema";
-import * as z from "../schema/auth.schema";
 import { loginCookieConfig } from "../utils/auth.util";
 import { getEnv } from "../utils/config";
 import { EmailOptions, sendEmail, sendVerificationEmail } from "../utils/mail.util";
-import * as _z from "../utils/zod";
+import * as z from "../utils/zod";
 
 // =====================================
 // Signup
@@ -19,7 +18,7 @@ import * as _z from "../utils/zod";
  * @remark username, email, password are required
  */
 export async function signup(
-  req: Request<{}, {}, _z.Signup["body"]>,
+  req: Request<{}, {}, z.Signup["body"]>,
   res: Response
 ) {
   var { username, email, password } = req.body;
@@ -50,8 +49,8 @@ export async function cancelOauthSignup(req: Request, res: Response) {
  * @route PUT /api/v2/auth/complete-oauth
  * @remark Middlewares used are: verifyAuth
  */
-export async function completeOauthController(
-  req: Request<{}, {}, _z.CompleteOauth["body"]>,
+export async function completeOauth(
+  req: Request<{}, {}, z.CompleteOauth["body"]>,
   res: Response
 ) {
   var { username, email } = req.body;
@@ -74,7 +73,7 @@ export async function completeOauthController(
  * @route POST /api/v2/auth/login
  */
 export async function login(
-  req: Request<{}, {}, _z.Login["body"]>,
+  req: Request<{}, {}, z.Login["body"]>,
   res: Response
 ) {
   var { email, password } = req.body;
@@ -143,7 +142,7 @@ export async function accessToken(req: Request, res: Response) {
  * @route POST /api/v2/auth/verify-email
  */
 export async function verifyEmail(
-  req: Request<{}, {}, _z.VerifyEmail["body"]>,
+  req: Request<{}, {}, z.VerifyEmail["body"]>,
   res: Response
 ) {
   var { email } = req.body;
@@ -160,12 +159,12 @@ export async function verifyEmail(
 
 /**
  * Verify user email
- * @route PUT /api/v2auth/confirm-email/:token
+ * @route PUT /api/v2/auth/confirm-email/:token
  * @remark token is sent in email
  * @remark after successful verification, user will be redirected to the frontend
  */
 export async function confirmEmail(
-  req: Request<_z.ConfirmEmail["params"]>,
+  req: Request<z.ConfirmEmail["params"]>,
   res: Response
 ) {
   var { token } = req.params;
@@ -186,15 +185,15 @@ export async function confirmEmail(
   return res.redirect(301, getEnv().frontendURL);
 }
 
-// ==================================
-// PASSWORD RESET CONTROLLERS
-// ==================================
+// =====================================
+// Password reset
+// =====================================
 
 /**
  * Send password reset link to user's registered email
- * @route POST /auth/forgot-password
+ * @route POST /api/v2/uth/forgot-password
  */
-export async function forgotPasswordController(
+export async function forgotPassword(
   req: Request<{}, {}, z.ForgotPassword["body"]>,
   res: Response
 ) {
@@ -205,7 +204,7 @@ export async function forgotPasswordController(
   var token = user.generatePasswordResetToken();
   await user.save({ validateModifiedOnly: true });
 
-  var url = `${process.env.FRONTEND_BASE_URL}/auth/password-reset/${token}`;
+  var url = `${getEnv().frontendURL}/auth/password-reset/${token}`;
   var opts: EmailOptions = {
     to: user.email,
     subject: "Reset your password",
@@ -227,9 +226,9 @@ export async function forgotPasswordController(
 
 /**
  * Reset user's password
- * @route PUT /auth/password-reset/:token
+ * @route PUT /api/v2/auth/password-reset/:token
  */
-export async function passwordResetController(
+export async function passwordReset(
   req: Request<z.PasswordReset["params"], {}, z.PasswordReset["body"]>,
   res: Response
 ) {
@@ -253,22 +252,17 @@ export async function passwordResetController(
   return res.status(200).json({ message: "Password reset successfully" });
 }
 
-// ==================================
-// OTHER CONTROLLERS
-// ==================================
+// =====================================
+// Logout
+// =====================================
 
 /**
  * Logout user with email/password login OR social login
- * @route GET /auth/logout
+ * @route GET /api/v2/auth/logout
  */
-export async function logoutController(req: Request, res: Response) {
+export async function logout(req: Request, res: Response) {
   if (req.cookies?.refreshToken) {
-    res.clearCookie("refreshToken", {
-      httpOnly: true,
-      sameSite: "none",
-      secure: true,
-      // secure: process.env.NODE_ENV == "production",
-    });
+    res.clearCookie("refreshToken", loginCookieConfig);
   } else if (req.logOut) {
     req.logOut(function successfulOAuthLogout() {});
   }

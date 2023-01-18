@@ -5,11 +5,10 @@ import * as ctrl from "../controller/auth.controller";
 import verifyAuth from "../middlewares/auth.middleware";
 import { validateResource } from "../middlewares/zod.middleware";
 import { Strategies } from "../passport";
-import * as z from "../schema/auth.schema";
 import { handleMiddlewareError } from "../utils/async.util";
 import { getEnv } from "../utils/config";
 import { sendErrorResponse } from "../utils/error";
-import * as _z from "../utils/zod";
+import * as z from "../utils/zod";
 
 export var router = Router();
 
@@ -20,7 +19,7 @@ export var router = Router();
 // Email/password signup
 router.post(
   "/signup",
-  validateResource(_z.signup),
+  validateResource(z.signup),
   handleMiddlewareError(ctrl.signup),
   sendErrorResponse
 );
@@ -36,9 +35,9 @@ router.delete(
 // Complete OAuth signup (post oauth signup)
 router.put(
   "/complete-oauth",
-  validateResource(_z.completeOauthSchema),
+  validateResource(z.completeOauthSchema),
   handleMiddlewareError(verifyAuth),
-  handleMiddlewareError(ctrl.completeOauthController),
+  handleMiddlewareError(ctrl.completeOauth),
   sendErrorResponse
 );
 
@@ -101,7 +100,7 @@ router
 // Email/password login
 router.post(
   "/login",
-  validateResource(_z.login),
+  validateResource(z.login),
   handleMiddlewareError(ctrl.login),
   sendErrorResponse
 );
@@ -172,49 +171,45 @@ router
     function loginWithTwitterRedirect() {}
   );
 
-// ==================================
-// EMAIL VERIFICATION ROUTES
-// ==================================
+// =====================================
+// Verify email
+// =====================================
 
 router
   .post(
     "/verify-email",
-    validateResource(z.verifyEmailSchema),
+    validateResource(z.verifyEmail),
     handleMiddlewareError(ctrl.verifyEmail),
     sendErrorResponse
   )
   .put(
     "/confirm-email/:token",
-    validateResource(z.confirmEmailSchema),
+    validateResource(z.confirmEmail),
     handleMiddlewareError(ctrl.confirmEmail),
     sendErrorResponse
   );
 
-// ==================================
-// PASSWORD RESET ROUTES
-// ==================================
+// =====================================
+// Forgot password
+// =====================================
 
 router
   .post(
     "/forgot-password",
-    validateResource(z.forgotPasswordSchema),
-    handleMiddlewareError(ctrl.forgotPasswordController),
+    validateResource(z.forgotPassword),
+    handleMiddlewareError(ctrl.forgotPassword),
     sendErrorResponse
   )
   .put(
     "/password-reset/:token",
-    validateResource(z.passwordResetSchema),
-    handleMiddlewareError(ctrl.passwordResetController),
+    validateResource(z.passwordReset),
+    handleMiddlewareError(ctrl.passwordReset),
     sendErrorResponse
   );
 
-// ==================================
-// OTHER ROUTES
-// ==================================
+// =====================================
+// Logout
+// =====================================
 
 // Logout
-router.get(
-  "/logout",
-  handleMiddlewareError(ctrl.logoutController),
-  sendErrorResponse
-);
+router.get("/logout", handleMiddlewareError(ctrl.logout), sendErrorResponse);
