@@ -4,7 +4,7 @@ import { Profile, Strategy } from "passport-twitter";
 
 import { createUserService, getUserService } from "../services/user.service";
 import { BaseApiError } from "../utils/error";
-import { OAuthProvider } from "../utils/user.util";
+import { OAuthProvider } from "../utils/user";
 import { Strategies } from "./";
 
 async function verify(

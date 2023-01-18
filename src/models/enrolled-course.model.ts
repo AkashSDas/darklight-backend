@@ -1,17 +1,11 @@
 import MongoPaging from "mongo-cursor-pagination";
 import { SchemaTypes } from "mongoose";
 
-import {
-  getModelForClass,
-  plugin,
-  prop,
-  Ref,
-  Severity,
-} from "@typegoose/typegoose";
+import { getModelForClass, plugin, prop, Ref, Severity } from "@typegoose/typegoose";
 
 import { CourseClass } from "./course.model";
 import { LessonClass } from "./lesson.model";
-import { UserClass } from "./user.model";
+import { UserSchema } from "./user.schema";
 
 export enum PaymentStatus {
   PENDING = "PENDING",
@@ -21,8 +15,8 @@ export enum PaymentStatus {
 
 @plugin(MongoPaging.mongoosePlugin, { name: "paginateEnrolledCourse" })
 export class EnrolledCourseClass {
-  @prop({ ref: () => UserClass, required: true })
-  user: Ref<UserClass>;
+  @prop({ ref: () => UserSchema, required: true })
+  user: Ref<UserSchema>;
 
   @prop({ ref: () => CourseClass, required: true })
   course: Ref<CourseClass>;

@@ -2,14 +2,21 @@ import crypto from "crypto";
 import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 
-import User from "../models/user.model";
+import User from "../models/user.schema";
 import * as z from "../schema/auth.schema";
 import { loginCookieConfig } from "../utils/auth.util";
 import { EmailOptions, sendEmail, sendVerificationEmail } from "../utils/mail.util";
 
-// ==================================
-// SIGNUP CONTROLLERS
-// ==================================
+// =====================================
+// Signup
+// =====================================
+
+/**
+ * Signup a new user
+ * @route POST /api/v2/auth/signup
+ * @remark username, email, password are required
+ */
+export async function signup() {}
 
 /**
  * Signup a new user and send verification email
@@ -29,10 +36,10 @@ export async function signupController(
 
   // Login user
   {
-    let accessToken = user.accessToken();
-    let refreshToken = user.refreshToken();
+    let accessToken = user.getAccessToken();
+    let refreshToken = user.getRefreshToken();
     res.cookie("refreshToken", refreshToken, loginCookieConfig);
-    user.password = undefined; // remove password from response
+    user.passwordDigest = undefined; // remove password from response
     return res.status(201).json({ message, accessToken, user });
   }
 }
@@ -95,7 +102,7 @@ export async function loginController(
   var { email, password } = req.body;
   var user = await User.findOne({ email }).select("+password");
   if (!user) return res.status(404).json({ message: "User not found" });
-  if (!user.password) {
+  if (!user.passwordDigest) {
     return res.status(400).json({ message: "Invalid login method" });
   }
 
@@ -105,10 +112,10 @@ export async function loginController(
   }
 
   {
-    let accessToken = user.accessToken();
-    let refreshToken = user.refreshToken();
+    let accessToken = user.getAccessToken();
+    let refreshToken = user.getRefreshToken();
     res.cookie("refreshToken", refreshToken, loginCookieConfig);
-    user.password = undefined; // remove password from response
+    user.passwordDigest = undefined; // remove password from response
     return res.status(200).json({ user, accessToken });
   }
 }
@@ -142,7 +149,7 @@ export async function accessTokenController(req: Request, res: Response) {
 
           var user = await User.findById((decoded as any)._id);
           if (!user) return res.status(404).json({ message: "User not found" });
-          var accessToken = user.accessToken();
+          var accessToken = user.getAccessToken();
           return res.status(200).json({ user, accessToken });
         }
       );
@@ -262,7 +269,7 @@ export async function passwordResetController(
   }
 
   // Update the user's password
-  user.password = req.body?.password;
+  user.passwordDigest = req.body?.password;
   user.passwordResetToken = undefined;
   user.passwordResetTokenExpiresAt = undefined;
   await user.save({ validateModifiedOnly: true });

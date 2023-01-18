@@ -4,7 +4,7 @@ import { Profile, Strategy, VerifyCallback } from "passport-google-oauth20";
 
 import { createUserService, getUserService } from "../services/user.service";
 import { BaseApiError } from "../utils/error";
-import { OAuthProvider } from "../utils/user.util";
+import { OAuthProvider } from "../utils/user";
 import { Strategies } from "./";
 
 // TODO: test this function

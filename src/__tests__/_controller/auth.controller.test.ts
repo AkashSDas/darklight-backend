@@ -8,7 +8,7 @@ import { DocumentType } from "@typegoose/typegoose";
 
 // import { createUserService, deleteUserService, getUserService, getUserWithSelectService } from "../../_services/user.service";
 import { app } from "../../api";
-import User, { UserClass } from "../../models/user.model";
+import User, { UserSchema } from "../../models/user.schema";
 import { userPayload } from "../payload";
 
 describe("AuthController", () => {
@@ -138,7 +138,7 @@ describe("AuthController", () => {
           password: userPayload.password,
         });
 
-        accessToken = user.accessToken();
+        accessToken = user.getAccessToken();
         userId = user._id.toString();
       });
 
@@ -178,7 +178,7 @@ describe("AuthController", () => {
         password: userPayload.password,
       });
 
-      accessToken = user.accessToken();
+      accessToken = user.getAccessToken();
       userId = user._id.toString();
     });
 
@@ -272,7 +272,7 @@ describe("AuthController", () => {
       });
 
       userId = user._id.toString();
-      refreshToken = user.refreshToken();
+      refreshToken = user.getRefreshToken();
     });
 
     afterAll(async function deleteUser() {
@@ -306,7 +306,7 @@ describe("AuthController", () => {
 
   describe.skip("verifyEmailController", () => {
     var userId: string;
-    var user: DocumentType<UserClass>;
+    var user: DocumentType<UserSchema>;
 
     beforeAll(async function createUser() {
       user = await User.create({
@@ -345,7 +345,7 @@ describe("AuthController", () => {
   describe("confirmEmailController", () => {
     var userId: string;
     var token: string;
-    var user: DocumentType<UserClass>;
+    var user: DocumentType<UserSchema>;
 
     beforeAll(async function createUser() {
       user = await User.create({
@@ -391,7 +391,7 @@ describe("AuthController", () => {
 
   describe.skip("forgotPasswordController", () => {
     var userId: string;
-    var user: DocumentType<UserClass>;
+    var user: DocumentType<UserSchema>;
 
     beforeAll(async function createUser() {
       user = await User.create({
@@ -435,7 +435,7 @@ describe("AuthController", () => {
   describe("passwordResetController", () => {
     var userId: string;
     var token: string;
-    var user: DocumentType<UserClass>;
+    var user: DocumentType<UserSchema>;
 
     beforeAll(async function createUser() {
       user = await User.create({
@@ -504,7 +504,7 @@ describe("AuthController", () => {
 
   describe("logoutController", () => {
     var userId: string;
-    var user: DocumentType<UserClass>;
+    var user: DocumentType<UserSchema>;
     var accessToken: string;
 
     beforeAll(async function createUser() {
@@ -515,7 +515,7 @@ describe("AuthController", () => {
       });
 
       userId = user._id.toString();
-      accessToken = user.accessToken();
+      accessToken = user.getAccessToken();
     });
 
     afterAll(async function deleteUser() {

@@ -6,7 +6,7 @@ import { afterAll, beforeAll, describe, expect, it } from "@jest/globals";
 import { DocumentType } from "@typegoose/typegoose";
 
 import { app } from "../../api";
-import User, { UserClass } from "../../models/user.model";
+import User, { UserSchema } from "../../models/user.schema";
 import { userPayload } from "../payload";
 
 describe("UserController", () => {
@@ -30,7 +30,7 @@ describe("UserController", () => {
 
   describe("userExistsController", () => {
     describe("when the user exists", () => {
-      var user: DocumentType<UserClass>;
+      var user: DocumentType<UserSchema>;
 
       beforeAll(async function createUser() {
         user = await User.create({
@@ -82,7 +82,7 @@ describe("UserController", () => {
           password: userPayload.password,
         });
 
-        accessToken = user.accessToken();
+        accessToken = user.getAccessToken();
         userId = user._id.toString();
       });
 
@@ -121,7 +121,7 @@ describe("UserController", () => {
           password: userPayload.password,
         });
 
-        accessToken = user.accessToken();
+        accessToken = user.getAccessToken();
         userId = user._id.toString();
       });
 
@@ -252,7 +252,7 @@ describe("UserController", () => {
 //     describe("given that is user is logged in", () => {
 //       it("should return user info", async () => {
 //         var user = await createUserService(userPayload);
-//         var token = user.accessToken();
+//         var token = user.getAccessToken();
 //         var { statusCode, body } = await supertest(app)
 //           .get(`/api/v2/user/me`)
 //           .set("Authorization", `Bearer ${token}`);
@@ -278,7 +278,7 @@ describe("UserController", () => {
 //     describe("given that the user is not a teacher", () => {
 //       it("should assign the teacher role", async () => {
 //         var user = await createUserService(userPayload);
-//         var token = user.accessToken();
+//         var token = user.getAccessToken();
 //         var { statusCode } = await supertest(app)
 //           .post(`/api/v2/user/instructor-signup`)
 //           .set("Authorization", `Bearer ${token}`);

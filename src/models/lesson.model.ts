@@ -7,7 +7,7 @@ import { ContentClass } from "./content.model";
 import { CourseClass } from "./course.model";
 import { ImageClass } from "./image.model";
 import { QnaClass } from "./qna.model";
-import { UserClass } from "./user.model";
+import { UserSchema } from "./user.schema";
 
 export class LessonClass {
   @prop({ ref: () => CourseClass, required: true })
@@ -16,8 +16,8 @@ export class LessonClass {
   @prop({ type: () => SchemaTypes.ObjectId, required: true })
   group: Types.ObjectId;
 
-  @prop({ type: SchemaTypes.Array, ref: () => UserClass, required: true })
-  instructors: Ref<UserClass>[];
+  @prop({ type: SchemaTypes.Array, ref: () => UserSchema, required: true })
+  instructors: Ref<UserSchema>[];
 
   @prop({ type: SchemaTypes.String, trim: true })
   emoji?: string;

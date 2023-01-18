@@ -2,7 +2,7 @@ import passport from "passport";
 import { Profile, Strategy } from "passport-twitter";
 
 import { getUserService } from "../services/user.service";
-import { OAuthProvider } from "../utils/user.util";
+import { OAuthProvider } from "../utils/user";
 import { Strategies } from "./";
 
 async function verify(

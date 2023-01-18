@@ -6,7 +6,7 @@ import { plugin, prop, Ref } from "@typegoose/typegoose";
 import { CourseDifficulty, CourseStage } from "../utils/course.util";
 import { ImageClass } from "./image.model";
 import { LessonClass } from "./lesson.model";
-import { UserClass } from "./user.model";
+import { UserSchema } from "./user.schema";
 
 @plugin(MongoPaging.mongoosePlugin, { name: "paginateCourse" })
 export class CourseClass {
@@ -32,11 +32,11 @@ export class CourseClass {
 
   @prop({
     type: SchemaTypes.Array,
-    ref: () => UserClass,
+    ref: () => UserSchema,
     required: true,
     default: [],
   })
-  instructors: Ref<UserClass>[];
+  instructors: Ref<UserSchema>[];
 
   @prop({ type: SchemaTypes.Number, min: 0 })
   price?: number;

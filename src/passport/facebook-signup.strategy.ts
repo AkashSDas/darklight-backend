@@ -4,7 +4,7 @@ import { Profile, Strategy } from "passport-facebook";
 
 import { createUserService, getUserService } from "../services/user.service";
 import { BaseApiError } from "../utils/error";
-import { OAuthProvider } from "../utils/user.util";
+import { OAuthProvider } from "../utils/user";
 import { Strategies } from "./";
 
 /** Check if the user exists OR not. If not, create a new user else login the user. */

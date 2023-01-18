@@ -28,12 +28,11 @@
 import { DocumentType } from "@typegoose/typegoose";
 
 import { CourseClass } from "../../src/models/course.model";
-import { UserClass } from "../../src/models/user.model";
+import { UserSchema } from "../../src/models/user.schema";
 
 declare module "express-serve-static-core" {
   interface Request {
-    // TODO: fix types
-    user?: DocumentType<UserClass>;
+    user?: DocumentType<UserSchema>;
     course?: DocumentType<CourseClass>;
   }
 }

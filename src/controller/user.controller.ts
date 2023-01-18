@@ -5,7 +5,7 @@ import { UploadedFile } from "express-fileupload";
 import User from "../models/user.model";
 import { UpdateDetails, UserExists } from "../schema/user.schema";
 import { USER_PROFILE } from "../utils/cloudinary.util";
-import { UserRole } from "../utils/user.util";
+import { UserRole } from "../utils/user";
 
 // ==================================
 // OTHER CONTROLLERS
