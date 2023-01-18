@@ -64,38 +64,33 @@ export async function completeOauthController(
   return res.status(200).json({ user });
 }
 
-// ==================================
-// LOGIN CONTROLLERS
-// ==================================
+// =====================================
+// Login
+// =====================================
 
 /**
- * Login user with email and password
- * @route POST /auth/login
- * @remark access token will be sent in response cookie and body
+ * Login user with email & password
+ * @route POST /api/v2/auth/login
  */
-export async function loginController(
-  req: Request<{}, {}, z.Login["body"]>,
+export async function login(
+  req: Request<{}, {}, _z.Login["body"]>,
   res: Response
 ) {
   var { email, password } = req.body;
-  var user = await User.findOne({ email }).select("+password");
+  var user = await User.findOne({ email }).select("+passwordDigest");
   if (!user) return res.status(404).json({ message: "User not found" });
   if (!user.passwordDigest) {
     return res.status(400).json({ message: "Invalid login method" });
   }
 
-  {
-    let isMatch = await user.verifyPassword(password);
-    if (!isMatch) return res.status(400).json({ message: "Invalid password" });
-  }
+  var isMatch = await user.verifyPassword(password);
+  if (!isMatch) return res.status(400).json({ message: "Wrong password" });
 
-  {
-    let accessToken = user.getAccessToken();
-    let refreshToken = user.getRefreshToken();
-    res.cookie("refreshToken", refreshToken, loginCookieConfig);
-    user.passwordDigest = undefined; // remove password from response
-    return res.status(200).json({ user, accessToken });
-  }
+  var accessToken = user.getAccessToken();
+  var refreshToken = user.getRefreshToken();
+  res.cookie("refreshToken", refreshToken, loginCookieConfig);
+  user.passwordDigest = undefined; // rm password from response
+  return res.status(200).json({ user, accessToken });
 }
 
 /**

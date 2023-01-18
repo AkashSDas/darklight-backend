@@ -94,15 +94,15 @@ router
     function signupWithTwitterRedirect() {}
   );
 
-// ==================================
-// LOGIN ROUTES
-// ==================================
+// =====================================
+// Login
+// =====================================
 
 // Email/password login
 router.post(
   "/login",
-  validateResource(z.loginSchema),
-  handleMiddlewareError(ctrl.loginController),
+  validateResource(_z.login),
+  handleMiddlewareError(ctrl.login),
   sendErrorResponse
 );
 
