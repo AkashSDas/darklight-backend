@@ -1,5 +1,55 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`auth controller access-token when refresh token is valid then successfully get a new access token 1`] = `
+{
+  "accessToken": Any<String>,
+  "user": {
+    "__v": 0,
+    "_id": Any<String>,
+    "active": false,
+    "banned": false,
+    "createdAt": Any<String>,
+    "email": "james@gmail.com",
+    "enrolledCourses": [],
+    "oauthProviders": [],
+    "roles": [
+      "base",
+    ],
+    "updatedAt": Any<String>,
+    "userId": Any<String>,
+    "verified": false,
+  },
+}
+`;
+
+exports[`auth controller login when user doesn't exists then give a 404 response 1`] = `
+{
+  "message": "User not found",
+}
+`;
+
+exports[`auth controller login when user exists then successfully login 1`] = `
+{
+  "accessToken": Any<String>,
+  "user": {
+    "__v": 0,
+    "_id": Any<String>,
+    "active": false,
+    "banned": false,
+    "createdAt": Any<String>,
+    "email": "james@gmail.com",
+    "enrolledCourses": [],
+    "oauthProviders": [],
+    "roles": [
+      "base",
+    ],
+    "updatedAt": Any<String>,
+    "userId": Any<String>,
+    "verified": false,
+  },
+}
+`;
+
 exports[`auth controller signup user already exists if user already then given an user exists error 1`] = `
 {
   "message": "User already exists",

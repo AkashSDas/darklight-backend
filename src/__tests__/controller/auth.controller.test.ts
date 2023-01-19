@@ -75,4 +75,89 @@ describe("auth controller", () => {
       });
     });
   });
+
+  // =====================================
+  // Login
+  // =====================================
+
+  describe("login", () => {
+    describe("when user doesn't exists", () => {
+      it("then give a 404 response", async () => {
+        let response = await supertest(app)
+          .post("/api/v2/auth/login")
+          .send({ email: "james@gmail.com", password: "testingTEST@123" });
+
+        expect(response.status).toEqual(404);
+        expect(response.body).toMatchSnapshot();
+      });
+    });
+
+    describe("when user exists", () => {
+      beforeEach(async () => {
+        await User.create({
+          email: "james@gmail.com",
+          passwordDigest: "testingTEST@123",
+        });
+      });
+
+      it("then successfully login", async () => {
+        let response = await supertest(app)
+          .post("/api/v2/auth/login")
+          .send({ email: "james@gmail.com", password: "testingTEST@123" });
+
+        expect(response.status).toEqual(200);
+
+        expect(response.body).toMatchSnapshot({
+          accessToken: expect.any(String),
+          user: {
+            ...response.body.user,
+            _id: expect.any(String),
+            userId: expect.any(String),
+            createdAt: expect.any(String),
+            updatedAt: expect.any(String),
+          },
+        });
+
+        expect(
+          response.headers["set-cookie"].find((cookie: string) =>
+            cookie.includes("refreshToken")
+          )
+        ).toBeDefined();
+      });
+    });
+  });
+
+  describe("access-token", () => {
+    let refreshToken: string;
+
+    beforeEach(async () => {
+      let user = await User.create({
+        email: "james@gmail.com",
+        passwordDigest: "testingTEST@123",
+      });
+
+      refreshToken = user.getRefreshToken();
+    });
+
+    describe("when refresh token is valid", () => {
+      it("then successfully get a new access token", async () => {
+        let response = await supertest(app)
+          .get("/api/v2/auth/access-token")
+          .set("Cookie", [`refreshToken=${refreshToken}`]);
+
+        expect(response.status).toEqual(200);
+
+        expect(response.body).toMatchSnapshot({
+          accessToken: expect.any(String),
+          user: {
+            ...response.body.user,
+            _id: expect.any(String),
+            userId: expect.any(String),
+            createdAt: expect.any(String),
+            updatedAt: expect.any(String),
+          },
+        });
+      });
+    });
+  });
 });
