@@ -47,7 +47,7 @@ router
     passport.authenticate(Strategies.GoogleSignup, {
       scope: ["profile", "email"],
     }),
-    function signupWithGoogle() { }
+    function signupWithGoogle() {}
   )
   .get(
     "/signup/google/redirect",
@@ -63,7 +63,7 @@ router
   .get(
     "/signup/facebook",
     passport.authenticate(Strategies.FacebookSignup),
-    function signupWithFacebook() { }
+    function signupWithFacebook() {}
   )
   .get(
     "/signup/facebook/redirect",
@@ -72,7 +72,7 @@ router
       successRedirect: process.env.OAUTH_SIGNUP_SUCCESS_REDIRECT_URL,
       failureRedirect: process.env.OAUTH_SIGNUP_FAILURE_REDIRECT_URL,
     }),
-    function signupWithFacebookRedirect() { }
+    function signupWithFacebookRedirect() {}
   );
 
 // Twitter OAuth signup
@@ -80,7 +80,7 @@ router
   .get(
     "/signup/twitter",
     passport.authenticate(Strategies.TwitterSignup),
-    function signupWithTwitter() { }
+    function signupWithTwitter() {}
   )
   .get(
     "/signup/twitter/redirect",
@@ -89,7 +89,7 @@ router
       successRedirect: process.env.OAUTH_SIGNUP_SUCCESS_REDIRECT_URL,
       failureRedirect: process.env.OAUTH_SIGNUP_FAILURE_REDIRECT_URL,
     }),
-    function signupWithTwitterRedirect() { }
+    function signupWithTwitterRedirect() {}
   );
 
 // ==================================
@@ -118,7 +118,7 @@ router
     passport.authenticate(Strategies.GoogleLogin, {
       scope: ["profile", "email"],
     }),
-    function loginWithGoogle() { }
+    function loginWithGoogle() {}
   )
   .get(
     "/login/google/redirect",
@@ -127,7 +127,7 @@ router
       successRedirect: process.env.OAUTH_LOGIN_SUCCESS_REDIRECT_URL,
       failureRedirect: `${process.env.OAUTH_LOGIN_FAILURE_REDIRECT_URL}?info=signup-invalid`,
     }),
-    function loginWithGoogleRedirect() { }
+    function loginWithGoogleRedirect() {}
   );
 
 // Facebook OAuth login
@@ -135,7 +135,7 @@ router
   .get(
     "/login/facebook",
     passport.authenticate(Strategies.FacebookLogin),
-    function loginWithFacebook() { }
+    function loginWithFacebook() {}
   )
   .get(
     "/login/facebook/redirect",
@@ -144,7 +144,7 @@ router
       successRedirect: process.env.OAUTH_LOGIN_SUCCESS_REDIRECT_URL,
       failureRedirect: `${process.env.OAUTH_LOGIN_FAILURE_REDIRECT_URL}?info=signup-invalid`,
     }),
-    function loginWithFacebookRedirect() { }
+    function loginWithFacebookRedirect() {}
   );
 
 // Twitter OAuth login
@@ -152,7 +152,7 @@ router
   .get(
     "/login/twitter",
     passport.authenticate(Strategies.TwitterLogin),
-    function loginWithTwitter() { }
+    function loginWithTwitter() {}
   )
   .get(
     "/login/twitter/redirect",
@@ -161,7 +161,7 @@ router
       successRedirect: process.env.OAUTH_LOGIN_SUCCESS_REDIRECT_URL,
       failureRedirect: `${process.env.OAUTH_LOGIN_FAILURE_REDIRECT_URL}?info=signup-invalid`,
     }),
-    function loginWithTwitterRedirect() { }
+    function loginWithTwitterRedirect() {}
   );
 
 // ==================================
@@ -175,7 +175,7 @@ router
     handleMiddlewareError(ctrl.verifyEmailController),
     sendErrorResponse
   )
-  .put(
+  .get(
     "/confirm-email/:token",
     validateResource(z.confirmEmailSchema),
     handleMiddlewareError(ctrl.confirmEmailController),
