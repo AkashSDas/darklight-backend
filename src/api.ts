@@ -46,6 +46,13 @@ app.get("/api/v2/testing/test", function testController(_req, res) {
 });
 
 app.use("/api/v2/auth", require("./routes/auth.route").router);
+app.use("/api/v2/course", require("./routes/course.route").router);
+app.use(
+  "/api/v2/enrolled-course",
+  require("./routes/enrolled-course.route").router
+);
+app.use("/api/v2/payment", require("./routes/payment.route").router);
+app.use("/api/v2/user", require("./routes/user.route").router);
 
 app.all("*", function handleUnknownRoutes(req, res) {
   return res.status(404).json({
