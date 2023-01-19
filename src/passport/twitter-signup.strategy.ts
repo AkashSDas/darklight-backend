@@ -2,10 +2,9 @@ import { Request } from "express";
 import passport from "passport";
 import { Profile, Strategy } from "passport-twitter";
 
-import { AvailableOauthProvider } from "../models/oauth-provider.schema";
 import { createUserService, getUserService } from "../services/user.service";
-import { getEnv } from "../utils/config";
-import { BaseApiError } from "../utils/error";
+import { BaseApiError } from "../utils/error.util";
+import { OAuthProvider } from "../utils/user.util";
 import { Strategies } from "./";
 
 async function verify(
@@ -15,24 +14,23 @@ async function verify(
   profile: Profile,
   next: any
 ) {
-  var { id, email } = profile._json;
+  var { id, name, email, profile_image_url } = profile._json;
   var user = await getUserService({
-    oauthProviders: {
-      $elemMatch: { id: id, provider: AvailableOauthProvider.TWITTER },
-    },
+    oauthProviders: { $elemMatch: { id: id, provider: OAuthProvider.TWITTER } },
   });
   if (user) return next(null, user); // login the user
 
   // Signup the user
   try {
     let newUser = await createUserService({
+      fullName: name,
       email: email ?? undefined,
       verified: email ? true : false,
-      // profileImage: profile_image_url
-      //   ? { id: "twitter", URL: profile_image_url }
-      //   : null,
+      profileImage: profile_image_url
+        ? { id: "twitter", URL: profile_image_url }
+        : null,
       active: email ? true : false,
-      oauthProviders: [{ sid: id, provider: AvailableOauthProvider.TWITTER }],
+      oauthProviders: [{ id: id, provider: OAuthProvider.TWITTER }],
     });
     return next(null, newUser);
   } catch (error) {
@@ -47,9 +45,9 @@ async function verify(
 function twitterSignupStrategy() {
   return new Strategy(
     {
-      consumerKey: getEnv().oauth.twitter.clientKey,
-      consumerSecret: getEnv().oauth.twitter.clientKeySecret,
-      callbackURL: getEnv().oauth.twitter.signupCallbackURL,
+      consumerKey: process.env.TWITTER_OAUTH_CLIENT_KEY,
+      consumerSecret: process.env.TWITTER_OAUTH_CLIENT_KEY_SECRET,
+      callbackURL: process.env.TWITTER_OAUTH_CALLBACK_URL,
       passReqToCallback: true,
       includeEmail: true,
     },

@@ -1,12 +1,10 @@
 import cloudinary from "cloudinary";
 
-import { getEnv } from "./config";
-
 export async function connectToCloudinary() {
   cloudinary.v2.config({
-    cloud_name: getEnv().cloudinary.cloudName,
-    api_key: getEnv().cloudinary.apiKey,
-    api_secret: getEnv().cloudinary.apiSecret,
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_SECRET_KEY,
   });
 }
 

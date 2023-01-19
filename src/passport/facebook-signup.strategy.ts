@@ -2,10 +2,9 @@ import { Request } from "express";
 import passport from "passport";
 import { Profile, Strategy } from "passport-facebook";
 
-import { AvailableOauthProvider } from "../models/oauth-provider.schema";
 import { createUserService, getUserService } from "../services/user.service";
-import { getEnv } from "../utils/config";
-import { BaseApiError } from "../utils/error";
+import { BaseApiError } from "../utils/error.util";
+import { OAuthProvider } from "../utils/user.util";
 import { Strategies } from "./";
 
 /** Check if the user exists OR not. If not, create a new user else login the user. */
@@ -16,22 +15,21 @@ async function verify(
   profile: Profile,
   next: any
 ) {
-  var { email, id } = profile._json;
+  var { email, id, name, picture } = profile._json;
   var user = await getUserService({
-    oauthProviders: {
-      $elemMatch: { id, provider: AvailableOauthProvider.FACEBOOK },
-    },
+    oauthProviders: { $elemMatch: { id, provider: OAuthProvider.FACEBOOK } },
   });
   if (user) return next(null, user); // login the user
 
   // Signup the user
   try {
     let newUser = await createUserService({
+      fullName: name,
       email: email ?? undefined,
       verified: email ? true : false,
-      // profileImage: { id: "facebook", URL: picture.data.url },
+      profileImage: { id: "facebook", URL: picture.data.url },
       active: email ? true : false,
-      oauthProviders: [{ sid: id, provider: AvailableOauthProvider.FACEBOOK }],
+      oauthProviders: [{ id: id, provider: OAuthProvider.FACEBOOK }],
     });
     return next(null, newUser);
   } catch (error) {
@@ -46,9 +44,9 @@ async function verify(
 function facebookSignupStrategy() {
   return new Strategy(
     {
-      clientID: getEnv().oauth.facebook.clientID,
-      clientSecret: getEnv().oauth.facebook.clientSecret,
-      callbackURL: getEnv().oauth.facebook.signupCallbackURL,
+      clientID: process.env.FACEBOOK_OAUTH_CLIENT_ID,
+      clientSecret: process.env.FACEBOOK_OAUTH_CLIENT_SECRET,
+      callbackURL: process.env.FACEBOOK_OAUTH_CALLBACK_URL,
       profileFields: ["id", "first_name", "displayName", "photos", "email"],
       passReqToCallback: true,
     },

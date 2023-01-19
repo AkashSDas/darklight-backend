@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 
-import logger from "./logger";
+import logger from "./logger.util";
+import { WENT_WRONG } from "./response.util";
 
 /**
  * API error class
@@ -34,12 +35,12 @@ export class BaseApiError extends Error {
  */
 export function sendErrorResponse(
   err: unknown,
-  _req: Request,
+  req: Request,
   res: Response,
-  _next: NextFunction
+  next: NextFunction
 ) {
   var status = 500;
-  var message = "Internal Server Error";
+  var message = WENT_WRONG;
 
   if (err instanceof Error) {
     message = err.message;

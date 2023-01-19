@@ -1,12 +1,10 @@
-import { SchemaTypes } from "mongoose";
-
 import { prop } from "@typegoose/typegoose";
-
-import { UserSchema } from "./user.schema";
+import { SchemaTypes } from "mongoose";
+import { UserClass } from "./user.model";
 
 class ReplyClass {
-  @prop({ ref: () => UserSchema, required: true })
-  user: UserSchema;
+  @prop({ ref: () => UserClass, required: true })
+  user: UserClass;
 
   @prop({ type: SchemaTypes.String, required: true })
   reply: string;
@@ -17,8 +15,8 @@ class ReplyClass {
 }
 
 export class QnaClass {
-  @prop({ ref: () => UserSchema, required: true })
-  user: UserSchema;
+  @prop({ ref: () => UserClass, required: true })
+  user: UserClass;
 
   @prop({
     type: SchemaTypes.String,

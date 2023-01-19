@@ -1,13 +1,17 @@
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 
-import User from "../models/user.schema";
-import { getEnv } from "../utils/config";
-import { BaseApiError } from "../utils/error";
+import { getUserService } from "../services/user.service";
+import { BaseApiError } from "../utils/error.util";
 
-async function verifyJwt(req: Request, _res: Response, next: NextFunction) {
+async function verifyJwt(req: Request, res: Response, next: NextFunction) {
   // Check if the bearer token is present in the request header
-  var authHeader = req.headers.Authorization as string;
+  var authHeader =
+    req.headers.authorization ||
+    (req.headers.Authorization as string) ||
+    req.cookies.accessToken ||
+    req.body.accessToken;
+
   if (!authHeader?.startsWith("Bearer ")) {
     throw new BaseApiError(401, "Unauthorized");
   }
@@ -18,10 +22,10 @@ async function verifyJwt(req: Request, _res: Response, next: NextFunction) {
   try {
     let decodedJwt = jwt.verify(
       token,
-      getEnv().accessTokenSecret
+      process.env.ACCESS_TOKEN_SECRET
     ) as jwt.JwtPayload;
 
-    let user = await User.findById(decodedJwt._id);
+    let user = await getUserService({ _id: decodedJwt._id });
     req.user = user;
     next();
   } catch (error) {

@@ -1,11 +1,9 @@
 import { Types } from "mongoose";
-import Stripe from "stripe";
-
-import { DocumentType } from "@typegoose/typegoose";
-
-import { stripe } from "../";
-import User, { UserSchema } from "../models/user.schema";
 import { handleAsync } from "../utils/async.util";
+import Stripe from "stripe";
+import User, { UserClass } from "../models/user.model";
+import { DocumentType } from "@typegoose/typegoose";
+import { stripe } from "..";
 
 /**
  * Get or create customer
@@ -20,7 +18,7 @@ export async function getOrCreateCustomer(
     let result = await handleAsync(User.findById(userId).exec());
 
     if (result.error || !result.data) return null;
-    var user = result.data as DocumentType<UserSchema>;
+    var user = result.data as DocumentType<UserClass>;
   }
 
   // If user has a stripe customer id, retrieve it

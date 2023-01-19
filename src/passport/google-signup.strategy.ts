@@ -2,10 +2,9 @@ import { Request } from "express";
 import passport from "passport";
 import { Profile, Strategy, VerifyCallback } from "passport-google-oauth20";
 
-import { AvailableOauthProvider } from "../models/oauth-provider.schema";
 import { createUserService, getUserService } from "../services/user.service";
-import { getEnv } from "../utils/config";
-import { BaseApiError } from "../utils/error";
+import { BaseApiError } from "../utils/error.util";
+import { OAuthProvider } from "../utils/user.util";
 import { Strategies } from "./";
 
 // TODO: test this function
@@ -17,7 +16,7 @@ async function verify(
   profile: Profile,
   next: VerifyCallback
 ) {
-  var { email, sub, email_verified } = profile._json;
+  var { email, sub, email_verified, picture } = profile._json;
   var user = await getUserService({ email: email });
 
   // Login the user if the user already has an account
@@ -29,15 +28,16 @@ async function verify(
       typeof email_verified == "boolean"
         ? email_verified
         : email_verified == "true"
-        ? true
-        : false;
+          ? true
+          : false;
 
     let newUser = await createUserService({
+      fullName: profile.displayName,
       email: email,
       verified,
-      // profileImage: { id: "google", URL: picture },
+      profileImage: { id: "google", URL: picture },
       active: verified,
-      oauthProviders: [{ sid: sub, provider: AvailableOauthProvider.GOOGLE }],
+      oauthProviders: [{ id: sub, provider: OAuthProvider.GOOGLE }],
     });
     return next(null, newUser);
   } catch (error) {
@@ -52,9 +52,9 @@ async function verify(
 function googleSignupStrategy() {
   return new Strategy(
     {
-      clientID: getEnv().oauth.google.clientID,
-      clientSecret: getEnv().oauth.google.clientSecret,
-      callbackURL: getEnv().oauth.google.signupCallbackURL,
+      clientID: process.env.GOOGLE_OAUTH_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_OAUTH_CLIENT_SECRET,
+      callbackURL: process.env.GOOGLE_OAUTH_CALLBACK_URL,
       passReqToCallback: true,
     },
     verify

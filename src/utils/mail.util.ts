@@ -2,8 +2,7 @@ import { createTransport } from "nodemailer";
 
 import { DocumentType } from "@typegoose/typegoose";
 
-import { UserSchema } from "../models/user.schema";
-import { getEnv } from "./config";
+import { UserClass } from "../models/user.model";
 
 export interface EmailOptions {
   to: string;
@@ -14,16 +13,16 @@ export interface EmailOptions {
 
 export async function sendEmail(opts: EmailOptions) {
   var transporter = createTransport({
-    host: getEnv().smtp.host,
-    port: getEnv().smtp.port,
+    host: process.env.SMTP_HOST,
+    port: Number(process.env.SMTP_PORT) || 0,
     auth: {
-      user: getEnv().smtp.username,
-      pass: getEnv().smtp.password,
+      user: process.env.SMTP_USERNAME,
+      pass: process.env.SMTP_PASSWORD,
     },
   });
 
   var msg = {
-    from: getEnv().smtp.fromEmail,
+    from: process.env.FROM_EMAIL,
     to: opts.to,
     subject: opts.subject,
     text: opts.text,
@@ -33,11 +32,11 @@ export async function sendEmail(opts: EmailOptions) {
   return await transporter.sendMail(msg);
 }
 
-export async function sendVerificationEmail(user: DocumentType<UserSchema>) {
+export async function sendVerificationEmail(user: DocumentType<UserClass>) {
   var token = user.generateVerificationToken();
   await user.save({ validateModifiedOnly: true }); // save token
 
-  var url = `${getEnv().backendURL}/api/v2/auth/confirm-email/${token}`;
+  var url = `${process.env.BASE_URL}/api/v2/auth/confirm-email/${token}`;
   var opts: EmailOptions = {
     to: user.email,
     subject: "Verify your email",

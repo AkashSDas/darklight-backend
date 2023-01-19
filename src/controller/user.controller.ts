@@ -1,8 +1,11 @@
+import * as cloudinary from "cloudinary";
 import { Request, Response } from "express";
+import { UploadedFile } from "express-fileupload";
 
-import User from "../models/user.schema";
+import User from "../models/user.model";
 import { UpdateDetails, UserExists } from "../schema/user.schema";
-import { UserRole } from "../utils/user";
+import { USER_PROFILE } from "../utils/cloudinary.util";
+import { UserRole } from "../utils/user.util";
 
 // ==================================
 // OTHER CONTROLLERS
@@ -51,11 +54,11 @@ export async function getUserController(req: Request, res: Response) {
  */
 export async function instructorSignupController(req: Request, res: Response) {
   var user = req.user;
-  if ((user.roles as UserRole[]).includes(UserRole.INSTRUCTOR)) {
+  if ((user.roles as UserRole[]).includes(UserRole.TEACHER)) {
     return res.status(400).json({ message: "Already a teacher" });
   }
 
-  (user.roles as UserRole[]).push(UserRole.INSTRUCTOR);
+  (user.roles as UserRole[]).push(UserRole.TEACHER);
   await (user as any).save();
   return res.status(200).json({ message: "Signed up as a teacher" });
 }
@@ -87,6 +90,7 @@ export async function updateDetailsController(
     }
   }
 
+  user.fullName = req.body.fullName;
   user.username = req.body.username;
   user.email = req.body.email;
   await user.save();
@@ -105,19 +109,19 @@ export async function updateProfileImageController(
   res: Response
 ) {
   var user = req.user;
-  // var image = req.files.profileImage;
-  // if (!image) return res.status(400).json({ message: "No image provided" });
+  var image = req.files.profileImage;
+  if (!image) return res.status(400).json({ message: "No image provided" });
 
-  // // Check if the image already exists
-  // if (user.profileImage?.id) {
-  //   await cloudinary.v2.uploader.destroy(user.profileImage.id);
-  // }
+  // Check if the image already exists
+  if (user.profileImage?.id) {
+    await cloudinary.v2.uploader.destroy(user.profileImage.id);
+  }
 
-  // var result = await cloudinary.v2.uploader.upload(
-  //   (image as UploadedFile).tempFilePath,
-  //   { folder: USER_PROFILE }
-  // );
-  // user.profileImage = { id: result.public_id, URL: result.secure_url };
+  var result = await cloudinary.v2.uploader.upload(
+    (image as UploadedFile).tempFilePath,
+    { folder: USER_PROFILE }
+  );
+  user.profileImage = { id: result.public_id, URL: result.secure_url };
   await user.save();
   return res.status(200).json({ message: "Profile image updated" });
 }

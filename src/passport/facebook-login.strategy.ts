@@ -1,9 +1,8 @@
 import passport from "passport";
 import { Profile, Strategy } from "passport-facebook";
 
-import { AvailableOauthProvider } from "../models/oauth-provider.schema";
 import { getUserService } from "../services/user.service";
-import { getEnv } from "../utils/config";
+import { OAuthProvider } from "../utils/user.util";
 import { Strategies } from "./";
 
 async function verify(
@@ -14,14 +13,12 @@ async function verify(
 ) {
   var { id } = profile._json;
   var user = await getUserService({
-    oauthProviders: {
-      $elemMatch: { sid: id, provider: AvailableOauthProvider.FACEBOOK },
-    },
+    oauthProviders: { $elemMatch: { id, provider: OAuthProvider.FACEBOOK } },
   });
 
   // If the user doesn't exists OR the user exists but the signup process isn't
   // completed yet
-  if (!user || (user && !user.username) || !user.email) {
+  if (!user || (user && !user.username) || !user.email || !user.fullName) {
     return next(null, null);
   }
 
@@ -32,9 +29,9 @@ async function verify(
 function facebookLoginStrategy() {
   return new Strategy(
     {
-      clientID: getEnv().oauth.facebook.clientID,
-      clientSecret: getEnv().oauth.facebook.clientSecret,
-      callbackURL: getEnv().oauth.facebook.loginCallbackURL,
+      clientID: process.env.FACEBOOK_OAUTH_CLIENT_ID,
+      clientSecret: process.env.FACEBOOK_OAUTH_CLIENT_SECRET,
+      callbackURL: process.env.FACEBOOK_OAUTH_CALLBACK_URL_FOR_LOGIN,
       profileFields: ["id", "first_name", "displayName", "photos", "email"],
     },
     verify

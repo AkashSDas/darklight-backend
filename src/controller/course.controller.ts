@@ -6,7 +6,7 @@ import { startSession } from "mongoose";
 import { Course, Lesson } from "../models";
 import * as z from "../schema/course.schema";
 import { CourseStage, deleteContentBlock, updateCourseCoverImage } from "../utils/course.util";
-import { UserRole } from "../utils/user";
+import { UserRole } from "../utils/user.util";
 
 // ==================================
 // COURSE CONTROLLERS
@@ -22,7 +22,7 @@ import { UserRole } from "../utils/user";
  */
 export async function createCourseController(req: Request, res: Response) {
   var user = req.user;
-  if (!user.roles.includes(UserRole.INSTRUCTOR)) {
+  if (!user.roles.includes(UserRole.TEACHER)) {
     return res.status(403).json({ message: "Forbidden" });
   }
 

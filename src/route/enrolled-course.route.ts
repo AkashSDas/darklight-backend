@@ -1,16 +1,11 @@
 import { Router } from "express";
 
-import {
-  buyCourseController,
-  getEnrolledCourseController,
-  getEnrolledCoursesController,
-  toggleLessonCompletionController,
-} from "../controller/enrolled-course.controller";
+import { buyCourseController, getEnrolledCourseController, getEnrolledCoursesController, toggleLessonCompletionController } from "../controller/enrolled-course.controller";
 import verifyAuth from "../middlewares/auth.middleware";
 import { validateResource } from "../middlewares/zod.middleware";
 import { buyCourseSchema } from "../schema/enrolled-course.schema";
 import { handleMiddlewareError } from "../utils/async.util";
-import { sendErrorResponse } from "../utils/error";
+import { sendErrorResponse } from "../utils/error.util";
 
 export var router = Router();
 

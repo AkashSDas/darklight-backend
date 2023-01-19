@@ -2,55 +2,70 @@ import crypto from "crypto";
 import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 
-import User from "../models/user.schema";
+import User from "../models/user.model";
+import * as z from "../schema/auth.schema";
 import { loginCookieConfig } from "../utils/auth.util";
-import { getEnv } from "../utils/config";
 import { EmailOptions, sendEmail, sendVerificationEmail } from "../utils/mail.util";
-import * as z from "../utils/zod";
 
-// =====================================
-// Signup
-// =====================================
+// ==================================
+// SIGNUP CONTROLLERS
+// ==================================
 
 /**
- * Signup a new user
- * @route POST /api/v2/auth/signup
+ * Signup a new user and send verification email
+ * @route POST /auth/signup
  * @remark username, email, password are required
  */
-export async function signup(
+export async function signupController(
   req: Request<{}, {}, z.Signup["body"]>,
   res: Response
 ) {
   var { username, email, password } = req.body;
   var user = await User.create({ username, email, password });
-  if (!user) return res.status(400).json({ message: "Account not created" });
+  var success = await sendVerificationEmail(user);
+  var message = success
+    ? "Account created, verification email sent"
+    : "Account created";
 
-  // Login the user
-  var accessToken = user.getAccessToken();
-  var refreshToken = user.getRefreshToken();
-  res.cookie("refreshToken", refreshToken, loginCookieConfig);
-  user.passwordDigest = undefined; // rm password from response
-  return res.status(201).json({ user, accessToken });
+  // Login user
+  {
+    let accessToken = user.accessToken();
+    let refreshToken = user.refreshToken();
+    res.cookie("refreshToken", refreshToken, loginCookieConfig);
+    user.password = undefined; // remove password from response
+    return res.status(201).json({ message, accessToken, user });
+  }
 }
 
 /**
- * Cancel oauth signup process and delete the user
- * @route DELETE /api/v2/auth/cancel-oauth
- * @remark Middlewares used are: verifyAuth
+ * Cancel OAuth signup process and delete the user
+ * @route DELETE /auth/signup
+ * @remark User that logged in will be deleted and OAuth session
+ * will be logged out
+ *
+ * Middleware used are:
+ * - verifyAuth
  */
-export async function cancelOauthSignup(req: Request, res: Response) {
+export async function cancelOAuthController(req: Request, res: Response) {
+  if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+
   var user = await User.findByIdAndDelete(req.user._id);
+  if (!user) return res.status(404).json({ message: "User not found" });
+
   if (req.logOut) req.logOut(function () {});
   return res.status(200).json({ user });
 }
 
 /**
  * Complete user OAuth signup process by saving compulsory fields
- * @route PUT /api/v2/auth/complete-oauth
- * @remark Middlewares used are: verifyAuth
+ * @route PUT /auth/complete-oauth
+ * @remark User that logged in will be updated with compulsory fields
+ *
+ * Middleware used are:
+ * - verifyAuth
  */
-export async function completeOauth(
-  req: Request<{}, {}, z.CompleteOauth["body"]>,
+export async function completeOAuthController(
+  req: Request<{}, {}, z.CompleteOAuth["body"]>,
   res: Response
 ) {
   var { username, email } = req.body;
@@ -64,51 +79,55 @@ export async function completeOauth(
   return res.status(200).json({ user });
 }
 
-// =====================================
-// Login
-// =====================================
+// ==================================
+// LOGIN CONTROLLERS
+// ==================================
 
 /**
- * Login user with email & password
- * @route POST /api/v2/auth/login
+ * Login user with email and password
+ * @route POST /auth/login
+ * @remark access token will be sent in response cookie and body
  */
-export async function login(
+export async function loginController(
   req: Request<{}, {}, z.Login["body"]>,
   res: Response
 ) {
   var { email, password } = req.body;
-  var user = await User.findOne({ email }).select("+passwordDigest");
+  var user = await User.findOne({ email }).select("+password");
   if (!user) return res.status(404).json({ message: "User not found" });
-  if (!user.passwordDigest) {
+  if (!user.password) {
     return res.status(400).json({ message: "Invalid login method" });
   }
 
-  var isMatch = await user.verifyPassword(password);
-  if (!isMatch) return res.status(400).json({ message: "Wrong password" });
+  {
+    let isMatch = await user.verifyPassword(password);
+    if (!isMatch) return res.status(400).json({ message: "Invalid password" });
+  }
 
-  var accessToken = user.getAccessToken();
-  var refreshToken = user.getRefreshToken();
-  res.cookie("refreshToken", refreshToken, loginCookieConfig);
-  user.passwordDigest = undefined; // rm password from response
-  return res.status(200).json({ user, accessToken });
+  {
+    let accessToken = user.accessToken();
+    let refreshToken = user.refreshToken();
+    res.cookie("refreshToken", refreshToken, loginCookieConfig);
+    user.password = undefined; // remove password from response
+    return res.status(200).json({ user, accessToken });
+  }
 }
 
 /**
  * Get a new access token using refresh token
- * @route GET /api/v2/auth/access-token
- *
+ * @route GET /auth/access-token
  * @remark throwning an error inside the callback of jwt.verify was not working
  * and there was a timeout error. So, I sent a response instead of throwing an error
  * and it working fine. Follow the test cases regarding this.
  */
-export async function accessToken(req: Request, res: Response) {
+export async function accessTokenController(req: Request, res: Response) {
   var refreshToken = req.cookies?.refreshToken;
-  if (!refreshToken) res.status(401).json({ message: "Unauthorized" });
+  if (!refreshToken) res.status(400).json({ message: "Unauthorized" });
   else {
     try {
       jwt.verify(
         refreshToken,
-        getEnv().refreshTokenSecret,
+        process.env.REFRESH_TOKEN_SECRET,
         async function getNewAccessToken(
           err: jwt.VerifyErrors,
           decoded: string | jwt.JwtPayload
@@ -123,7 +142,7 @@ export async function accessToken(req: Request, res: Response) {
 
           var user = await User.findById((decoded as any)._id);
           if (!user) return res.status(404).json({ message: "User not found" });
-          var accessToken = user.getAccessToken();
+          var accessToken = user.accessToken();
           return res.status(200).json({ user, accessToken });
         }
       );
@@ -133,24 +152,23 @@ export async function accessToken(req: Request, res: Response) {
   }
 }
 
-// =====================================
-// Email verification
-// =====================================
+// ==================================
+// EMAIL VERIFICATION CONTROLLERS
+// ==================================
 
 /**
  * Send verification email to user email
- * @route POST /api/v2/auth/verify-email
+ * @route POST /auth/verify-email
  */
-export async function verifyEmail(
+export async function verifyEmailController(
   req: Request<{}, {}, z.VerifyEmail["body"]>,
   res: Response
 ) {
   var { email } = req.body;
   var user = await User.findOne({ email });
   if (!user) return res.status(404).json({ message: "User not found" });
-  if (user.verified) {
+  if (user.verified)
     return res.status(400).json({ message: "Already verified" });
-  }
 
   var success = await sendVerificationEmail(user);
   var message = success ? "Verification email sent" : "Failed to send email";
@@ -159,11 +177,11 @@ export async function verifyEmail(
 
 /**
  * Verify user email
- * @route PUT /api/v2/auth/confirm-email/:token
+ * @route PUT /auth/confirm-email/:token
  * @remark token is sent in email
- * @remark after successful verification, user will be redirected to the frontend
+ * @remark after successful verification, user will be redirected to `FRONTEND_BASE_URL`
  */
-export async function confirmEmail(
+export async function confirmEmailController(
   req: Request<z.ConfirmEmail["params"]>,
   res: Response
 ) {
@@ -182,18 +200,18 @@ export async function confirmEmail(
   user.verificationTokenExpiresAt = undefined;
   await user.save({ validateModifiedOnly: true });
 
-  return res.redirect(301, getEnv().frontendURL);
+  return res.redirect(301, process.env.FRONTEND_BASE_URL);
 }
 
-// =====================================
-// Password reset
-// =====================================
+// ==================================
+// PASSWORD RESET CONTROLLERS
+// ==================================
 
 /**
  * Send password reset link to user's registered email
- * @route POST /api/v2/uth/forgot-password
+ * @route POST /auth/forgot-password
  */
-export async function forgotPassword(
+export async function forgotPasswordController(
   req: Request<{}, {}, z.ForgotPassword["body"]>,
   res: Response
 ) {
@@ -204,7 +222,7 @@ export async function forgotPassword(
   var token = user.generatePasswordResetToken();
   await user.save({ validateModifiedOnly: true });
 
-  var url = `${getEnv().frontendURL}/auth/password-reset/${token}`;
+  var url = `${process.env.FRONTEND_BASE_URL}/auth/password-reset/${token}`;
   var opts: EmailOptions = {
     to: user.email,
     subject: "Reset your password",
@@ -226,9 +244,9 @@ export async function forgotPassword(
 
 /**
  * Reset user's password
- * @route PUT /api/v2/auth/password-reset/:token
+ * @route PUT /auth/password-reset/:token
  */
-export async function passwordReset(
+export async function passwordResetController(
   req: Request<z.PasswordReset["params"], {}, z.PasswordReset["body"]>,
   res: Response
 ) {
@@ -244,7 +262,7 @@ export async function passwordReset(
   }
 
   // Update the user's password
-  user.passwordDigest = req.body?.password;
+  user.password = req.body?.password;
   user.passwordResetToken = undefined;
   user.passwordResetTokenExpiresAt = undefined;
   await user.save({ validateModifiedOnly: true });
@@ -252,17 +270,22 @@ export async function passwordReset(
   return res.status(200).json({ message: "Password reset successfully" });
 }
 
-// =====================================
-// Logout
-// =====================================
+// ==================================
+// OTHER CONTROLLERS
+// ==================================
 
 /**
  * Logout user with email/password login OR social login
- * @route GET /api/v2/auth/logout
+ * @route GET /auth/logout
  */
-export async function logout(req: Request, res: Response) {
+export async function logoutController(req: Request, res: Response) {
   if (req.cookies?.refreshToken) {
-    res.clearCookie("refreshToken", loginCookieConfig);
+    res.clearCookie("refreshToken", {
+      httpOnly: true,
+      sameSite: "none",
+      secure: true,
+      // secure: process.env.NODE_ENV == "production",
+    });
   } else if (req.logOut) {
     req.logOut(function successfulOAuthLogout() {});
   }
